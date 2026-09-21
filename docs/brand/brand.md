@@ -2,7 +2,7 @@
 
 ## Essência da marca
 
-Seu patrimônio, com clareza.
+Reserva Clara é uma aplicação para organizar, acompanhar e construir seu patrimônio com clareza, ajudando a transformar objetivos financeiros de longo prazo em decisões simples e conscientes.
 
 A marca deve transmitir clareza, segurança, tranquilidade e progresso responsável.
 
