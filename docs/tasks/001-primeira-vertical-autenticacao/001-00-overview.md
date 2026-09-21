@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [001-primeira-vertical-autenticacao.md](../../specs/001-primeira-vertical-autenticacao.md)
-- **Progresso:** 2/4 subtarefas concluídas
+- **Progresso:** 3/4 subtarefas concluídas
 
 ## Objetivo
 
@@ -14,7 +14,7 @@ infraestrutura de sessão ou autorização fora do escopo.
 
 - [x] [001-01-estruturar-login-ui.md](001-01-estruturar-login-ui.md)
 - [x] [001-02-integrar-google-popup.md](001-02-integrar-google-popup.md)
-- [ ] [001-03-criar-dashboard-guard.md](001-03-criar-dashboard-guard.md)
+- [x] [001-03-criar-dashboard-guard.md](001-03-criar-dashboard-guard.md)
 - [ ] [001-04-validar-fluxo-e2e.md](001-04-validar-fluxo-e2e.md)
 
 ## Observações
@@ -27,5 +27,5 @@ infraestrutura de sessão ou autorização fora do escopo.
   sessão server-side e autorização real.
 - Não há test runner no repositório; usar lint, type-check, build e validação
   manual documentada na spec.
-- O destino `/dashboard` e seu guard permanecem bloqueados pela subtarefa 001-03;
-  prova manual com Firebase e browsers permanece bloqueada pela 001-04.
+- O destino `/dashboard` e seu guard foram implementados; prova manual com
+  Firebase e browsers permanece pendente na subtarefa 001-04.

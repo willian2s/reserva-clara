@@ -2,7 +2,7 @@
 
 - **Ticker:** `001`
 - **Número:** `03`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -86,3 +86,40 @@ expor conteúdo privado durante a checagem.
 - Não renderizar dados patrimoniais, Firestore ou valores nesta vertical.
 - Não usar `auth.currentUser` como única decisão.
 - Não adicionar middleware/proxy apenas para esconder essa limitação.
+
+## Registro de execução
+
+- **Status final:** `completed`
+- **Arquivos alterados:**
+  - `src/app/dashboard/page.tsx`
+  - `src/components/auth/dashboard-gate.tsx`
+  - `docs/tasks/001-primeira-vertical-autenticacao/001-03-criar-dashboard-guard.md`
+  - `docs/tasks/001-primeira-vertical-autenticacao/001-00-overview.md`
+- **Decisões e desvios:**
+  - Rota permanece Server Component e apenas compõe `DashboardGate`.
+  - Guard usa `onAuthStateChanged` como decisão única; estado inicial e ausência
+    de usuário exibem somente status acessível não sensível.
+  - Usuário confirmado vê shell textual mínimo; usuário ausente usa
+    `router.replace("/login")` sem renderizar shell.
+  - Listener é removido no cleanup e callbacks posteriores são ignorados por
+    referência de montagem. Redirect é idempotente sem ignorar perda posterior
+    de sessão. Nenhum desvio funcional ou infraestrutura nova foi introduzido.
+- **Comandos executados:**
+  - `npm run lint -- src/app/dashboard/page.tsx src/components/auth/dashboard-gate.tsx` — passou.
+  - `npm exec next typegen` — passou; tipos de rotas gerados.
+  - `npx tsc --noEmit` — passou.
+  - `npm run build` — passou; rota `/dashboard` compilada e prerenderizada.
+- **Resultados e evidências:**
+  - Build listou `/dashboard` junto das rotas `/` e `/login`.
+  - Lint, type-check e build passaram sem erros.
+  - Código não importa Firebase na página server-side; `auth` fica restrito ao
+    componente Client.
+  - Shell contém somente “Dashboard” e “Autenticação confirmada.”, sem dados de
+    usuário, patrimônio, Firestore ou valores.
+  - Alteração pós-revisão mantém mudanças de auth autenticado para ausente
+    redirecionáveis, evitando shell persistente após perda de sessão.
+- **Riscos residuais:**
+  - Guard continua sendo proteção de UX client-side, não boundary de segurança;
+    conteúdo privado permanece fora desta vertical.
+  - Validação manual de sessão Firebase, redirect anônimo, refresh, browsers e
+    acessibilidade permanece prevista na subtarefa 001-04.
