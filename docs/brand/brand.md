@@ -15,17 +15,23 @@ Palavras-chave:
 - Tranquilo
 - Responsável
 - Simples
+- Visão de longo prazo
+
+## Tagline
+
+Seu patrimônio, com clareza.
 
 ## Direção visual
 
 A identidade visual deve transmitir:
 
+- clareza sobre o patrimônio
 - organização financeira
-- proteção
 - segurança
-- clareza sobre gastos
-- evolução da reserva de emergência
-- tranquilidade para lidar com imprevistos
+- estabilidade
+- progresso patrimonial
+- planejamento de longo prazo
+- tranquilidade para tomar decisões financeiras
 
 ## Guias
 
