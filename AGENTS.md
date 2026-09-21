@@ -8,19 +8,21 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-## Repository map
+## Structure
 
-- Single-package npm app; `package-lock.json` is authoritative.
-- Next.js 16 App Router lives in `src/app`. `@/*` resolves to `src/*`.
-- `src/components/ui` contains shadcn components configured by `components.json` (`base-nova`, Base UI, RSC). Add components with `npx shadcn add <component>` rather than hand-copying another shadcn style.
-- Tailwind CSS 4 is CSS-first: theme tokens and imports live in `src/app/globals.css`; there is no Tailwind config file.
-- Browser Firebase initialization is centralized in `src/lib/firebase/client.ts`. It reuses an existing app during hot reload and reads the public variables listed in `.env.example`; use `.env.local`, which is intentionally ignored.
+- Single npm package; `package-lock.json` is authoritative. App Router entrypoints live in `src/app`; `@/*` maps to `src/*`.
+- `src/components/ui` uses shadcn `base-nova` with Base UI and RSC. Generate additions with `npx shadcn add <component>`; do not copy another shadcn style.
+- Tailwind 4 is CSS-first. Theme and imports belong in `src/app/globals.css`; no Tailwind config exists.
+- Firebase browser setup belongs in `src/lib/firebase/client.ts`. Copy `.env.example` to ignored `.env.local` and provide its `NEXT_PUBLIC_FIREBASE_*` values before exercising auth.
 
 ## Commands
 
-- Install exactly from lockfile: `npm ci`
-- Develop: `npm run dev`
-- Lint all files: `npm run lint`; lint one file: `npm run lint -- src/app/page.tsx`
-- Type-check from a clean tree: `npm exec next typegen` then `npx tsc --noEmit`. Route helpers such as `LayoutProps` do not exist until type generation.
-- Production verification: `npm run build`
-- No test runner or formatter is configured. Do not claim test coverage or add tool-specific commands without first adding corresponding tooling.
+```bash
+npm ci
+npm run dev
+npm run lint
+npm exec next typegen && npx tsc --noEmit
+npm run build
+```
+
+Run type generation before TypeScript checks; generated route helpers such as `LayoutProps` depend on it. No test runner or formatter is configured.
