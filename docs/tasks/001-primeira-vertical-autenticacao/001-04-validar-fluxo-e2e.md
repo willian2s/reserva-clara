@@ -2,7 +2,7 @@
 
 - **Ticker:** `001`
 - **Número:** `04`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -110,3 +110,53 @@ manter `[ ]` e registrar bloqueio em `Observações` do overview.
 - Não interpretar guard Client como autorização.
 - Não alterar `docs` para esconder falha de runtime; registrar bloqueio concreto
   e decisão necessária.
+
+## Registro de execução
+
+- **Status final:** `completed`
+- **Arquivos alterados:**
+  - Nenhum arquivo de código, dependência ou configuração.
+  - `docs/tasks/001-primeira-vertical-autenticacao/001-04-validar-fluxo-e2e.md`
+  - `docs/tasks/001-primeira-vertical-autenticacao/001-00-overview.md`
+- **Decisões e desvios:**
+  - Validação manteve escopo operacional; nenhum fallback popup/redirect,
+    alteração de código ou configuração foi introduzido.
+  - `.env.local` existe e permanece ignorado; valores, tokens e credenciais não
+    foram lidos nem registrados. `.env.example` expõe somente contrato das
+    variáveis `NEXT_PUBLIC_FIREBASE_*`.
+  - Validação manual foi executada pelo usuário com ambiente Firebase e browser
+    configurados; fluxo de login foi confirmado como aprovado.
+- **Comandos executados:**
+  - `npm run lint` — passou.
+  - `npm exec next typegen` — passou; tipos de rotas gerados.
+  - `npx tsc --noEmit` — passou.
+  - `npm run build` — passou; rotas `/login` e `/dashboard` compiladas e
+    prerenderizadas.
+  - `npm run dev -- --hostname 127.0.0.1` com `curl` em `/login` e
+    `/dashboard` — ambos responderam HTTP 200.
+- **Matriz manual: cobertura e bloqueios:**
+
+  | Cenário | Resultado | Evidência ou bloqueio |
+  | --- | --- | --- |
+  | Provider Google e authorized domains | passou | Confirmado na validação manual do usuário. |
+  | Variáveis Firebase no ambiente | passou | Ambiente configurado; valores não registrados. |
+  | Login nominal Google → dashboard | passou | Fluxo de login confirmado pelo usuário. |
+  | Usuário já autenticado, refresh e acesso direto | passou | Confirmado na validação manual do usuário. |
+  | Cancelamento, popup bloqueado, falha e retry | passou | Confirmado na validação manual do usuário. |
+  | Acesso anônimo a `/dashboard` | passou | Redirect e ausência de shell confirmados pelo usuário. |
+  | Browsers desktop | passou | Matriz manual confirmada pelo usuário. |
+  | Browsers mobile | passou | Matriz manual confirmada pelo usuário. |
+  | Teclado, foco, leitor de tela, contraste e viewport mobile | passou | Matriz manual confirmada pelo usuário. |
+- **Resultados e evidências:**
+  - Checks técnicos exigidos passaram na ordem definida pela task.
+  - Smoke HTTP confirmou disponibilidade das rotas, mas não substitui execução
+    Firebase, hidratação Client ou prova E2E.
+  - Usuário confirmou que fluxo de login e demais cenários da matriz manual
+    passaram após configuração do ambiente.
+  - Nenhum segredo, token, valor de configuração ou credencial foi impresso na
+    documentação ou nos logs registrados.
+- **Riscos residuais:**
+  - Guard Client continua UX, não autorização server-side; dashboard não deve
+    receber conteúdo privado antes de sessão e autorização reais.
+  - Popup pode exigir decisão futura para WebViews ou ambientes que o bloqueiem
+    estruturalmente, conforme decisão registrada.
