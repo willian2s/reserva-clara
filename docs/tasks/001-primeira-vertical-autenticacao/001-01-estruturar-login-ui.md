@@ -2,7 +2,7 @@
 
 - **Ticker:** `001`
 - **Número:** `01`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -88,3 +88,27 @@ autenticação improvisada.
 - Não deixar botão simular login com navegação fake; comportamento real entra na
   subtarefa 02.
 - Preservar classes e variantes existentes do shadcn/base-nova.
+
+## Registro de execução
+
+- **Status final:** `completed`
+- **Arquivos alterados:**
+  - `src/app/login/page.tsx`
+  - `src/components/auth/google-sign-in.tsx`
+- **Decisões e desvios:**
+  - Mantida página `/login` como Server Component, sem importação de Firebase ou APIs de browser.
+  - Limitada fronteira Client ao `GoogleSignIn`, com props serializáveis para disabled e região futura de status/erro.
+  - Mantido clique sem handler nesta etapa para não simular autenticação; integração real fica na subtarefa 02.
+  - Usado heading `h1` dentro de `CardTitle`, pois componente UI existente renderiza `div`.
+- **Comandos executados:**
+  - `npm run lint -- src/app/login/page.tsx src/components/auth/google-sign-in.tsx` — passou.
+  - `npm exec next typegen` — passou; tipos de rotas gerados.
+  - `npx tsc --noEmit` — passou.
+  - `npm run build` — passou; `/login` compilada como rota estática.
+- **Resultados e evidências:**
+  - Build listou `/login` sem alterar a rota `/`.
+  - CTA possui botão real, foco visível herdado de `Button`, área mínima de toque e região live reservada.
+  - Layout usa largura fluida com limite `max-w-md`, espaçamento responsivo e tokens globais.
+- **Riscos residuais:**
+  - Validação visual manual em browsers desktop/mobile e teclado ainda deve ser feita na validação operacional da subtarefa 04.
+  - CTA permanece sem autenticação até integração prevista na subtarefa 02.

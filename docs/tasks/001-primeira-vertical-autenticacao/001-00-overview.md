@@ -1,8 +1,8 @@
 # 001 — Primeira vertical de autenticação
 
-- **Status geral:** pending
+- **Status geral:** in_progress
 - **Spec:** [001-primeira-vertical-autenticacao.md](../../specs/001-primeira-vertical-autenticacao.md)
-- **Progresso:** 0/4 subtarefas concluídas
+- **Progresso:** 1/4 subtarefas concluídas
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ infraestrutura de sessão ou autorização fora do escopo.
 
 ## Checklist
 
-- [ ] [001-01-estruturar-login-ui.md](001-01-estruturar-login-ui.md)
+- [x] [001-01-estruturar-login-ui.md](001-01-estruturar-login-ui.md)
 - [ ] [001-02-integrar-google-popup.md](001-02-integrar-google-popup.md)
 - [ ] [001-03-criar-dashboard-guard.md](001-03-criar-dashboard-guard.md)
 - [ ] [001-04-validar-fluxo-e2e.md](001-04-validar-fluxo-e2e.md)
