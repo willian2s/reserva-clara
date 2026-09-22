@@ -154,7 +154,7 @@ export function GoogleSignIn({
         <Button
           type="button"
           size="lg"
-          className="min-h-11 w-full px-4"
+          className="min-h-12 w-full px-4 shadow-sm shadow-primary/10"
           disabled={disabled || isBusy}
           onClick={handleSignIn}
           aria-describedby={displayedStatusMessage ? statusId : undefined}

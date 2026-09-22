@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [002-brand-integration-design-system-foundations.md](../../specs/002-brand-integration-design-system-foundations.md)
-- **Progresso:** 5/9 subtarefas concluídas
+- **Progresso:** 6/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -17,7 +17,7 @@ tipografia, tokens, assets, componentes e acessibilidade, usando `/login` e
 - [x] [002-03-estabelecer-foundations-globais.md](002-03-estabelecer-foundations-globais.md)
 - [x] [002-04-integrar-assets-oficiais.md](002-04-integrar-assets-oficiais.md)
 - [x] [002-05-ajustar-componentes-fundamentais.md](002-05-ajustar-componentes-fundamentais.md)
-- [ ] [002-06-aplicar-foundations-as-telas.md](002-06-aplicar-foundations-as-telas.md)
+- [x] [002-06-aplicar-foundations-as-telas.md](002-06-aplicar-foundations-as-telas.md)
 - [ ] [002-07-validar-acessibilidade.md](002-07-validar-acessibilidade.md)
 - [ ] [002-08-validar-checks-tecnicos.md](002-08-validar-checks-tecnicos.md)
 - [ ] [002-09-validar-visual-final.md](002-09-validar-visual-final.md)

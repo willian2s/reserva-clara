@@ -2,7 +2,7 @@
 
 - **Ticker:** `002`
 - **Número:** `06`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -90,3 +90,34 @@ autenticação, conteúdo não sensível e fronteiras Server/Client.
 - Não usar Emerald como indicador de login bem-sucedido por hábito financeiro.
 - Não adicionar saldo, gráfico ou widget fictício para “preencher” dashboard.
 - Não interpretar a melhoria visual como autorização server-side.
+
+## Evidências de execução
+
+- **Arquivos alterados:**
+  - `src/app/login/page.tsx`
+  - `src/components/auth/google-sign-in.tsx`
+  - `src/components/auth/dashboard-gate.tsx`
+- **Decisões:** o login usa o lockup oficial
+  `/brand/logo-horizontal.png` com dimensões estáveis e tagline preservada; o
+  dashboard usa o mesmo lockup em um shell autenticado discreto e o mark oficial
+  durante loading/redirect. O conteúdo autenticado permanece não sensível e sem
+  dados fictícios.
+- **Correção visual:** removida a faixa decorativa superior do login, que criava
+  uma superfície cinza inesperada acima do conteúdo; o layout permanece limpo e
+  centralizado sem alterar a composição funcional.
+- **Preservado:** listener Firebase, popup Google, estados, mensagens, retry,
+  `router.replace` e fronteiras Client/Server existentes. `dashboard/page.tsx`
+  continua Server Component e apenas renderiza `DashboardGate`.
+- **Comandos executados:**
+  - `npm run lint`
+  - `npm exec next typegen`
+  - `npx tsc --noEmit`
+  - `npm run build`
+  - `git diff --check`
+- **Resultados:** todos os comandos concluíram com sucesso; typegen gerou os
+  tipos de rota e não houve alterações fora dos três arquivos da implementação.
+- **Smoke manual:** não executado neste ambiente; permanece como verificação
+  visual independente em mobile/desktop e nos estados reais do Firebase.
+- **Riscos residuais:** a validação visual final e o fluxo real com popup,
+  cancelamento e bloqueio dependem de ambiente de navegador e configuração
+  Firebase válida; permanecem cobertos pelas subtarefas de validação seguintes.
