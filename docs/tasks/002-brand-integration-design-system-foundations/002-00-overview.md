@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [002-brand-integration-design-system-foundations.md](../../specs/002-brand-integration-design-system-foundations.md)
-- **Progresso:** 7/9 subtarefas concluídas
+- **Progresso:** 8/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -19,7 +19,7 @@ tipografia, tokens, assets, componentes e acessibilidade, usando `/login` e
 - [x] [002-05-ajustar-componentes-fundamentais.md](002-05-ajustar-componentes-fundamentais.md)
 - [x] [002-06-aplicar-foundations-as-telas.md](002-06-aplicar-foundations-as-telas.md)
 - [x] [002-07-validar-acessibilidade.md](002-07-validar-acessibilidade.md)
-- [ ] [002-08-validar-checks-tecnicos.md](002-08-validar-checks-tecnicos.md)
+- [x] [002-08-validar-checks-tecnicos.md](002-08-validar-checks-tecnicos.md)
 - [ ] [002-09-validar-visual-final.md](002-09-validar-visual-final.md)
 
 ## Observações
@@ -28,6 +28,8 @@ tipografia, tokens, assets, componentes e acessibilidade, usando `/login` e
   `globals.css`, layout, shadcn/base-nova e telas concluídas da fase 001.
 - V1 é light-only; `.dark` pode permanecer dormente, sem toggle ou provider.
 - `/` permanece template fora desta fase; registrar follow-up se escopo mudar.
+- `002-08` concluiu lint, type generation, typecheck e build; `/login` e
+  `/dashboard` foram confirmadas no output. Não há bloqueios registrados.
 - Não adicionar dados privados, Firebase Admin, sessão server-side ou novo
   catálogo de componentes.
 - Marcar subtarefa e progresso somente após sua própria definição de pronto;

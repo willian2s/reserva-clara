@@ -2,7 +2,7 @@
 
 - **Ticker:** `002`
 - **Número:** `08`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -84,3 +84,28 @@ lockfile ou assets.
 - Não usar `--no-check`, ignorar lint ou apagar erro gerado.
 - Não confundir sucesso de build com aprovação visual ou E2E Firebase.
 - Não expor variáveis, tokens, credenciais ou conteúdo de `.env.local`.
+
+## Registro de execução
+
+- **Arquivos alterados:** esta subtarefa e o overview `002-00-overview.md`.
+  Nenhum arquivo de implementação, `package.json`, lockfile ou asset foi
+  alterado; `.next` permaneceu apenas como artefato ignorado de build.
+- **Decisões e desvios:** nenhum desvio. Os gates foram executados na ordem
+  exigida, sem instalar dependências, criar test runner ou alterar código fora
+  da documentação de planejamento.
+- **Comandos executados e resultados:**
+  - `npm run lint` — aprovado, sem diagnóstico do ESLint.
+  - `npm exec next typegen` — aprovado; `Types generated successfully`.
+  - `npx tsc --noEmit` — aprovado, sem diagnóstico TypeScript.
+  - `npm run build` — aprovado; compilação concluída, páginas estáticas
+    geradas e rotas `/dashboard` e `/login` presentes no output.
+- **Inspeções estruturais:** `src/app/layout.tsx` exporta `Metadata` com
+  título `Reserva Clara` e descrição `Seu patrimônio, com clareza.`; não há
+  import Firebase em arquivos de `src/app`; assets oficiais permanecem em
+  `public/brand/`; `git status` ficou limpo após os comandos e não houve diff
+  em `package.json`, `package-lock.json` ou `public/`.
+- **Warnings e evidências:** a varredura do log do build não encontrou
+  `warning`, `error`, `failed` ou `fatal`. Esta validação cobre gates de build
+  e estrutura, não aprovação visual nem E2E Firebase.
+- **Riscos residuais:** nenhum bloqueio técnico identificado. A validação E2E
+  Firebase e a revisão visual continuam fora do escopo desta subtarefa.
