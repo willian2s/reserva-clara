@@ -2,7 +2,7 @@
 
 - **Ticker:** `002`
 - **Número:** `03`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -85,3 +85,49 @@ visual discreta e previsível sem criar uma escala paralela ou dark mode.
 - Não transformar `rounded-full` ou glow em padrão global.
 - Não usar opacidade que faça foco, border ou texto desaparecerem.
 - Não alterar regras `.dark` como se dark mode fosse requisito desta fase.
+
+## Arquivos alterados
+
+- `src/app/globals.css`: aliases de fonte de interface e radius semântico;
+  hierarquia global de headings; aliases tipográficos para título, subtítulo,
+  body, label, caption e valor financeiro; foco visível com ring Deep Navy;
+  body regular com antialiasing e escala Tailwind preservada.
+
+## Decisões e desvios
+
+- `font-interface` aponta para a mesma variável Inter de `font-sans` e
+  `font-heading`; nenhuma família adicional foi criada.
+- `rounded-control` e `rounded-card` derivam de `rounded-lg` e `rounded-xl`;
+  controles e cards existentes continuam usando utilities Tailwind originais.
+- Spacing e shadows não receberam escala customizada. `shadow-sm` permanece
+  opt-in para superfícies que exigirem elevação.
+- Foco global usa outline de 2px, offset de 2px e token `--ring`; rings locais
+  existentes continuam preservados para Button e Input.
+- Nenhum componente, tela, regra `.dark` ou boundary Client foi alterado.
+
+## Comandos executados
+
+- `npm run lint`
+- `npm exec next typegen`
+- `npx tsc --noEmit`
+- `npm run build`
+- `git diff --check`
+- Inspeção do CSS compilado em `.next/static/chunks/*.css`.
+
+## Resultados e evidências
+
+- Lint, geração de tipos, typecheck e build concluíram sem erros.
+- Build Next.js 16.3.5 gerou `/`, `/login`, `/dashboard` e `/_not-found`
+  estáticos.
+- CSS compilado contém regras para `h1`–`h6`, foco `:focus-visible`,
+  aliases `.type-title`, `.type-subtitle`, `.type-body`, `.type-label`,
+  `.type-caption` e `.financial-value` com `tabular-nums`.
+- CSS compilado mantém `font-sans`, `font-heading` e `font-interface` em
+  `var(--font-inter)`; não há escala customizada de spacing ou shadow.
+- `git diff --check` não encontrou whitespace inválido.
+
+## Riscos residuais
+
+- Inspeção visual interativa e navegação por teclado em `/login` e `/dashboard`
+  permanecem nas subtarefas `002-07` e `002-09`; validação automatizável e
+  inspeção do artefato CSS foram concluídas nesta subtarefa.
