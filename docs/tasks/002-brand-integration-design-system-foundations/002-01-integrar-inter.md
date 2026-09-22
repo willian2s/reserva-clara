@@ -2,7 +2,7 @@
 
 - **Ticker:** `002`
 - **Número:** `01`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -87,3 +87,43 @@ principal duplicada.
 - Não usar `@import` CSS ou `<link>` externo para contornar o loader.
 - Não declarar task concluída apenas porque CSS contém o nome Inter; validar
   fonte computada e build.
+
+## Arquivos alterados
+
+- `src/app/layout.tsx`: substituído Geist por Inter, com `display: "swap"`,
+  subset `latin` e variável `--font-inter` no `<html>`.
+- `src/app/globals.css`: aliases `font-sans` e `font-heading` apontam para
+  `var(--font-inter)`; `font-mono` usa fallback técnico do sistema.
+
+## Decisões e desvios
+
+- Geist Sans e Geist Mono foram removidas. `font-mono` permanece disponível
+  somente como fallback técnico para uso residual do template `/`.
+- Nenhum desvio de escopo. Layout continua Server Component e `lang="pt-BR"`
+  foi preservado.
+
+## Comandos executados
+
+- `npm run lint`
+- `npm exec next typegen`
+- `npx tsc --noEmit`
+- `npm run build`
+- Inspeção de CSS/HTML produzido em `.next`.
+
+## Resultados e evidências
+
+- Lint, geração de tipos, typecheck e build concluíram sem erros.
+- Build Next.js 16.3.5 gerou `@font-face` local para `Inter`, sem URL externa
+  Google no CSS/HTML produzido.
+- CSS gerado contém `--font-sans: var(--font-inter)`,
+  `--font-heading: var(--font-inter)`, `.font-sans` e `.font-heading` usando
+  `var(--font-inter)`, além do fallback `.font-mono`.
+- HTML prerenderizado de `/login` e `/dashboard` contém classe de variável
+  Inter e `lang="pt-BR"`; nenhum carregamento Geist foi encontrado no artefato
+  de produção.
+- Validação manual confirmada: fonte computada é Inter, com fallback gerado
+  pelo `next/font` quando Inter não está disponível.
+
+## Riscos residuais
+
+- Nenhum risco técnico adicional identificado.
