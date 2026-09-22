@@ -2,7 +2,7 @@
 
 - **Ticker:** `002`
 - **Número:** `04`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -89,3 +89,77 @@ sem conflito com o arquivo padrão atual.
   ativar dark mode.
 - `logo-horizontal-off-white.png` e `logo-compact-off-white.png` só devem ser
   usadas quando fundo embutido coincidir com a superfície.
+
+## Contrato operacional de uso
+
+- Lockups informativos usam `alt="Reserva Clara"`; `logo-mark.png` ao lado de
+  nome já visível usa `alt=""`. Mark sem nome equivalente recebe
+  `alt="Reserva Clara"`.
+- Manter clear-space mínimo de uma altura do mark renderizado em cada lado do
+  asset; nenhum texto, controle ou borda invade essa área.
+- Larguras mínimas de renderização: horizontal `180px`, compact `140px`, stacked
+  `128px` e mark `32px`. Mark em controle mantém alvo interativo mínimo de
+  `44px`.
+- Limites são operacionais: preservar proporção original, não distorcer e não
+  reduzir abaixo deles; validação visual confirma legibilidade no contexto real.
+
+## Arquivos alterados
+
+- `src/app/layout.tsx`: `metadata.icons` aponta para os seis favicons oficiais
+  PNG em `/brand/`, com MIME e dimensões explícitos, e para
+  `/brand/app-icon-light.png` como `apple-touch-icon` V1.
+- `src/app/favicon.ico`: removido para eliminar autoridade concorrente.
+- `docs/specs/002-brand-integration-design-system-foundations.md`: clear-space,
+  larguras mínimas e alvo interativo operacionalizados.
+- `public/brand/*`: nenhum arquivo alterado, copiado ou duplicado.
+
+## Decisões e desvios
+
+- Todos os favicons `16`, `32`, `48`, `64`, `128` e `256` foram declarados como
+  `rel="icon"`; `app-icon-light.png` foi declarado como `apple-touch-icon`.
+- V1 continua light-only: `app-icon-dark.png`, logos dark e variantes off-white
+  não foram referenciados no layout.
+- Logos de tela não foram renderizados nesta subtarefa, conforme escopo que
+  reserva adaptação de `/login` e `/dashboard` para `002-06`. O contrato de
+  variante, alt, proporção, clear-space e tamanho mínimo permanece nesta task e
+  na spec.
+
+## Comandos executados
+
+- `npm run lint`
+- `npm exec next typegen`
+- `npx tsc --noEmit`
+- `npm run build`
+- `sips -g pixelWidth -g pixelHeight ...` e `file --brief --mime-type ...` nos
+  assets oficiais
+- `npm run start` com requisições HTTP aos assets e inspeção do `<head>` de
+  `/login`
+- Chrome headless com perfil limpo (`--user-data-dir`) para inspeção fresca do
+  `<head>` de `/login`
+- `git diff --check`
+
+## Resultados e evidências
+
+- Lint, geração de tipos, typecheck e build concluíram sem erros; build gerou
+  `/`, `/login`, `/dashboard` e `/_not-found` estáticos.
+- Dimensões reais confirmadas: favicons `16x16`, `32x32`, `48x48`, `64x64`,
+  `128x128`, `256x256`; app icon `512x512`; todos com MIME `image/png`.
+- Também confirmadas dimensões dos lockups: horizontal `979x285`, compact
+  `609x172`, stacked `719x463` e mark `512x512`, todos `image/png`.
+- Servidor local retornou `200` e `image/png` para os seis favicons e
+  `app-icon-light.png`.
+- `<head>` renderizado contém seis links `rel="icon"` em `/brand/...` e um
+  `rel="apple-touch-icon"` para `/brand/app-icon-light.png`; não contém
+  `/favicon.ico`.
+- Perfil Chrome limpo reproduziu os mesmos sete links e confirmou
+  `legacy favicon present: False`.
+- Chrome headless emitiu apenas warnings locais de `CVDisplayLink` do ambiente
+  macOS; a inspeção DOM terminou com sucesso.
+- `git diff --check` passou e somente `src/app/layout.tsx` e a remoção de
+  `src/app/favicon.ico`, além dos registros SDD em `docs/`, ficaram alterados;
+  `public/brand/` permaneceu intacto.
+
+## Riscos residuais
+
+- Uso visual de lockups, alt efetivo e validação de contraste em superfícies
+  reais permanecem em `002-06`, `002-07` e `002-09`.

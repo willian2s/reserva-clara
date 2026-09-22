@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [002-brand-integration-design-system-foundations.md](../../specs/002-brand-integration-design-system-foundations.md)
-- **Progresso:** 3/9 subtarefas concluídas
+- **Progresso:** 4/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -15,7 +15,7 @@ tipografia, tokens, assets, componentes e acessibilidade, usando `/login` e
 - [x] [002-01-integrar-inter.md](002-01-integrar-inter.md)
 - [x] [002-02-estabelecer-tokens-semanticos.md](002-02-estabelecer-tokens-semanticos.md)
 - [x] [002-03-estabelecer-foundations-globais.md](002-03-estabelecer-foundations-globais.md)
-- [ ] [002-04-integrar-assets-oficiais.md](002-04-integrar-assets-oficiais.md)
+- [x] [002-04-integrar-assets-oficiais.md](002-04-integrar-assets-oficiais.md)
 - [ ] [002-05-ajustar-componentes-fundamentais.md](002-05-ajustar-componentes-fundamentais.md)
 - [ ] [002-06-aplicar-foundations-as-telas.md](002-06-aplicar-foundations-as-telas.md)
 - [ ] [002-07-validar-acessibilidade.md](002-07-validar-acessibilidade.md)
@@ -41,3 +41,6 @@ tipografia, tokens, assets, componentes e acessibilidade, usando `/login` e
   financeiros integradas em `globals.css`; spacing e shadows continuam opt-in
   na escala Tailwind. Validação visual e teclado permanecem nas subtarefas
   próprias.
+- `002-04` concluída: metadata aponta para favicons oficiais e
+  `app-icon-light.png`, `src/app/favicon.ico` foi removido e dimensões/MIME dos
+  assets foram confirmados. Uso de lockups nas telas permanece em `002-06`.

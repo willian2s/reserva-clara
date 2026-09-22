@@ -226,7 +226,12 @@ Regras comuns: preservar proporção, não distorcer, não aplicar filtros, não
 recolorir, não aplicar gradiente/glow e não usar logo em tamanho que torne texto
 ilegível. Logo com função informativa recebe alt “Reserva Clara”; mark ao lado de
 nome já visível recebe `alt=""`. A implementação deve confirmar dimensões reais
-dos arquivos antes de preencher `width`/`height` de `next/image`.
+dos arquivos antes de preencher `width`/`height` de `next/image`. Para operação,
+reservar clear-space mínimo de uma altura do mark renderizado em cada lado do
+lockup ou mark e manter, como menor largura de uso, `180px` no horizontal,
+`140px` no compact, `128px` no stacked e `32px` no mark. O mark usado como
+controle deve continuar dentro de alvo interativo mínimo de `44px`; esses limites
+evitam perda de legibilidade e não substituem a validação visual da tela.
 
 ## Arquivos, módulos e contratos afetados
 
