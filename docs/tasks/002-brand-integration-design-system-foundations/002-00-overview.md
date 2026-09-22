@@ -1,8 +1,8 @@
 # 002 — Brand Integration & Design System Foundations
 
-- **Status geral:** in_progress
+- **Status geral:** completed
 - **Spec:** [002-brand-integration-design-system-foundations.md](../../specs/002-brand-integration-design-system-foundations.md)
-- **Progresso:** 8/9 subtarefas concluídas
+- **Progresso:** 9/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -20,7 +20,7 @@ tipografia, tokens, assets, componentes e acessibilidade, usando `/login` e
 - [x] [002-06-aplicar-foundations-as-telas.md](002-06-aplicar-foundations-as-telas.md)
 - [x] [002-07-validar-acessibilidade.md](002-07-validar-acessibilidade.md)
 - [x] [002-08-validar-checks-tecnicos.md](002-08-validar-checks-tecnicos.md)
-- [ ] [002-09-validar-visual-final.md](002-09-validar-visual-final.md)
+- [x] [002-09-validar-visual-final.md](002-09-validar-visual-final.md)
 
 ## Observações
 
@@ -53,3 +53,7 @@ tipografia, tokens, assets, componentes e acessibilidade, usando `/login` e
 - `002-07` concluída: contraste light mode, foco, teclado, alvos, estados de
   auth, semântica ARIA e alt dos assets foram validados; permanecem apenas os
   riscos residuais documentados na subtarefa, sem bloqueio de aceite.
+- `002-09` concluída: Chrome confirmou a matriz visual disponível, redirect sem
+  sessão e shell autenticado com a conta de teste disponível. Safari, Firefox,
+  Safari iOS e Chrome Android não estavam disponíveis; os riscos residuais
+  estão registrados na subtarefa.

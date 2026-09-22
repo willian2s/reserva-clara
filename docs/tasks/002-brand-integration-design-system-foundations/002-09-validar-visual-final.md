@@ -2,7 +2,7 @@
 
 - **Ticker:** `002`
 - **Número:** `09`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -87,3 +87,41 @@ explicitamente proibidas.
 - Não confundir `logo-light` com suporte dark.
 - Não aprovar `/` como branded; rota continua follow-up conhecido.
 - Não registrar dados pessoais, tokens Firebase ou credenciais nas evidências.
+
+## Registro de execução
+
+- **Arquivos alterados:** esta subtarefa e o overview `002-00-overview.md`.
+  Nenhum arquivo de implementação, asset, dependência ou lockfile foi
+  alterado. Screenshots foram mantidas somente em `/tmp`, fora do repositório.
+- **Decisões e desvios:** a validação foi feita com Chrome, único browser
+  desktop disponível no ambiente; Safari, Firefox, Safari iOS e Chrome Android
+  não estão disponíveis. Não foi feito ajuste visual improvisado. A conta
+  autenticada disponível no perfil Chrome permitiu comprovar o shell protegido
+  sem registrar identidade, dados ou credenciais.
+- **Validação visual:** Chrome headless confirmou `/login` em viewport desktop
+  `1440x900` e mobile `390x844`. As telas mostram lockup oficial, tagline,
+  Inter, fundo light, card discreto, borda sutil, controle legível e nenhuma
+  estética de trading, gradiente decorativo, glow ou glassmorphism. Evidências:
+  `/tmp/reserva-final-login-desktop.png`,
+  `/tmp/reserva-final-login-mobile.png` e
+  `/tmp/reserva-final-dashboard-redirect.png`.
+- **Branding e assets:** HTML carregado expõe título `Reserva Clara`, logo em
+  `/brand/logo-horizontal.png`, alt `Reserva Clara`, e fontes computadas como
+  `Inter`. Favicon/app icon foram encontrados no HTML via metadata; os sete
+  assets responderam `200` com `Content-Type: image/png` em janela limpa.
+- **Estados funcionais observados:** loading foi observado com
+  `Verificando sua sessão...`; estado normal ficou pronto com botão habilitado;
+  acesso sem sessão a `/dashboard` redirecionou para `/login`; e a sessão
+  autenticada disponível exibiu `/dashboard` com `Área protegida`, `Bem-vindo`
+  e `Seu espaço está pronto.`. O clique Google também foi observado no estado
+  `Abrindo login do Google...`; cancelamento, popup bloqueado e erro continuam
+  cobertos pelos handlers existentes e não foram forçados contra a sessão
+  autenticada para não encerrá-la.
+- **Comandos executados e resultados:** `npm run lint`,
+  `npm exec next typegen`, `npx tsc --noEmit` e `npm run build` passaram na
+  ordem exigida; o build confirmou `/login` e `/dashboard`.
+- **Riscos residuais:** Safari, Firefox, Safari iOS e Chrome Android não foram
+  executados por indisponibilidade no ambiente. Os estados de cancelamento,
+  popup bloqueado e erro não foram disparados novamente após a sessão
+  autenticada estar disponível; os handlers e mensagens permanecem registrados
+  na task de acessibilidade anterior.
