@@ -112,6 +112,8 @@ tipografia, radius, borders e comportamento de estados previsível.
 - A primeira tentativa de build foi bloqueada por configuração Firebase
   ausente; após disponibilização de `.env.local` no ambiente, o build foi
   repetido com sucesso. Nenhum componente foi alterado para contornar o erro.
+- Após validação manual, o Button recebeu `cursor-pointer`; o estado disabled
+  mantém `cursor-not-allowed` e `pointer-events-none`.
 
 ## Comandos executados
 
@@ -121,6 +123,9 @@ tipografia, radius, borders e comportamento de estados previsível.
 - `npm run build`
 - `git diff --check`
 - Revisão independente do diff por agente de review.
+- Reteste completo após ajuste de cursor: `npm run lint`,
+  `npm exec next typegen`, `npx tsc --noEmit`, `npm run build` e
+  `git diff --check`.
 
 ## Resultados e evidências
 
@@ -131,6 +136,8 @@ tipografia, radius, borders e comportamento de estados previsível.
 - `git diff --check`: passou sem whitespace inválido.
 - `npm run build`: passou; compilou e prerenderizou `/`, `/login`, `/dashboard`
   e `/_not-found`.
+- Reteste do cursor: `cursor-pointer` está presente no Button e o override
+  `disabled:cursor-not-allowed` permanece preservado.
 - Review independente não encontrou achados concretos no diff e confirmou a
   preservação de CVA, Base UI, `cn`, `data-slot`, variants e contratos.
 
