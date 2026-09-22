@@ -2,7 +2,7 @@
 
 - **Ticker:** `002`
 - **Número:** `05`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -88,3 +88,53 @@ tipografia, radius, borders e comportamento de estados previsível.
 - Não ocultar foco para obter aparência minimalista.
 - Não tratar opacity isolada como comunicação suficiente de disabled/error.
 - Não adicionar API de loading que nenhum consumidor usa.
+
+## Arquivos alterados
+
+- `src/components/ui/button.tsx`: variants, estados, foco, radius, tipografia e
+  tamanhos de controle alinhados aos tokens semânticos.
+- `src/components/ui/card.tsx`: surface, border, radius, sombra discreta e
+  hierarquia do título ajustados; subcomponentes e `data-slot` preservados.
+- `src/components/ui/input.tsx`: altura/radius compartilhados, tipografia,
+  foco, disabled e estado `aria-invalid` ajustados com tokens semânticos.
+- `src/components/ui/label.tsx`: tipografia, foreground e estados disabled
+  derivados de `group`/`peer` ajustados.
+
+## Decisões e desvios
+
+- Reutilizados `rounded-control`, `rounded-card`, `border-border`, `ring` e os
+  aliases tipográficos existentes; nenhum token novo, hex ou API pública foi
+  criado.
+- O tamanho default do Button passou para `h-10` e o `lg` para `h-11`; os
+  tamanhos compactos explícitos e os nomes das variants foram preservados.
+- O carregamento continua sendo responsabilidade do consumidor: `GoogleSignIn`
+  segue usando `disabled` e `aria-busy`, sem spinner ou prop nova.
+- A primeira tentativa de build foi bloqueada por configuração Firebase
+  ausente; após disponibilização de `.env.local` no ambiente, o build foi
+  repetido com sucesso. Nenhum componente foi alterado para contornar o erro.
+
+## Comandos executados
+
+- `npm run lint`
+- `npm exec next typegen`
+- `npx tsc --noEmit`
+- `npm run build`
+- `git diff --check`
+- Revisão independente do diff por agente de review.
+
+## Resultados e evidências
+
+- `npm run lint`: passou sem erros.
+- `npm exec next typegen`: `Types generated successfully`.
+- `npx tsc --noEmit`: passou sem erros; o build também concluiu a etapa de
+  TypeScript antes do prerender.
+- `git diff --check`: passou sem whitespace inválido.
+- `npm run build`: passou; compilou e prerenderizou `/`, `/login`, `/dashboard`
+  e `/_not-found`.
+- Review independente não encontrou achados concretos no diff e confirmou a
+  preservação de CVA, Base UI, `cn`, `data-slot`, variants e contratos.
+
+## Riscos residuais
+
+- Inspeção visual interativa, teclado e matriz completa de acessibilidade ficam
+  para as subtarefas `002-07` e `002-09`.

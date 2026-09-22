@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [002-brand-integration-design-system-foundations.md](../../specs/002-brand-integration-design-system-foundations.md)
-- **Progresso:** 4/9 subtarefas concluídas
+- **Progresso:** 5/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -16,7 +16,7 @@ tipografia, tokens, assets, componentes e acessibilidade, usando `/login` e
 - [x] [002-02-estabelecer-tokens-semanticos.md](002-02-estabelecer-tokens-semanticos.md)
 - [x] [002-03-estabelecer-foundations-globais.md](002-03-estabelecer-foundations-globais.md)
 - [x] [002-04-integrar-assets-oficiais.md](002-04-integrar-assets-oficiais.md)
-- [ ] [002-05-ajustar-componentes-fundamentais.md](002-05-ajustar-componentes-fundamentais.md)
+- [x] [002-05-ajustar-componentes-fundamentais.md](002-05-ajustar-componentes-fundamentais.md)
 - [ ] [002-06-aplicar-foundations-as-telas.md](002-06-aplicar-foundations-as-telas.md)
 - [ ] [002-07-validar-acessibilidade.md](002-07-validar-acessibilidade.md)
 - [ ] [002-08-validar-checks-tecnicos.md](002-08-validar-checks-tecnicos.md)
@@ -44,3 +44,7 @@ tipografia, tokens, assets, componentes e acessibilidade, usando `/login` e
 - `002-04` concluída: metadata aponta para favicons oficiais e
   `app-icon-light.png`, `src/app/favicon.ico` foi removido e dimensões/MIME dos
   assets foram confirmados. Uso de lockups nas telas permanece em `002-06`.
+- `002-05` concluída após reteste: a primeira execução ficou bloqueada por
+  `auth/invalid-api-key` sem configuração Firebase válida; com `.env.local`
+  disponível no ambiente, lint, typegen, typecheck e build passaram. Segredos
+  não foram registrados no repositório.
