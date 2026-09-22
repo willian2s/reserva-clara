@@ -8,12 +8,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-## Structure
+## Project
 
-- Single npm package; `package-lock.json` is authoritative. App Router entrypoints live in `src/app`; `@/*` maps to `src/*`.
+- Use npm; this is a single package and `package-lock.json` is authoritative. App Router entrypoints are under `src/app`; `@/*` resolves to `src/*`.
 - `src/components/ui` uses shadcn `base-nova` with Base UI and RSC. Generate additions with `npx shadcn add <component>`; do not copy another shadcn style.
 - Tailwind 4 is CSS-first. Theme and imports belong in `src/app/globals.css`; no Tailwind config exists.
-- Firebase browser setup belongs in `src/lib/firebase/client.ts`. Copy `.env.example` to ignored `.env.local` and provide its `NEXT_PUBLIC_FIREBASE_*` values before exercising auth.
+- Auth is currently browser-only: `src/lib/firebase/client.ts` initializes Firebase, and the auth components observe client state and redirect. `/dashboard` has no server-side authorization boundary; do not treat `DashboardGate` as access control for sensitive data.
+- Copy `.env.example` to ignored `.env.local` and provide its `NEXT_PUBLIC_FIREBASE_*` values before exercising Google sign-in.
 
 ## Commands
 
@@ -25,4 +26,4 @@ npm exec next typegen && npx tsc --noEmit
 npm run build
 ```
 
-Run type generation before TypeScript checks; generated route helpers such as `LayoutProps` depend on it. No test runner or formatter is configured.
+Run type generation before TypeScript checks; global route helpers such as `LayoutProps` are generated. No test runner, formatter, CI workflow, or pre-commit hook is configured.
