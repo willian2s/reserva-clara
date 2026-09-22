@@ -2,7 +2,7 @@
 
 - **Ticker:** `003`
 - **Número:** `01`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -101,3 +101,75 @@ projeto Next.js distinga a superfície pública da aplicação sem alterar os pa
 - Não aceitar qualquer subdomínio `*.reservaclara.com.br` como produção.
 - Não ativar DNS/TLS ou testar a existência de domínio como se fosse entregue
   nesta fase.
+
+## Registro da implementação
+
+### Status
+
+`completed`
+
+### Arquivos alterados
+
+- `src/proxy.ts`: normalização/classificação centralizada de host, matriz de
+  redirects e matcher restrito a documentos.
+- `src/app/(marketing)/page.tsx`: movimentação temporária da página raiz para o
+  grupo de marketing, sem alterar o conteúdo da landing nesta subtarefa.
+- `src/app/(app)/login/page.tsx`: movimentação da página de login preservando
+  imports e contrato de autenticação.
+- `src/app/(app)/dashboard/page.tsx`: movimentação da página de dashboard
+  preservando `DashboardGate`.
+- Removidos os antigos `src/app/page.tsx`, `src/app/login/page.tsx` e
+  `src/app/dashboard/page.tsx` para evitar rotas duplicadas.
+
+### Decisões e desvios
+
+- O proxy lê o header `Host`, com fallback para `request.nextUrl.hostname`,
+  porque isso permite validar a topologia com Host headers e mantém a
+  classificação em um único ponto.
+- O redirect do app `/` usa uma URL absoluta same-origin. A implementação do
+  Proxy do Next.js 16 rejeita `Location` relativo durante a serialização da
+  resposta; o destino continua fixo em `/login`, sem query, `returnTo` ou host
+  controlado pelo usuário.
+- `X-Robots-Tag` foi incluído para localhost e previews conforme a matriz; a
+  metadata de rota permanece para a task 003-04.
+- A landing continua sendo o template temporário existente; copy, visual e
+  metadata final permanecem nas subtarefas seguintes.
+
+### Comandos executados
+
+```bash
+npm run lint
+npm exec next typegen
+npx tsc --noEmit
+npm run build
+```
+
+Também foi executado smoke HTTP com `npm start -- --hostname 127.0.0.1
+--port 3100` e `curl` usando headers `Host`.
+
+### Resultados e evidências
+
+- Lint, geração de tipos, typecheck e build passaram nessa ordem.
+- O build reconheceu `/`, `/login`, `/dashboard` e `ƒ Proxy (Middleware)`.
+- Smoke HTTP observou: público `/` `200`; público `/login` e `/dashboard`
+  `307` para `https://app.reservaclara.com.br`; app `/` `307` same-origin para
+  `/login`; app `/login` `200`; `www` `308` para o público; localhost e
+  `*.vercel.app` `200` same-origin com `X-Robots-Tag: noindex, nofollow`;
+  host desconhecido `404`.
+- Host em maiúsculas, ponto final, porta local e loopback IPv6 foram
+  normalizados corretamente.
+- Query `returnTo` não foi transportada no redirect público→app.
+- Requests de `/brand/logo-horizontal.png`, `/_next/static/*`, `/_next/image`,
+  favicon e `/api/*` não receberam redirect do proxy.
+- `src/proxy.ts` não importa Firebase, auth ou componentes de autorização;
+  `GoogleSignIn`, `DashboardGate`, root layout e `next.config.ts` foram
+  preservados.
+
+### Riscos residuais
+
+- A separação por host é routing, não autorização; o dashboard continua sem
+  fronteira server-side e sem dados sensíveis.
+- DNS, TLS, Vercel, `www` efetivo e Firebase Authorized Domains continuam
+  adiados para a fase 004.
+- A validação foi feita com servidor local e Host headers simulados; não prova
+  configuração real de infraestrutura nem o fluxo OAuth em domínio produtivo.

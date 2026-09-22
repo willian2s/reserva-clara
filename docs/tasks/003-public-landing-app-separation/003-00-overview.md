@@ -1,8 +1,8 @@
 # 003 — Public Landing & App Separation
 
-- **Status geral:** pending
+- **Status geral:** in_progress
 - **Spec:** [003-public-landing-app-separation.md](../../specs/003-public-landing-app-separation.md)
-- **Progresso:** 0/8 subtarefas concluídas
+- **Progresso:** 1/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -13,7 +13,7 @@ foundations da fase 002.
 
 ## Checklist
 
-- [ ] [003-01-estabelecer-fronteira-public-app.md](003-01-estabelecer-fronteira-public-app.md)
+- [x] [003-01-estabelecer-fronteira-public-app.md](003-01-estabelecer-fronteira-public-app.md)
 - [ ] [003-02-estruturar-landing-v1.md](003-02-estruturar-landing-v1.md)
 - [ ] [003-03-integrar-cta-e-navegacao.md](003-03-integrar-cta-e-navegacao.md)
 - [ ] [003-04-estabelecer-metadata-seo.md](003-04-estabelecer-metadata-seo.md)
@@ -37,3 +37,8 @@ foundations da fase 002.
 - A documentação local do Next indicada por `AGENTS.md` não está disponível no
   checkout; a decisão foi conferida na documentação oficial da versão instalada
   e deve ser validada pelos checks do pacote durante a implementação.
+- A subtarefa 003-01 foi concluída com os quatro gates técnicos e smoke HTTP da
+  matriz de hosts. O app `/` usa redirect absoluto same-origin, pois o Proxy
+  do Next.js 16 rejeita `Location` relativo; o path e o destino permanecem
+  fixos. A landing final, metadata, regressão auth e validação visual continuam
+  nas subtarefas específicas.
