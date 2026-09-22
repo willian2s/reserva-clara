@@ -2,7 +2,7 @@
 
 - **Ticker:** `002`
 - **Número:** `02`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -92,3 +92,50 @@ tokens semânticos e não hex inline.
   base-nova.
 - Não resolver contraste alterando cor oficial; ajustar papel semântico.
 - Não inserir `success`/`warning` por completude abstrata.
+
+## Arquivos alterados
+
+- `src/app/globals.css`: brand tokens oficiais, semântica light shadcn/base-nova,
+  aliases Tailwind para estados financeiros e valores derivados de contraste.
+
+## Decisões e desvios
+
+- `primary` usa Deep Navy; `accent` usa Emerald; nenhum dos dois é alias de
+  `positive`.
+- `positive` e `negative` usam valores semânticos derivados, separados de
+  `destructive`; `negative` usa tom berry-red distinto do vermelho de erro. Não
+  foram adicionados `success` ou `warning`.
+- `muted-foreground` usa `oklch(0.4 0.03 255)` (fallback compilado
+  `#3D4958`) para superar AA sem alterar Slate Gray oficial.
+- `input` usa Slate Gray oficial para manter borda de campo perceptível; `border`
+  permanece Cool Gray sutil e `ring` usa Deep Navy.
+- `.dark`, tokens chart/sidebar e componentes TSX permaneceram sem alteração.
+
+## Comandos executados
+
+- `npm run lint`
+- `npm exec next typegen`
+- `npx tsc --noEmit`
+- `npm run build`
+- `git diff --check`
+- Inspeção do CSS compilado em `.next/static/chunks/*.css`.
+- Cálculo manual de contraste WCAG para papéis light derivados.
+
+## Resultados e evidências
+
+- Lint, geração de tipos, typecheck e build concluíram sem erros; build gerou
+  `/`, `/login`, `/dashboard` e `/_not-found` estáticos.
+- CSS compilado contém os cinco valores oficiais em `--brand-*`, aliases
+  `--positive`/`--negative` e utilities semânticas `text-positive`.
+- Valores oficiais permaneceram byte-a-byte iguais: `#0D1B2A`, `#10B981`,
+  `#64748B`, `#E5E7EB` e `#F7F8FA`.
+- Contraste calculado: Deep Navy/Off White `16.37:1`, derived muted/Cool Gray
+  `7.40:1`, Slate/Input/Off White `4.48:1`, Navy/Emerald `6.86:1`, white/
+  positive `7.06:1` e white/negative `8.09:1`.
+- Nenhum componente TSX ou asset foi alterado; nenhum hex novo foi introduzido
+  em componentes.
+
+## Riscos residuais
+
+- Validação visual interativa e matriz completa de acessibilidade permanecem nas
+  subtarefas 002-07 e 002-09; checks automatizáveis desta subtarefa passaram.

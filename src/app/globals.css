@@ -28,6 +28,10 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-negative-foreground: var(--negative-foreground);
+  --color-negative: var(--negative);
+  --color-positive-foreground: var(--positive-foreground);
+  --color-positive: var(--positive);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -50,24 +54,37 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* Brand identity tokens. Semantic roles below must own UI meaning. */
+  --brand-deep-navy: #0D1B2A;
+  --brand-emerald: #10B981;
+  --brand-slate-gray: #64748B;
+  --brand-cool-gray: #E5E7EB;
+  --brand-off-white: #F7F8FA;
+
+  /* Light semantic tokens. Emerald remains an accent, not a financial state. */
+  --background: var(--brand-off-white);
+  --foreground: var(--brand-deep-navy);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
+  --card-foreground: var(--brand-deep-navy);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --popover-foreground: var(--brand-deep-navy);
+  --primary: var(--brand-deep-navy);
+  --primary-foreground: var(--brand-off-white);
+  --secondary: var(--brand-cool-gray);
+  --secondary-foreground: var(--brand-deep-navy);
+  --muted: var(--brand-cool-gray);
+  --muted-foreground: oklch(0.4 0.03 255);
+  --accent: var(--brand-emerald);
+  --accent-foreground: var(--brand-deep-navy);
+  --destructive: oklch(0.45 0.18 25);
+  --border: var(--brand-cool-gray);
+  --input: var(--brand-slate-gray);
+  --ring: var(--brand-deep-navy);
+  /* Financial states stay separate from accent, primary and UI errors. */
+  --positive: oklch(0.45 0.14 160);
+  --positive-foreground: oklch(1 0 0);
+  --negative: oklch(0.45 0.14 350);
+  --negative-foreground: oklch(1 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);

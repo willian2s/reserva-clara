@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [002-brand-integration-design-system-foundations.md](../../specs/002-brand-integration-design-system-foundations.md)
-- **Progresso:** 1/9 subtarefas concluídas
+- **Progresso:** 2/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -13,7 +13,7 @@ tipografia, tokens, assets, componentes e acessibilidade, usando `/login` e
 ## Checklist
 
 - [x] [002-01-integrar-inter.md](002-01-integrar-inter.md)
-- [ ] [002-02-estabelecer-tokens-semanticos.md](002-02-estabelecer-tokens-semanticos.md)
+- [x] [002-02-estabelecer-tokens-semanticos.md](002-02-estabelecer-tokens-semanticos.md)
 - [ ] [002-03-estabelecer-foundations-globais.md](002-03-estabelecer-foundations-globais.md)
 - [ ] [002-04-integrar-assets-oficiais.md](002-04-integrar-assets-oficiais.md)
 - [ ] [002-05-ajustar-componentes-fundamentais.md](002-05-ajustar-componentes-fundamentais.md)
@@ -34,3 +34,6 @@ tipografia, tokens, assets, componentes e acessibilidade, usando `/login` e
   tarefas de validação permanecem desmarcadas enquanto houver bloqueio.
 - `002-01` concluída: Inter integrada no layout, aliases tipográficos corrigidos
   e checks técnicos aprovados.
+- `002-02` concluída: brand tokens oficiais e semantic tokens light integrados em
+  `globals.css`; contraste derivado registrado na task. Validação visual ampla
+  permanece nas subtarefas próprias.
