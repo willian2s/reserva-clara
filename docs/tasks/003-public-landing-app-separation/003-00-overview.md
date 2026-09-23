@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [003-public-landing-app-separation.md](../../specs/003-public-landing-app-separation.md)
-- **Progresso:** 6/8 subtarefas concluídas
+- **Progresso:** 7/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -19,7 +19,7 @@ foundations da fase 002.
 - [x] [003-04-estabelecer-metadata-seo.md](003-04-estabelecer-metadata-seo.md)
 - [x] [003-05-validar-responsividade-acessibilidade.md](003-05-validar-responsividade-acessibilidade.md)
 - [x] [003-06-preservar-regressao-auth.md](003-06-preservar-regressao-auth.md)
-- [ ] [003-07-executar-checks-tecnicos.md](003-07-executar-checks-tecnicos.md)
+- [x] [003-07-executar-checks-tecnicos.md](003-07-executar-checks-tecnicos.md)
 - [ ] [003-08-validar-topologia-local-preview.md](003-08-validar-topologia-local-preview.md)
 
 ## Observações
@@ -61,3 +61,8 @@ foundations da fase 002.
   impediu sua abertura; popup bloqueado, erro/retry e acessibilidade manual
   não foram exaustivamente reproduzidos, sem bloquear conclusão dos cenários
   essenciais.
+- A subtarefa 003-07 foi concluída: `npm run lint`, `npm exec next typegen`,
+  `npx tsc --noEmit` e `npm run build` passaram nessa ordem. Build reconheceu
+  `/`, `/login`, `/dashboard` e `ƒ Proxy (Middleware)`; não houve warning
+  material. Nenhum package, lockfile ou asset foi alterado. A matriz HTTP de
+  hosts e assets permanece para 003-08.
