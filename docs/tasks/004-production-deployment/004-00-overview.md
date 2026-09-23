@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [004-production-deployment.md](../../specs/004-production-deployment.md)
-- **Progresso:** 5/9 subtarefas concluídas
+- **Progresso:** 6/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -17,7 +17,7 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
 - [x] [004-03-configurar-environment-variables.md](004-03-configurar-environment-variables.md)
 - [x] [004-04-configurar-dominios-dns-tls.md](004-04-configurar-dominios-dns-tls.md)
 - [x] [004-05-configurar-firebase-auth-producao.md](004-05-configurar-firebase-auth-producao.md)
-- [ ] [004-06-validar-topologia-real.md](004-06-validar-topologia-real.md)
+- [x] [004-06-validar-topologia-real.md](004-06-validar-topologia-real.md)
 - [ ] [004-07-validar-google-sign-in-producao.md](004-07-validar-google-sign-in-producao.md)
 - [ ] [004-08-validar-previews-e-seguranca.md](004-08-validar-previews-e-seguranca.md)
 - [ ] [004-09-fechar-gates-e-rollback.md](004-09-fechar-gates-e-rollback.md)
@@ -69,7 +69,13 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
    progresso `4/9`. Riscos residuais permanecem documentados na task e
    decisão 004.
    - 004-05 concluída em 2026-09-23: confirmação humana posterior revalidou
-     `app.reservaclara.com.br` no Authorized Domains, popup nominal em contexto
-     sem sessão e remoção de `reservaclara.com.br`. Sem wildcard de preview e
-     sem alteração de `authDomain`. OAuth nominal completo e matriz de erros
-     permanecem em 004-07. Progresso `5/9`.
+   `app.reservaclara.com.br` no Authorized Domains, popup nominal em contexto
+   sem sessão e remoção de `reservaclara.com.br`. Sem wildcard de preview e
+   sem alteração de `authDomain`. OAuth nominal completo e matriz de erros
+   permanecem em 004-07. Progresso `5/9`.
+   - 004-06 concluída em 2026-09-23: matriz pública HTTP/HTTPS, cadeias de
+     redirect, DNS, TLS, metadata, robots, assets, RSC e CTA browser passaram.
+     Host desconhecido é rejeitado pelo edge antes do proxy; `robots.txt`,
+     `sitemap.xml` e `/favicon.ico` não são publicados, enquanto metadata robots
+     e ícones PNG oficiais passam. OAuth nominal permanece em 004-07. Progresso
+     `6/9`.
