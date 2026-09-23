@@ -2,7 +2,7 @@
 
 - **Ticker:** `003`
 - **Número:** `04`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -100,3 +100,77 @@ localhost e previews não são tratados como conteúdo público indexável.
 - Uma imagem OG inadequada pode ser pior que não ter imagem; validar
   `logo-horizontal.png` antes de adotá-la e não inventar um card financeiro.
 - Não marcar preview como indexável mesmo que o HTML da landing seja válido.
+
+## Registro da implementação
+
+### Status
+
+`completed`
+
+### Arquivos alterados
+
+- `src/app/(marketing)/layout.tsx`: metadata estática da landing com title,
+  description, canonical absoluta e Open Graph `website` em `pt_BR`.
+- `src/app/(app)/layout.tsx`: metadata própria da aplicação com title,
+  description e `robots: noindex, nofollow`.
+- `docs/tasks/003-public-landing-app-separation/003-04-estabelecer-metadata-seo.md`:
+  registro desta implementação.
+- `docs/tasks/003-public-landing-app-separation/003-00-overview.md`: checklist e
+  progresso atualizados.
+
+### Decisões e desvios
+
+- A metadata foi definida em layouts dos route groups para impedir que a
+  canonical pública seja herdada pela aplicação. O root layout permaneceu com
+  os favicons e Apple icon oficiais já declarados.
+- `openGraph.images` não foi incluído: não há card OG dedicado validado, e não
+  foi inventada arte nem usado asset inadequado como substituto.
+- O `X-Robots-Tag` de localhost e preview já estava centralizado em
+  `src/proxy.ts`, conforme 003-01; foi validado sem duplicar checks em páginas ou
+  layouts.
+- A primeira tentativa usou `LayoutProps<"/login">` no layout do grupo app, mas
+  o typegen desta topologia aceita somente `"/"`; o layout passou a tipar
+  `children` com `ReactNode`, sem alterar contrato de rota.
+
+### Comandos executados
+
+```bash
+git diff --check
+npm run lint
+npm exec next typegen
+npx tsc --noEmit
+npm run build
+```
+
+Também foi executado smoke HTTP com `npm start -- --hostname 127.0.0.1
+--port 3117` e parser HTML com headers `Host` simulando produção, app,
+localhost e preview.
+
+### Resultados e evidências
+
+- A primeira execução encadeada parou no typecheck por `LayoutProps<"/login">`;
+  após a correção de tipo, lint, typegen, typecheck e build passaram na ordem
+  exigida.
+- O build reconheceu `/`, `/login`, `/dashboard` e `ƒ Proxy (Middleware)`.
+- No host público, `/` retornou `200` com title, description, canonical
+  `https://reservaclara.com.br/`, `og:url` igual à canonical, locale `pt_BR`,
+  tipo `website`, site name e ícones oficiais.
+- No host app, `/login` e `/dashboard` retornaram `200`, sem canonical ou OG
+  público, com `<meta name="robots" content="noindex, nofollow">`.
+- Localhost e `foo.vercel.app` retornaram `X-Robots-Tag: noindex, nofollow`;
+  o host público não retornou esse header. Público `/login` retornou `307` para
+  `https://app.reservaclara.com.br/login`.
+- Não existe `src/app/favicon.ico`; os seis favicons PNG e o Apple icon do root
+  continuaram presentes.
+- Revisão independente da subtarefa aprovou implementação sem achados blocker,
+  major ou minor.
+
+### Riscos residuais
+
+- A landing local/preview mantém canonical estática pública, mas recebe
+  `X-Robots-Tag: noindex, nofollow`; canonical dinâmica por host está
+  explicitamente fora do escopo.
+- Não foi adotada imagem OG dedicada; compartilhamento usa metadata textual e
+  os ícones oficiais permanecem disponíveis.
+- DNS, TLS, deploy e validação OAuth em domínio produtivo continuam fora desta
+  subtarefa.

@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [003-public-landing-app-separation.md](../../specs/003-public-landing-app-separation.md)
-- **Progresso:** 3/8 subtarefas concluídas
+- **Progresso:** 4/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -16,7 +16,7 @@ foundations da fase 002.
 - [x] [003-01-estabelecer-fronteira-public-app.md](003-01-estabelecer-fronteira-public-app.md)
 - [x] [003-02-estruturar-landing-v1.md](003-02-estruturar-landing-v1.md)
 - [x] [003-03-integrar-cta-e-navegacao.md](003-03-integrar-cta-e-navegacao.md)
-- [ ] [003-04-estabelecer-metadata-seo.md](003-04-estabelecer-metadata-seo.md)
+- [x] [003-04-estabelecer-metadata-seo.md](003-04-estabelecer-metadata-seo.md)
 - [ ] [003-05-validar-responsividade-acessibilidade.md](003-05-validar-responsividade-acessibilidade.md)
 - [ ] [003-06-preservar-regressao-auth.md](003-06-preservar-regressao-auth.md)
 - [ ] [003-07-executar-checks-tecnicos.md](003-07-executar-checks-tecnicos.md)
@@ -40,5 +40,8 @@ foundations da fase 002.
 - A subtarefa 003-01 foi concluída com os quatro gates técnicos e smoke HTTP da
   matriz de hosts. O app `/` usa redirect absoluto same-origin, pois o Proxy
   do Next.js 16 rejeita `Location` relativo; o path e o destino permanecem
-  fixos. A landing final, metadata, regressão auth e validação visual continuam
-  nas subtarefas específicas.
+  fixos. A landing final, regressão auth e validação visual continuam nas
+  subtarefas específicas.
+- A subtarefa 003-04 foi concluída: metadata pública estática ficou restrita ao
+  grupo marketing, app recebeu `noindex, nofollow`, ícones oficiais foram
+  preservados e localhost/preview mantêm `X-Robots-Tag` centralizado no proxy.
