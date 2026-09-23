@@ -6,7 +6,7 @@
 
 ## Status
 
-`planned`
+`completed`
 
 ## Contexto
 
@@ -304,11 +304,12 @@ Referências de partida, a conferir novamente durante execução:
 - [Cloudflare DNS records](https://developers.cloudflare.com/dns/manage-dns-records/how-to/create-dns-records/)
 - [Cloudflare SSL modes](https://developers.cloudflare.com/ssl/origin-configuration/ssl-modes/)
 
-Não existe decision document novo nesta etapa: Vercel + Cloudflare + Firebase
-continuam decisões de infraestrutura fornecidas pelo pedido, e o modo efetivo
-de proxy/TLS e a allowlist de previews dependem de confirmação oficial e do
-estado real das contas. Se essa confirmação mudar a topologia ou a fronteira
-de confiança, criar decision document antes da mudança externa. A decision
+No início do planejamento não havia decision document novo: Vercel + Cloudflare
+e Firebase eram decisões de infraestrutura fornecidas pelo pedido, e o modo
+efetivo de proxy/TLS e a allowlist de previews dependiam de confirmação oficial
+e do estado real das contas. A execução confirmou a configuração efetiva e
+registrou a decisão operacional em
+`docs/decisions/004-cloudflare-proxied-vercel.md`; a decisão
 `docs/decisions/003-separacao-host-publico-app.md` continua sendo autoridade
 para o contrato do `src/proxy.ts`.
 
@@ -527,7 +528,10 @@ checkpoint de OAuth.
 8. [004-08-validar-previews-e-seguranca.md](../tasks/004-production-deployment/004-08-validar-previews-e-seguranca.md) — validar previews, noindex, escopo de Firebase e segurança mínima.
 9. [004-09-fechar-gates-e-rollback.md](../tasks/004-production-deployment/004-09-fechar-gates-e-rollback.md) — executar gates finais, consolidar evidências e fechar rollback.
 
-## Premissas explícitas e decisões pendentes
+## Premissas explícitas e decisões pendentes no início do planejamento
+
+As premissas abaixo registram o estado anterior à execução. O estado final e as
+evidências estão nas subtasks `004-01` a `004-09` e no overview da fase.
 
 - `004` foi informado explicitamente e é preservado como ticker.
 - O domínio `reservaclara.com.br` é controlado por Cloudflare, mas nenhum

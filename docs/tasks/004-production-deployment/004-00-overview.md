@@ -1,8 +1,8 @@
 # 004 — Production Deployment
 
-- **Status geral:** in_progress
+- **Status geral:** completed
 - **Spec:** [004-production-deployment.md](../../specs/004-production-deployment.md)
-- **Progresso:** 8/9 subtarefas concluídas
+- **Progresso:** 9/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -20,7 +20,7 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
 - [x] [004-06-validar-topologia-real.md](004-06-validar-topologia-real.md)
 - [x] [004-07-validar-google-sign-in-producao.md](004-07-validar-google-sign-in-producao.md)
 - [x] [004-08-validar-previews-e-seguranca.md](004-08-validar-previews-e-seguranca.md)
-- [ ] [004-09-fechar-gates-e-rollback.md](004-09-fechar-gates-e-rollback.md)
+- [x] [004-09-fechar-gates-e-rollback.md](004-09-fechar-gates-e-rollback.md)
 
 ## Observações
 
@@ -92,3 +92,12 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
   deployment `Production`/`main`. Gates locais, env ignorado, ausência de
   BRAPI/Admin e dashboard não sensível foram conferidos. OAuth Preview ficou
   restrito ao hostname exato, sem wildcard. Item `[x]`; progresso `8/9`.
+- 004-09 concluída em 2026-09-23: gates lint → typegen → typecheck → build
+  passaram novamente; `git diff --check` passou e não há alteração de código,
+  env ou dependência. Evidências de Vercel, DNS, TLS, HTTP, OAuth, preview e
+  segurança foram consolidadas nas tasks anteriores. Rollback reproduzível foi
+  documentado para deployment, variables, DNS/domínios e Firebase; nenhum
+  rollback destrutivo foi necessário. Item `[x]`; progresso `9/9`.
+- Fase encerrada após checkpoint humano produtivo; limitações de popup
+  bloqueado e erro/retry seguem registradas como riscos residuais, não como
+  gates pendentes.
