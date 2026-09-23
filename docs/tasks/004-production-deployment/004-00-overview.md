@@ -1,8 +1,8 @@
 # 004 — Production Deployment
 
-- **Status geral:** pending
+- **Status geral:** in_progress
 - **Spec:** [004-production-deployment.md](../../specs/004-production-deployment.md)
-- **Progresso:** 3/9 subtarefas concluídas
+- **Progresso:** 4/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -15,7 +15,7 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
 - [x] [004-01-preparar-baseline-oficial.md](004-01-preparar-baseline-oficial.md)
 - [x] [004-02-conectar-vercel-e-publicar-preview.md](004-02-conectar-vercel-e-publicar-preview.md)
 - [x] [004-03-configurar-environment-variables.md](004-03-configurar-environment-variables.md)
-- [ ] [004-04-configurar-dominios-dns-tls.md](004-04-configurar-dominios-dns-tls.md)
+- [x] [004-04-configurar-dominios-dns-tls.md](004-04-configurar-dominios-dns-tls.md)
 - [ ] [004-05-configurar-firebase-auth-producao.md](004-05-configurar-firebase-auth-producao.md)
 - [ ] [004-06-validar-topologia-real.md](004-06-validar-topologia-real.md)
 - [ ] [004-07-validar-google-sign-in-producao.md](004-07-validar-google-sign-in-producao.md)
@@ -53,9 +53,18 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
   SSO sem sessão. Preview branch específico não foi evidenciado; smoke e
    política de proteção ficam para 004-08. Não registrar valores de environment
    variables; configuração de env pertence à 004-03.
-  - 004-03 concluída em 2026-09-23: confirmação humana registra os sete nomes em
-    `Production and Preview`; variables foram configuradas durante a conexão,
-    antes do deployment inicial. Smoke no Chrome confirmou página, chaves, login
-    e redirecionamento. Nenhum valor, token ou `.env.local` foi solicitado ou
-    registrado; checklist `[x]` e progresso `3/9`. OAuth em Preview dinâmico não
-    é assumido.
+   - 004-03 concluída em 2026-09-23: confirmação humana registra os sete nomes em
+     `Production and Preview`; variables foram configuradas durante a conexão,
+     antes do deployment inicial. Smoke no Chrome confirmou página, chaves, login
+     e redirecionamento. Nenhum valor, token ou `.env.local` foi solicitado ou
+     registrado; checklist `[x]` e progresso `3/9`. OAuth em Preview dinâmico não
+     é assumido.
+   - 004-04 concluída em 2026-09-23: três hosts associados ao mesmo projeto
+     Vercel; Cloudflare Proxied e SSL/TLS Full (strict) aplicados; snapshot final,
+     regras sem customizações, smoke público, ACME probe, redirects,
+     confirmação visual de TLS e logs por host passaram. Revisão independente
+     final aprovou após follow-up HTTP→HTTPS em app `/dashboard` e rotulagem da
+     captura apex antiga como intermediária. Rollback foi documentado como
+     desligar Proxied nos três records web, preservando targets. Item `[x]`;
+     progresso `4/9`. Riscos residuais permanecem documentados na task e
+     decisão 004.

@@ -2,11 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { buttonVariants } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 export default function Home() {
   return (
@@ -116,7 +112,9 @@ export default function Home() {
                       className="size-full"
                     />
                   </span>
-                  <span className="min-w-0 break-words">Clareza para o caminho</span>
+                  <span className="min-w-0 break-words">
+                    Clareza para o caminho
+                  </span>
                 </div>
                 <div>
                   <h2 className="font-heading text-2xl leading-tight font-semibold text-primary-foreground sm:text-3xl">
@@ -181,7 +179,9 @@ export default function Home() {
                 <p className="mb-4 text-sm font-semibold text-muted-foreground">
                   Visão do todo
                 </p>
-                <h3 className="max-w-xs text-xl">Entenda o que faz parte da sua jornada.</h3>
+                <h3 className="max-w-xs text-xl">
+                  Entenda o que faz parte da sua jornada.
+                </h3>
                 <p className="mt-4 max-w-sm text-muted-foreground">
                   Reúna perspectivas importantes para enxergar seu patrimônio
                   sem perder de vista os seus objetivos.
@@ -191,7 +191,9 @@ export default function Home() {
                 <p className="mb-4 text-sm font-semibold text-muted-foreground">
                   Organização contínua
                 </p>
-                <h3 className="max-w-xs text-xl">Tenha um lugar para acompanhar o caminho.</h3>
+                <h3 className="max-w-xs text-xl">
+                  Tenha um lugar para acompanhar o caminho.
+                </h3>
                 <p className="mt-4 max-w-sm text-muted-foreground">
                   Mantenha planos, escolhas e acompanhamento próximos da sua
                   rotina, com simplicidade e constância.
@@ -201,7 +203,9 @@ export default function Home() {
                 <p className="mb-4 text-sm font-semibold text-muted-foreground">
                   Decisões conscientes
                 </p>
-                <h3 className="max-w-xs text-xl">Escolha os próximos passos com calma.</h3>
+                <h3 className="max-w-xs text-xl">
+                  Escolha os próximos passos com calma.
+                </h3>
                 <p className="mt-4 max-w-sm text-muted-foreground">
                   Transforme mais informação em decisões coerentes com o que
                   importa para você no longo prazo.
