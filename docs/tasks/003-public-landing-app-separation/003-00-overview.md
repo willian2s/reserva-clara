@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [003-public-landing-app-separation.md](../../specs/003-public-landing-app-separation.md)
-- **Progresso:** 4/8 subtarefas concluídas
+- **Progresso:** 5/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -17,7 +17,7 @@ foundations da fase 002.
 - [x] [003-02-estruturar-landing-v1.md](003-02-estruturar-landing-v1.md)
 - [x] [003-03-integrar-cta-e-navegacao.md](003-03-integrar-cta-e-navegacao.md)
 - [x] [003-04-estabelecer-metadata-seo.md](003-04-estabelecer-metadata-seo.md)
-- [ ] [003-05-validar-responsividade-acessibilidade.md](003-05-validar-responsividade-acessibilidade.md)
+- [x] [003-05-validar-responsividade-acessibilidade.md](003-05-validar-responsividade-acessibilidade.md)
 - [ ] [003-06-preservar-regressao-auth.md](003-06-preservar-regressao-auth.md)
 - [ ] [003-07-executar-checks-tecnicos.md](003-07-executar-checks-tecnicos.md)
 - [ ] [003-08-validar-topologia-local-preview.md](003-08-validar-topologia-local-preview.md)
@@ -45,3 +45,10 @@ foundations da fase 002.
 - A subtarefa 003-04 foi concluída: metadata pública estática ficou restrita ao
   grupo marketing, app recebeu `noindex, nofollow`, ícones oficiais foram
   preservados e localhost/preview mantêm `X-Robots-Tag` centralizado no proxy.
+- A subtarefa 003-05 foi concluída: landing recebeu correções de responsividade,
+  targets, headings, foco, alt e limites oficiais de assets. Lint, typegen,
+  typecheck, build, smoke estrutural e revisão independente passaram. Chrome e
+  Chromium não estão disponíveis no ambiente; teclado, zoom, contraste
+  renderizado e scroll não tiveram prova visual direta. Refinamento posterior
+  deixou CTAs do hero lado a lado no mobile quando houver espaço, com quebra
+  segura em larguras extremas.

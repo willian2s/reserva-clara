@@ -2,7 +2,7 @@
 
 - **Ticker:** `003`
 - **Número:** `05`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -92,3 +92,118 @@ cor.
 - Não reduzir logo abaixo dos limites documentados em `docs/brand/brand.md`.
 - Não introduzir texto pequeno ou blocos densos para preservar uma composição
   desktop em mobile.
+
+## Registro da implementação
+
+### Status
+
+`completed`
+
+### Arquivos alterados
+
+- `src/app/(marketing)/page.tsx`: ajustes responsivos, semântica de headings,
+  foco do CTA no hero, alvos interativos e dimensões responsivas dos assets.
+- `docs/tasks/003-public-landing-app-separation/003-05-validar-responsividade-acessibilidade.md`:
+  registro desta validação.
+- `docs/tasks/003-public-landing-app-separation/003-00-overview.md`: checklist e
+  progresso atualizados.
+
+### Decisões e desvios
+
+- A correção ficou restrita à landing. Não houve alteração global em
+  `globals.css`, `Button`, `Card`, `/login` ou `/dashboard`.
+- O header permite quebra controlada em largura extrema/zoom 200%; links e logo
+  usam alvos de pelo menos 44px. O CTA do header usa a variante `lg`.
+- O painel do hero usa `h2` explícito; as linhas de apoio empilham em mobile e
+  recebem `min-w-0` para evitar clipping. O H1 usa quebra segura em palavras
+  longas.
+- O foco do CTA sobre o hero recebe indicador claro sem remover o foco global.
+  O footer usa logo horizontal com 180px em desktop e compacta com 140px em
+  mobile; o mark decorativo preserva 32px efetivos e `alt=""`.
+- Não foi possível executar Chrome/Chromium real neste ambiente. A limitação
+  impede prova visual direta de teclado, zoom, contraste renderizado e scroll;
+  inspeção estrutural, cálculo de contraste e revisão independente foram usados
+  como evidência equivalente disponível.
+
+### Comandos executados
+
+```bash
+git diff --check
+npm run lint
+npm exec next typegen
+npx tsc --noEmit
+npm run build
+```
+
+Também foi executado smoke HTTP com `npm start -- --hostname 127.0.0.1
+--port 3125` e `curl` com parser estrutural da landing, além de cálculo pontual
+de contraste WCAG sobre os tokens e revisão independente da implementação.
+
+### Resultados e evidências
+
+- `git diff --check`, lint, geração de tipos, typecheck e build passaram nessa
+  ordem. O build reconheceu `/`, `/login`, `/dashboard` e `ƒ Proxy (Middleware)`.
+- Smoke local encontrou `header`, `main` e `footer`, um H1, headings em ordem
+  (`h1`, `h2`, `h2`, `h3`...), três links para `/login`, cinco imagens com
+  `alt`, mark decorativo com alt vazio e nenhum resíduo `next.svg`, `vercel.svg`
+  ou copy do template.
+- A inspeção de classes confirmou `flex-wrap`, alvos `min-h-11`, quebra segura
+  do H1, dimensões oficiais 180/140px e mark efetivo de 32px. Não há gradiente,
+  glow, glassmorphism, animação gratuita, dado financeiro ou claim dependente
+  somente de cor.
+- Cálculo de contraste sobre o hero registrou 16.37:1 para foreground pleno e
+  7.50:1, 8.52:1 e 9.59:1 para textos em 65%, 70% e 75% de opacidade sobre
+  Deep Navy; foreground/background e primary/primary-foreground atendem WCAG AA.
+- Revisão independente final aprovou a subtarefa sem achados blocker, major ou
+  minor.
+
+### Riscos residuais
+
+- A ausência de browser desktop/mobile impede declarar cobertura visual real de
+  teclado, zoom 200%, alto contraste, contraste computado no navegador e scroll
+  horizontal. Esses pontos ficam para confirmação quando browser estiver
+  disponível.
+- Não há test runner ou ferramenta automatizada de acessibilidade configurada;
+  validação foi estrutural/manual dentro das ferramentas disponíveis.
+
+## Atualização — CTAs do hero no mobile
+
+### Status
+
+`completed`
+
+### Arquivos alterados
+
+- `src/app/(marketing)/page.tsx`: CTAs do hero passaram a usar `flex-row`
+  com `flex-wrap`, mantendo composição lado a lado quando houver espaço.
+- `docs/tasks/003-public-landing-app-separation/003-05-validar-responsividade-acessibilidade.md`:
+  registro deste refinamento.
+
+### Decisões e desvios
+
+- A ordem acessível permanece `Entrar` e depois `Conheça a proposta`.
+- `flex-wrap` preserva comportamento seguro em viewport estreito e zoom, sem
+  forçar overflow quando os dois links não couberem.
+- Não houve alteração de copy, destinos, foco, targets, componentes base ou
+  demais superfícies da aplicação.
+
+### Comandos executados e resultados
+
+```bash
+git diff --check
+npm run lint
+npm exec next typegen
+npx tsc --noEmit
+npm run build
+```
+
+- Todos os comandos passaram na ordem acima.
+- Smoke HTTP local confirmou `flex-row flex-wrap items-center gap-3`, três
+  links para `/login` e ausência de resíduos do template.
+- Revisão independente aprovou o refinamento sem achados blocker, major ou
+  minor.
+
+### Riscos residuais
+
+- Chrome/Chromium continua indisponível; prova visual real em zoom 200% e
+  larguras extremas permanece limitada à inspeção estrutural e CSS.

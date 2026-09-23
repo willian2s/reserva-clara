@@ -6,15 +6,18 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 
 export default function Home() {
   return (
     <div className="flex min-h-full flex-1 flex-col bg-background">
       <header className="sticky top-0 z-50 border-b border-border/70 bg-background">
-        <div className="mx-auto flex min-h-20 w-full max-w-7xl items-center justify-between gap-6 px-6 py-4 lg:px-10">
-          <Link href="/" aria-label="Reserva Clara — início">
+        <div className="mx-auto flex min-h-20 w-full max-w-7xl flex-wrap items-center justify-between gap-3 px-6 py-4 sm:gap-6 lg:px-10">
+          <Link
+            href="/"
+            aria-label="Reserva Clara — início"
+            className="inline-flex min-h-11 items-center"
+          >
             <Image
               src="/brand/logo-horizontal.png"
               alt="Reserva Clara"
@@ -34,17 +37,20 @@ export default function Home() {
             />
           </Link>
 
-          <nav aria-label="Navegação principal" className="flex items-center gap-2 sm:gap-4">
+          <nav
+            aria-label="Navegação principal"
+            className="flex items-center gap-2 sm:gap-4"
+          >
             <a
               href="#como-ajuda"
-              className="hidden rounded-control px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
+              className="hidden min-h-11 items-center rounded-control px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
             >
               Como ajuda
             </a>
             <Link
               href="/login"
               aria-label="Entrar"
-              className={buttonVariants({ variant: "default", size: "sm" })}
+              className={buttonVariants({ variant: "default", size: "lg" })}
             >
               <span className="sm:hidden">Entrar</span>
               <span className="hidden sm:inline">Entrar</span>
@@ -59,11 +65,14 @@ export default function Home() {
           className="overflow-hidden bg-primary text-primary-foreground"
         >
           <div className="mx-auto grid w-full max-w-7xl gap-14 px-6 py-16 sm:py-24 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-20 lg:px-10 lg:py-28">
-            <div className="max-w-2xl">
+            <div className="min-w-0 max-w-2xl">
               <p className="mb-6 text-sm font-semibold tracking-[0.16em] text-primary-foreground/65 uppercase">
                 Organização para o longo prazo
               </p>
-              <h1 id="hero-title" className="max-w-2xl text-5xl leading-[1.02] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
+              <h1
+                id="hero-title"
+                className="max-w-2xl break-words text-4xl leading-[1.02] tracking-[-0.04em] [overflow-wrap:anywhere] sm:text-6xl lg:text-7xl"
+              >
                 Seu patrimônio, com clareza.
               </h1>
               <p className="mt-7 max-w-xl text-lg leading-relaxed text-primary-foreground/75 sm:text-xl">
@@ -71,28 +80,33 @@ export default function Home() {
                 patrimônio com uma visão ampla, tranquila e feita para decisões
                 conscientes ao longo do tempo.
               </p>
-              <div className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+              <div className="mt-9 flex flex-row flex-wrap items-center gap-3">
                 <Link
                   href="/login"
                   aria-label="Entrar"
-                  className={buttonVariants({ variant: "secondary", size: "lg" })}
+                  className={buttonVariants({
+                    variant: "secondary",
+                    size: "lg",
+                    className:
+                      "focus-visible:border-primary-foreground focus-visible:outline-primary-foreground focus-visible:ring-primary-foreground/70 focus-visible:ring-offset-primary",
+                  })}
                 >
                   Entrar
                 </Link>
                 <a
                   href="#proposta"
-                  className="rounded-control px-3 py-2 text-sm font-medium text-primary-foreground underline-offset-4 transition-colors hover:bg-primary-foreground/10 hover:underline focus-visible:outline-2 focus-visible:outline-primary-foreground focus-visible:outline-offset-4"
+                  className="inline-flex min-h-11 items-center rounded-control px-3 py-2 text-sm font-medium text-primary-foreground underline-offset-4 transition-colors hover:bg-primary-foreground/10 hover:underline focus-visible:outline-2 focus-visible:outline-primary-foreground focus-visible:outline-offset-4"
                 >
                   Conheça a proposta
                 </a>
               </div>
             </div>
 
-            <Card className="relative overflow-visible border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground shadow-none">
+            <Card className="relative min-w-0 overflow-visible border-primary-foreground/20 bg-primary-foreground/10 text-primary-foreground shadow-none">
               <div className="absolute -right-3 -top-3 size-6 rounded-full bg-accent sm:-right-5 sm:-top-5 sm:size-10" />
               <CardHeader className="gap-6 p-6 sm:p-8">
-                <div className="flex items-center gap-3 text-sm font-medium text-primary-foreground/70">
-                  <span className="flex size-11 items-center justify-center rounded-full bg-card p-2.5">
+                <div className="flex min-w-0 items-center gap-3 text-sm font-medium text-primary-foreground/70">
+                  <span className="flex size-11 items-center justify-center rounded-full bg-card p-1.5">
                     <Image
                       src="/brand/logo-mark.png"
                       alt=""
@@ -102,12 +116,12 @@ export default function Home() {
                       className="size-full"
                     />
                   </span>
-                  <span>Clareza para o caminho</span>
+                  <span className="min-w-0 break-words">Clareza para o caminho</span>
                 </div>
                 <div>
-                  <CardTitle className="text-2xl leading-tight text-primary-foreground sm:text-3xl">
+                  <h2 className="font-heading text-2xl leading-tight font-semibold text-primary-foreground sm:text-3xl">
                     Um lugar para o que importa.
-                  </CardTitle>
+                  </h2>
                   <p className="mt-3 text-base leading-relaxed text-primary-foreground/70">
                     Quando cada parte encontra o seu lugar, fica mais simples
                     entender o presente e escolher os próximos passos.
@@ -116,21 +130,21 @@ export default function Home() {
               </CardHeader>
               <CardContent className="px-6 pb-6 sm:px-8 sm:pb-8">
                 <div className="divide-y divide-primary-foreground/20 border-y border-primary-foreground/20">
-                  <div className="flex items-center justify-between gap-4 py-4">
-                    <span className="font-medium">Organizar</span>
-                    <span className="text-right text-sm text-primary-foreground/65">
+                  <div className="flex flex-col items-start gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <span className="min-w-0 font-medium">Organizar</span>
+                    <span className="min-w-0 text-sm text-primary-foreground/65 sm:text-right">
                       dar forma aos planos
                     </span>
                   </div>
-                  <div className="flex items-center justify-between gap-4 py-4">
-                    <span className="font-medium">Acompanhar</span>
-                    <span className="text-right text-sm text-primary-foreground/65">
+                  <div className="flex flex-col items-start gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <span className="min-w-0 font-medium">Acompanhar</span>
+                    <span className="min-w-0 text-sm text-primary-foreground/65 sm:text-right">
                       perceber o caminho
                     </span>
                   </div>
-                  <div className="flex items-center justify-between gap-4 py-4">
-                    <span className="font-medium">Decidir</span>
-                    <span className="text-right text-sm text-primary-foreground/65">
+                  <div className="flex flex-col items-start gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+                    <span className="min-w-0 font-medium">Decidir</span>
+                    <span className="min-w-0 text-sm text-primary-foreground/65 sm:text-right">
                       agir com consciência
                     </span>
                   </div>
@@ -273,8 +287,16 @@ export default function Home() {
             alt="Reserva Clara"
             width={979}
             height={285}
+            sizes="180px"
+            className="hidden h-auto w-[180px] sm:block"
+          />
+          <Image
+            src="/brand/logo-compact.png"
+            alt="Reserva Clara"
+            width={609}
+            height={172}
             sizes="140px"
-            className="h-auto w-[140px]"
+            className="h-auto w-[140px] sm:hidden"
           />
           <p className="mt-3">Seu patrimônio, com clareza.</p>
         </div>
