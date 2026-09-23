@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [004-production-deployment.md](../../specs/004-production-deployment.md)
-- **Progresso:** 7/9 subtarefas concluídas
+- **Progresso:** 8/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -19,7 +19,7 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
 - [x] [004-05-configurar-firebase-auth-producao.md](004-05-configurar-firebase-auth-producao.md)
 - [x] [004-06-validar-topologia-real.md](004-06-validar-topologia-real.md)
 - [x] [004-07-validar-google-sign-in-producao.md](004-07-validar-google-sign-in-producao.md)
-- [ ] [004-08-validar-previews-e-seguranca.md](004-08-validar-previews-e-seguranca.md)
+- [x] [004-08-validar-previews-e-seguranca.md](004-08-validar-previews-e-seguranca.md)
 - [ ] [004-09-fechar-gates-e-rollback.md](004-09-fechar-gates-e-rollback.md)
 
 ## Observações
@@ -85,3 +85,10 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
      popup produtivo em sessão limpa. Popup bloqueado não foi reproduzido e
      erro/retry permanecem limitações explicitamente registradas. Item `[x]`;
      progresso `7/9`.
+- 004-08 concluída em 2026-09-23: URL de Preview de branch/PR exigiu Vercel
+  SSO. Com autorização, `/`, `/login` e `/dashboard` abriram; hostname exato
+  foi autorizado no Firebase e login Google concluiu. Não existe branch
+  `staging`; hostname `reserva-clara.vercel.app` foi validado somente como
+  deployment `Production`/`main`. Gates locais, env ignorado, ausência de
+  BRAPI/Admin e dashboard não sensível foram conferidos. OAuth Preview ficou
+  restrito ao hostname exato, sem wildcard. Item `[x]`; progresso `8/9`.
