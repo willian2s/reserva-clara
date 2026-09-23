@@ -2,7 +2,7 @@
 
 - **Ticker:** `004`
 - **Número:** `07`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -95,3 +95,66 @@ auth da fase 001.
 Usuário deve iniciar o popup e concluir login com conta autorizada. Se não houver
 conta/browser adequado, task fica `blocked` e o aceite de produção não pode ser
 declarado completo.
+
+## Evidências da execução
+
+- **Data:** 2026-09-23.
+- **Checkpoint humano:** responsável esclareceu que a matriz manual já foi
+  executada na fase 003 e confirmou login Google e cadastro de usuário novo
+  funcionando 100% no fluxo produtivo. Nenhuma identidade, email, UID, token,
+  cookie ou valor de configuração foi solicitado ou registrado.
+- **Evidência manual reutilizada de 003-06:** restauração de sessão no dashboard,
+  redirect de `/dashboard` anônimo para `/login` e mensagem de cancelamento ao
+  fechar o popup foram observados manualmente. Essa task registra a evidência
+  da regressão porque `GoogleSignIn` e `DashboardGate` não foram alterados.
+- **Evidência produtiva:** 004-05 registrou popup concluído em contexto sem
+  sessão no host app; confirmação humana atual cobre login e cadastro no fluxo
+  produtivo.
+- **Limitações registradas em 003-06:** popup bloqueado não foi reproduzido;
+  erro/retry e acessibilidade completa não foram exaustivamente reproduzidos.
+  Esses cenários não foram tratados como falha, nem ocultados como aprovação
+  nominal.
+
+## Arquivos alterados
+
+- `docs/tasks/004-production-deployment/004-07-validar-google-sign-in-producao.md`
+- `docs/tasks/004-production-deployment/004-00-overview.md`
+
+Nenhum arquivo de código, dependência, configuração externa ou environment
+variable foi alterado.
+
+## Decisões e desvios
+
+- Cadastro foi registrado como criação de usuário no primeiro login Google; não
+  existe fluxo separado de email/senha no escopo desta fase.
+- Nenhuma lógica de auth foi alterada. O comportamento segue
+  `GoogleSignIn`/`DashboardGate` browser-only da fase 001.
+- Task concluída com base na evidência manual da regressão 003, no popup
+  produtivo registrado em 004-05 e no checkpoint humano atual. Limitações de
+  browser permanecem explícitas, conforme definição de pronto.
+- OAuth em preview não foi testado nem ampliado; continua fora desta validação
+  produtiva.
+
+## Comandos executados e resultados
+
+- `git status --short --branch` — passou; branch `main` alinhada a
+  `origin/main`, com somente os dois arquivos SDD alterados.
+- `git diff --check` — passou após a atualização documental.
+- `npm run lint` — passou.
+- `npm exec next typegen` — passou; tipos de rota gerados.
+- `npx tsc --noEmit` — passou.
+- `npm run build` — passou; Next.js 16.3.5 compilou as rotas esperadas.
+- Gates locais não substituem a matriz manual de OAuth.
+- Test runner — não configurado no projeto; nenhuma suíte automatizada existe.
+- Revisão independente inicial — aprovou estrutura SDD, escopo, comandos e
+  status conservador; apontou ausência de evidência da matriz. A confirmação
+  humana posterior e a evidência manual referenciada de 003-06 resolveram esse
+  ponto sem alterar código.
+
+## Riscos residuais
+
+- Popup bloqueado não foi reproduzido em 003; WebView, erro/retry e
+  acessibilidade completa continuam limitações conhecidas da matriz manual.
+- O registro atual não contém browser, dispositivo ou horário detalhados; a
+  confirmação humana permanece evidência sanitizada, não roteiro reprodutível.
+- Nenhum token, UID, email ou dado patrimonial foi incluído na evidência.

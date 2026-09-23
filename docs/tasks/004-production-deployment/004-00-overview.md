@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [004-production-deployment.md](../../specs/004-production-deployment.md)
-- **Progresso:** 6/9 subtarefas concluídas
+- **Progresso:** 7/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -18,7 +18,7 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
 - [x] [004-04-configurar-dominios-dns-tls.md](004-04-configurar-dominios-dns-tls.md)
 - [x] [004-05-configurar-firebase-auth-producao.md](004-05-configurar-firebase-auth-producao.md)
 - [x] [004-06-validar-topologia-real.md](004-06-validar-topologia-real.md)
-- [ ] [004-07-validar-google-sign-in-producao.md](004-07-validar-google-sign-in-producao.md)
+- [x] [004-07-validar-google-sign-in-producao.md](004-07-validar-google-sign-in-producao.md)
 - [ ] [004-08-validar-previews-e-seguranca.md](004-08-validar-previews-e-seguranca.md)
 - [ ] [004-09-fechar-gates-e-rollback.md](004-09-fechar-gates-e-rollback.md)
 
@@ -79,3 +79,9 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
      `sitemap.xml` e `/favicon.ico` não são publicados, enquanto metadata robots
      e ícones PNG oficiais passam. OAuth nominal permanece em 004-07. Progresso
      `6/9`.
+   - 004-07 concluída em 2026-09-23: responsável confirmou login Google e
+     cadastro de usuário novo no fluxo produtivo. Evidência manual de 003-06
+     cobre restauração de sessão, guard anônimo e cancelamento; 004-05 cobre
+     popup produtivo em sessão limpa. Popup bloqueado não foi reproduzido e
+     erro/retry permanecem limitações explicitamente registradas. Item `[x]`;
+     progresso `7/9`.
