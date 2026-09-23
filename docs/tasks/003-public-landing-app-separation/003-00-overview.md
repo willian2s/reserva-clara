@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [003-public-landing-app-separation.md](../../specs/003-public-landing-app-separation.md)
-- **Progresso:** 5/8 subtarefas concluídas
+- **Progresso:** 6/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -18,7 +18,7 @@ foundations da fase 002.
 - [x] [003-03-integrar-cta-e-navegacao.md](003-03-integrar-cta-e-navegacao.md)
 - [x] [003-04-estabelecer-metadata-seo.md](003-04-estabelecer-metadata-seo.md)
 - [x] [003-05-validar-responsividade-acessibilidade.md](003-05-validar-responsividade-acessibilidade.md)
-- [ ] [003-06-preservar-regressao-auth.md](003-06-preservar-regressao-auth.md)
+- [x] [003-06-preservar-regressao-auth.md](003-06-preservar-regressao-auth.md)
 - [ ] [003-07-executar-checks-tecnicos.md](003-07-executar-checks-tecnicos.md)
 - [ ] [003-08-validar-topologia-local-preview.md](003-08-validar-topologia-local-preview.md)
 
@@ -52,3 +52,12 @@ foundations da fase 002.
   renderizado e scroll não tiveram prova visual direta. Refinamento posterior
   deixou CTAs do hero lado a lado no mobile quando houver espaço, com quebra
   segura em larguras extremas.
+- A subtarefa 003-06 foi concluída sem alteração de código: imports, contratos
+  de `GoogleSignIn`/`DashboardGate`, shell não sensível e ausência de Firebase na
+  landing foram confirmados. Lint, typegen, typecheck, build e smoke HTTP
+  localhost/app passaram. Teste manual confirmou loading e redirecionamento de
+  dashboard anônimo para login, restauração de sessão no dashboard e mensagem
+  de cancelamento ao fechar popup. Configuração do site para bloquear popup não
+  impediu sua abertura; popup bloqueado, erro/retry e acessibilidade manual
+  não foram exaustivamente reproduzidos, sem bloquear conclusão dos cenários
+  essenciais.

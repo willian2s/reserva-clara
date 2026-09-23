@@ -2,7 +2,7 @@
 
 - **Ticker:** `003`
 - **Número:** `06`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -96,3 +96,44 @@ contratos de `/login` e `/dashboard`.
 - Não reabrir decisão popup vs redirect nesta fase sem bloqueio material.
 - Mudança de origem no futuro pode exigir Firebase Authorized Domains, que fica
   para fase 004.
+
+## Registro de execução
+
+- **Status:** `completed`
+- **Arquivos alterados:**
+  - `docs/tasks/003-public-landing-app-separation/003-06-preservar-regressao-auth.md`
+  - `docs/tasks/003-public-landing-app-separation/003-00-overview.md`
+- **Decisões e desvios:** nenhuma alteração de código foi necessária. A
+  regressão foi validada por inspeção estática, gates técnicos e smoke HTTP;
+  nenhum fallback popup/redirect foi adicionado. A conclusão ficou bloqueada
+  inicialmente porque a matriz manual Google não estava disponível; após teste
+  manual, os cenários essenciais foram considerados aprovados.
+- **Comandos executados e resultados:**
+  - `npm run lint` — passou.
+  - `npm exec next typegen` — passou; tipos de rotas gerados.
+  - `npx tsc --noEmit` — passou.
+  - `npm run build` — passou; Next.js 16.3.5 compilou `/`, `/login` e
+    `/dashboard` como rotas estáticas e `src/proxy.ts` como Proxy.
+  - `npm start -- --hostname 127.0.0.1` com smoke HTTP — passou: `/login` e
+    `/dashboard` retornaram `200` em localhost com `X-Robots-Tag`; `/login` no
+    host público retornou `307` para `https://app.reservaclara.com.br/login`;
+    `/` no host app retornou `307` para `/login`; landing local retornou `200`
+    sem referências Firebase no HTML.
+- **Evidências:** somente `src/components/auth/google-sign-in.tsx` e
+  `src/components/auth/dashboard-gate.tsx` importam Firebase; `GoogleSignIn`
+  mantém `onAuthStateChanged`, `signInWithPopup`, estados de checking/ready,
+  cancelamento/erro e `router.replace("/dashboard")`; `DashboardGate` mantém o
+  listener, shell não sensível e `router.replace("/login")`; páginas e landing
+  preservam route groups e contratos `/login`/`/dashboard`.
+- **Evidência manual adicional:** ao abrir `/dashboard` sem sessão, o estado de
+  loading foi exibido e o guard conduziu para `/login`; com sessão existente, o
+  dashboard liberou o shell após a restauração. Ao fechar o popup durante o
+  login, a mensagem `Login cancelado. Você pode tentar novamente.` foi exibida.
+- **Limitações:** login nominal, popup bloqueado, erro/retry e acessibilidade
+  completa de browser não foram exaustivamente reproduzidos. O teste com
+  configuração do site para bloquear popup ainda abriu o popup, portanto o
+  cenário de bloqueio não foi reproduzido. Authorized Domains Firebase e
+  limitações de popup em WebView continuam dependentes da fase 004/decisão 001.
+- **Riscos residuais:** `DashboardGate` continua guard somente client-side e não
+  é autorização; popup pode falhar em browser bloqueado, WebView ou domínio não
+  autorizado.
