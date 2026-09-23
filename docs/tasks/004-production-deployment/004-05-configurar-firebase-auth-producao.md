@@ -2,7 +2,7 @@
 
 - **Ticker:** `004`
 - **Número:** `05`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -101,3 +101,79 @@ mantendo a decisão 001 e a allowlist mínima de Authorized Domains.
 Somente responsável com acesso ao Firebase Console pode habilitar/verificar
 provider e Authorized Domains. A task não pode ser marcada `[x]` com base em
 intenção ou screenshot sem teste da origem efetiva.
+
+## Evidências da execução
+
+- **Data:** 2026-09-23.
+- **Checkpoint humano:** responsável confirmou configuração do projeto Firebase
+  correto, provider Google ativo e login funcionando na aplicação produtiva.
+  Nenhum valor de configuração, token, UID, email ou identidade foi solicitado
+  ou registrado. A confirmação não substitui teste nominal em contexto sem
+  sessão quando a captura não mostra o início do popup.
+- **Origem observada:** captura do dashboard mostra
+  `https://app.reservaclara.com.br/dashboard` após autenticação. Isso comprova
+  que área logada foi alcançada, mas não distingue login novo de sessão já
+  existente.
+- **Authorized Domains:** captura do Firebase Console mostra `localhost`,
+  domínios padrão Firebase, `reservaclara.com.br` e o hostname estável
+  `reserva-clara.vercel.app`; não há wildcard `*.vercel.app`. A captura não
+  mostra `app.reservaclara.com.br`; confirmação humana posterior revalidou a
+  configuração atual com o host app autorizado.
+- **Evidências visuais recebidas, não editadas:**
+  `evidences/004-05-firebase-domains.png` e
+  `evidences/004-05-area-logada.png`.
+- **Documentação oficial consultada em 2026-09-23:**
+  [Firebase Google Web Sign-In](https://firebase.google.com/docs/auth/web/google-signin)
+  confirma `GoogleAuthProvider`/`signInWithPopup` e a configuração do provider;
+  [Firebase redirect best practices](https://firebase.google.com/docs/auth/web/redirect-best-practices)
+  foi consultada para preservar a decisão de popup e não introduzir redirect.
+
+## Arquivos alterados
+
+- `docs/tasks/004-production-deployment/004-05-configurar-firebase-auth-producao.md`
+- `docs/tasks/004-production-deployment/004-00-overview.md`
+
+Arquivos de evidência recebidos pelo responsável, não editados pelo agente:
+
+- `docs/tasks/004-production-deployment/evidences/004-05-firebase-domains.png`
+- `docs/tasks/004-production-deployment/evidences/004-05-area-logada.png`
+
+## Decisões e desvios
+
+- Nenhum código, dependência, variável, `authDomain` ou serviço foi alterado.
+- Nenhum wildcard de preview foi criado. O hostname Vercel exibido é específico,
+  não uma autorização ampla de `*.vercel.app`.
+- A configuração atual removeu `reservaclara.com.br`; `www` não foi autorizado.
+  Allowlist permanece mínima, sem wildcard de preview.
+- Confirmação humana posterior registrou `app.reservaclara.com.br` visível no
+  console e popup concluído em contexto sem sessão. Nenhuma alteração de código
+  ou fluxo foi necessária.
+- `authDomain` Firebase padrão permaneceu sem alteração; o popup produtivo foi
+  validado sem exigir configuração complementar.
+- A matriz nominal completa, restauração de sessão, cenário anônimo e erros
+  continuam pertencendo à subtarefa 004-07; ela não foi iniciada.
+
+## Comandos executados e resultados
+
+- `git status --short --branch` — `main...origin/main`; somente documentação e
+  evidências recebidas aparecem alteradas/não rastreadas.
+- `git diff --check` — passou.
+- `npm run lint` — passou.
+- `npm exec next typegen` — passou; tipos gerados.
+- `npx tsc --noEmit` — passou.
+- `npm run build` — passou; Next `16.3.5` compilou as rotas esperadas.
+- Test runner — não configurado no projeto; nenhuma suíte automatizada existe.
+- Browser — login produtivo confirmado pelo responsável; destino observado em
+  `app.reservaclara.com.br/dashboard`.
+- Confirmação humana posterior — `app.reservaclara.com.br` autorizado no
+  console, popup nominal concluído em sessão limpa e `reservaclara.com.br`
+  removido da allowlist.
+
+## Riscos residuais
+
+- A captura visual arquivada anteriormente não mostra a linha `app`, mas a
+  confirmação humana posterior revalidou console e fluxo em sessão limpa.
+- Popup bloqueado, cancelamento, retry, restauração de sessão e comportamento
+  anônimo ainda não foram validados como matriz completa; permanecem em 004-07.
+- Preview dinâmico continua sem autorização por wildcard; OAuth em hostname
+  efêmero não foi declarado.
