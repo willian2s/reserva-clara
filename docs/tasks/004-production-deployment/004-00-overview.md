@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [004-production-deployment.md](../../specs/004-production-deployment.md)
-- **Progresso:** 1/9 subtarefas concluídas
+- **Progresso:** 2/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -13,7 +13,7 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
 ## Checklist
 
 - [x] [004-01-preparar-baseline-oficial.md](004-01-preparar-baseline-oficial.md)
-- [ ] [004-02-conectar-vercel-e-publicar-preview.md](004-02-conectar-vercel-e-publicar-preview.md)
+- [x] [004-02-conectar-vercel-e-publicar-preview.md](004-02-conectar-vercel-e-publicar-preview.md)
 - [ ] [004-03-configurar-environment-variables.md](004-03-configurar-environment-variables.md)
 - [ ] [004-04-configurar-dominios-dns-tls.md](004-04-configurar-dominios-dns-tls.md)
 - [ ] [004-05-configurar-firebase-auth-producao.md](004-05-configurar-firebase-auth-producao.md)
@@ -45,3 +45,11 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
   004-04; alteração DNS permanece bloqueada até snapshot completo de RRsets,
   TTL, DNSSEC, proxy status, timestamp e fonte. Próximo avanço exige checkpoint
   humano Vercel/Git.
+- 004-02 concluída em 2026-09-23: prints confirmam repositório conectado,
+  `main` como Production Branch, defaults efetivos de Next.js/root/build,
+  ambientes, `reserva-clara.vercel.app` válido, deployment `Ready`, Build Logs,
+  rollback e URL `.vercel.app` protegida. O deployment capturado é
+  `Production`/`main`; requests à URL protegida retornaram `302` para Vercel
+  SSO sem sessão. Preview branch específico não foi evidenciado; smoke e
+  política de proteção ficam para 004-08. Não registrar valores de environment
+  variables; configuração de env pertence à 004-03.
