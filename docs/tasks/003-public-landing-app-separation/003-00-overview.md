@@ -1,8 +1,8 @@
 # 003 — Public Landing & App Separation
 
-- **Status geral:** in_progress
+- **Status geral:** completed
 - **Spec:** [003-public-landing-app-separation.md](../../specs/003-public-landing-app-separation.md)
-- **Progresso:** 7/8 subtarefas concluídas
+- **Progresso:** 8/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -20,7 +20,7 @@ foundations da fase 002.
 - [x] [003-05-validar-responsividade-acessibilidade.md](003-05-validar-responsividade-acessibilidade.md)
 - [x] [003-06-preservar-regressao-auth.md](003-06-preservar-regressao-auth.md)
 - [x] [003-07-executar-checks-tecnicos.md](003-07-executar-checks-tecnicos.md)
-- [ ] [003-08-validar-topologia-local-preview.md](003-08-validar-topologia-local-preview.md)
+- [x] [003-08-validar-topologia-local-preview.md](003-08-validar-topologia-local-preview.md)
 
 ## Observações
 
@@ -66,3 +66,11 @@ foundations da fase 002.
   `/`, `/login`, `/dashboard` e `ƒ Proxy (Middleware)`; não houve warning
   material. Nenhum package, lockfile ou asset foi alterado. A matriz HTTP de
   hosts e assets permanece para 003-08.
+- A subtarefa 003-08 foi concluída: servidor local em `127.0.0.1:3138` confirmou
+  matriz de hosts, redirects, normalização, ausência de loops/open redirect,
+  headers de robots, metadata, CTA same-origin e assets sem interceptação
+  indevida. Browser visual não estava disponível. DNS, TLS, Vercel, `www`
+  efetivo e Firebase Authorized Domains ficam no handoff da fase 004.
+- A spec 003 foi marcada `completed` após a conclusão das oito subtarefas;
+  DNS, TLS, Vercel, `www` efetivo e Firebase Authorized Domains continuam fora
+  do escopo executado e registrados no handoff da fase 004.

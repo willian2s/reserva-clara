@@ -6,7 +6,7 @@
 
 ## Status
 
-`pending`
+`completed`
 
 ## Contexto
 
