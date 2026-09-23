@@ -74,6 +74,7 @@ export default function Home() {
               <div className="mt-9 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
                 <Link
                   href="/login"
+                  aria-label="Entrar"
                   className={buttonVariants({ variant: "secondary", size: "lg" })}
                 >
                   Entrar
@@ -254,7 +255,11 @@ export default function Home() {
                 Comece a olhar para o seu patrimônio com mais clareza.
               </h2>
             </div>
-            <Link href="/login" className={buttonVariants({ size: "lg" })}>
+            <Link
+              href="/login"
+              aria-label="Entrar"
+              className={buttonVariants({ size: "lg" })}
+            >
               Entrar
             </Link>
           </div>

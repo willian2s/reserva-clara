@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [003-public-landing-app-separation.md](../../specs/003-public-landing-app-separation.md)
-- **Progresso:** 2/8 subtarefas concluídas
+- **Progresso:** 3/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -15,7 +15,7 @@ foundations da fase 002.
 
 - [x] [003-01-estabelecer-fronteira-public-app.md](003-01-estabelecer-fronteira-public-app.md)
 - [x] [003-02-estruturar-landing-v1.md](003-02-estruturar-landing-v1.md)
-- [ ] [003-03-integrar-cta-e-navegacao.md](003-03-integrar-cta-e-navegacao.md)
+- [x] [003-03-integrar-cta-e-navegacao.md](003-03-integrar-cta-e-navegacao.md)
 - [ ] [003-04-estabelecer-metadata-seo.md](003-04-estabelecer-metadata-seo.md)
 - [ ] [003-05-validar-responsividade-acessibilidade.md](003-05-validar-responsividade-acessibilidade.md)
 - [ ] [003-06-preservar-regressao-auth.md](003-06-preservar-regressao-auth.md)

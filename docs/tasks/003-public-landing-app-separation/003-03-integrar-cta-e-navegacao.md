@@ -2,7 +2,7 @@
 
 - **Ticker:** `003`
 - **Número:** `03`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -13,7 +13,8 @@ hardcode de domínio ou lógica de hostname nos componentes.
 ## Requisitos cobertos
 
 - CTA principal para `/login`.
-- Entradas equivalentes no header/footer sem destinos divergentes.
+- Entradas equivalentes no header e nos CTAs contextuais, sem redundância no
+  footer.
 - Ponte pública→app centralizada no proxy.
 - Preservação dos redirects relativos da autenticação.
 - Navegação acessível por teclado e sem dependência de JavaScript.
@@ -89,3 +90,59 @@ hardcode de domínio ou lógica de hostname nos componentes.
 - Não usar botão semântico para navegação quando um link é suficiente.
 - Não tratar status 307 como autorização ou como prova de login.
 - Não criar query de destino sem decisão explícita; ela está fora do escopo.
+
+## Registro da implementação
+
+### Status
+
+`completed`
+
+### Arquivos alterados
+
+- `src/app/(marketing)/page.tsx`: ajuste dos CTAs e nomes acessíveis para
+  “Entrar”; os destinos permanecem `/login` relativos e o footer mantém apenas
+  marca e tagline.
+
+### Decisões e desvios
+
+- O header mantém o rótulo visual curto “Entrar” em viewport estreito para
+  preservar o layout existente; seu `aria-label` também é “Entrar”.
+- O footer não repete CTA de login, conforme ajuste editorial solicitado para
+  reduzir redundância; header, hero e CTA final continuam entradas semânticas
+  para `/login` com o rótulo “Entrar”.
+- `src/proxy.ts` não precisou de alteração: já centraliza a ponte público→app,
+  usa destinos fixos e preserva localhost/preview same-origin.
+- `GoogleSignIn` e `DashboardGate` não foram alterados; os redirects relativos
+  existentes continuam sendo `/dashboard` e `/login`.
+
+### Comandos executados
+
+```bash
+git diff --check
+npm run lint
+npm exec next typegen
+npx tsc --noEmit
+npm run build
+```
+
+Também foi executado smoke HTTP com `npm start -- --hostname 127.0.0.1
+--port 3103` e `curl` usando headers `Host`, além de buscas estruturais por
+domínios produtivos, `returnTo` e `href="/login"` na landing.
+
+### Resultados e evidências
+
+- `git diff --check`, lint, geração de tipos, typecheck e build passaram nessa
+  ordem.
+- Landing contém três links `href="/login"`: header, hero e CTA final; não
+  contém CTA redundante no footer, domínio produtivo nem `returnTo`.
+- Smoke observou público `/login` como `307` para
+  `https://app.reservaclara.com.br/login`, app `/login` como `200`, localhost
+  `/` como `200` com `X-Robots-Tag: noindex, nofollow`, preview `/login` como
+  `200` same-origin com o mesmo header e host desconhecido como `404`.
+- Query `returnTo` não foi transportada no redirect público→app.
+
+### Riscos residuais
+
+- Navegação por teclado e validação visual detalhada permanecem na task 003-05.
+- DNS, TLS, configuração produtiva e OAuth em domínio real permanecem fora da
+  fase 003.
