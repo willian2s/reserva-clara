@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [004-production-deployment.md](../../specs/004-production-deployment.md)
-- **Progresso:** 0/9 subtarefas concluídas
+- **Progresso:** 1/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
 
 ## Checklist
 
-- [ ] [004-01-preparar-baseline-oficial.md](004-01-preparar-baseline-oficial.md)
+- [x] [004-01-preparar-baseline-oficial.md](004-01-preparar-baseline-oficial.md)
 - [ ] [004-02-conectar-vercel-e-publicar-preview.md](004-02-conectar-vercel-e-publicar-preview.md)
 - [ ] [004-03-configurar-environment-variables.md](004-03-configurar-environment-variables.md)
 - [ ] [004-04-configurar-dominios-dns-tls.md](004-04-configurar-dominios-dns-tls.md)
@@ -34,3 +34,14 @@ real a topologia público/app e o fluxo Google até `/dashboard`.
   não autorizado por padrão.
 - O modo Cloudflare (DNS only/proxied) deve ser confirmado na documentação
   oficial atual e registrado na task 004-04 antes da alteração pública.
+- 004-01 concluída em 2026-09-23: baseline atual é `main` em
+  `bdf7bed23007b778539a3923230ae97cbb651bc6`, working tree limpo antes desta
+  atualização, contratos 003 conferidos, docs oficiais consultadas e gates
+  locais aprovados na ordem lint → typegen → typecheck → build. Documentação
+  local do Next continua ausente; nenhum código, serviço ou env foi alterado.
+- Snapshot DNS público mostrou apex/`www` respondendo por Cloudflare e nenhum
+  A/CNAME público para `app`; isso é observação para rollback, não configuração
+  efetiva nem target futuro. MX/TXT/CAA/DNSSEC dependem de acesso Cloudflare em
+  004-04; alteração DNS permanece bloqueada até snapshot completo de RRsets,
+  TTL, DNSSEC, proxy status, timestamp e fonte. Próximo avanço exige checkpoint
+  humano Vercel/Git.
