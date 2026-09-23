@@ -2,7 +2,7 @@
 
 - **Ticker:** `004`
 - **Número:** `03`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -93,3 +93,85 @@ login e dashboard no hostname Vercel.
   responsável e não corrigir por tentativa.
 - Erro `auth/invalid-api-key` ou equivalente antes de Authorized Domains bloqueia
   task; não vazar código bruto para usuário final.
+
+## Evidências da execução
+
+- **Data da execução:** 2026-09-23.
+- **Estrutura SDD:** spec, pasta, overview e nove subtarefas usam ticker `004`;
+  overview contém uma única seção `## Checklist`, com um item por subtarefa.
+  Execução restrita a `004-03`.
+- **Contrato local:** `.env.example` contém exatamente os sete nomes previstos;
+  `src/lib/firebase/client.ts` consome os sete nomes; `.gitignore` ignora
+  `.env*` e preserva somente `.env.example`. Nenhum valor foi lido, exibido ou
+  registrado.
+- **Confirmação humana:** usuário confirmou no Chrome que a página carrega corretamente,
+  os deployments estão funcionais, as chaves estão corretas e funcionando, e o
+  login/redirecionamento funcionam corretamente no navegador. Nenhum valor real,
+  token ou conteúdo de `.env.local` foi solicitado ou registrado.
+- **Variables no Vercel:** confirmação textual do usuário registra os
+  sete nomes previstos, todos com escopo `Production and Preview` e status
+  configurado: `NEXT_PUBLIC_FIREBASE_API_KEY`,
+  `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`,
+  `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`,
+  `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`, `NEXT_PUBLIC_FIREBASE_APP_ID` e
+  `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID`. Nenhum valor foi registrado.
+- **Deployment inicial:** usuário esclareceu que variables foram configuradas
+  durante a conexão do projeto, antes do deployment inicial; portanto o
+  deployment `Production`/`main` já iniciou com essa configuração. Não houve
+  alteração posterior de variables que exigisse redeploy adicional nesta task.
+- **Development:** não foi listado como escopo Vercel para essas variables;
+  desenvolvimento local continua usando `.env.local` ignorado.
+- **Resultado remoto:** configuração efetiva foi validada por comportamento no
+  deployment; a confirmação não registra valores, identificadores de projeto ou
+  conteúdo de console.
+- **Regra de redeploy:** qualquer alteração posterior de variables exigirá novo
+  deployment; nesta execução, variables já estavam presentes no deployment
+  inicial.
+- **Documentação oficial consultada em 2026-09-23:**
+  [Vercel Environment Variables](https://vercel.com/docs/environment-variables)
+  confirma escopos Production/Preview/Development e que alterações só chegam a
+  novos deployments; [Vercel Environments](https://vercel.com/docs/deployments/environments)
+  confirma deployment Production após push em `main`, Preview para branches não
+  produtivas e redeploy após alteração de variables; [Firebase Web setup](https://firebase.google.com/docs/web/setup)
+  confirma que os valores devem vir da configuração da aplicação Web registrada.
+
+## Arquivos alterados
+
+- `docs/tasks/004-production-deployment/004-03-configurar-environment-variables.md`
+- `docs/tasks/004-production-deployment/004-00-overview.md`
+
+## Decisões e desvios
+
+- Nenhum código, dependência, lockfile, `.env.local`, variável remota ou serviço
+  externo foi alterado pelo agente.
+- A confirmação humana comprova os sete nomes em Production/Preview,
+  deployment inicial funcional com variables presentes e login/redirecionamento
+  no navegador; task pode ser marcada como concluída sem registrar valores.
+- Regra residual preservada: qualquer alteração futura de variables exigirá novo
+  deployment; configuração não retroage deployments anteriores.
+- Preview permanece documentado como útil para landing/metadata/assets;
+  autenticação em hostname efêmero não foi assumida nem autorizada.
+
+## Comandos executados e resultados
+
+- `git status --short --branch` — `main...origin/main`, sem alterações antes da
+  atualização documental.
+- `npm run lint` — passou.
+- `npm exec next typegen` — passou; tipos gerados.
+- `npx tsc --noEmit` — passou.
+- `npm run build` — passou; Next `16.3.5` gerou `/`, `/login`, `/dashboard` e
+  `ƒ Proxy (Middleware)`. O comando detectou `.env.local`; o agente não
+  inspecionou, exibiu ou registrou seu conteúdo.
+- `git diff --check` — passou.
+- Inspeção pós-gates — nenhum arquivo de código, dependência, lockfile ou env
+  versionado alterado.
+
+## Riscos residuais
+
+- ID/horário do deployment não foram registrados, por não terem sido informados;
+  evidência de aceite é confirmação humana funcional e configuração presente no
+  deployment inicial.
+- Development não possui variables Vercel registradas nesta evidência; ambiente
+  local depende de `.env.local` ignorado.
+- OAuth em hostname Preview dinâmico continua não assumido; isso pertence à
+  estratégia de preview e às tasks posteriores.
