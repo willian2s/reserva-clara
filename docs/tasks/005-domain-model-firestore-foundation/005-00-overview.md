@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [005-domain-model-firestore-foundation.md](../../specs/005-domain-model-firestore-foundation.md)
-- **Progresso:** 6/10 subtarefas concluídas
+- **Progresso:** 7/10 subtarefas concluídas
 
 ## Objetivo
 
@@ -19,16 +19,17 @@ condicionado a checkpoint humano de região.
 - [x] [005-04-criar-converters-e-validacao-runtime.md](005-04-criar-converters-e-validacao-runtime.md)
 - [x] [005-05-criar-acesso-de-dados-de-portfolio.md](005-05-criar-acesso-de-dados-de-portfolio.md)
 - [x] [005-06-versionar-security-rules.md](005-06-versionar-security-rules.md)
-- [ ] [005-07-configurar-emulator-e-testes-de-rules.md](005-07-configurar-emulator-e-testes-de-rules.md)
+- [x] [005-07-configurar-emulator-e-testes-de-rules.md](005-07-configurar-emulator-e-testes-de-rules.md)
 - [ ] [005-08-ativar-firestore-com-checkpoint-humano.md](005-08-ativar-firestore-com-checkpoint-humano.md)
 - [ ] [005-09-publicar-rules-e-validar-producao.md](005-09-publicar-rules-e-validar-producao.md)
 - [ ] [005-10-fechar-gates-e-documentacao.md](005-10-fechar-gates-e-documentacao.md)
 
 ## Observações
 
-- Fase 005 permanece sem banco, collection, documento, Rule publicada, env,
-  dependência ou deploy nesta execução; `005-02` implementa somente contratos
-  puros de domínio, sem persistência.
+- Fase 005 permanece sem banco, collection, documento, Rule publicada, env
+  produtivo ou deploy nesta execução; `005-02` implementa somente contratos
+  puros de domínio, sem persistência. `005-07` adiciona apenas dependências de
+  desenvolvimento para Emulator Suite e Rules Unit Testing.
 - Dependência central: Firebase Web existente em `src/lib/firebase/client.ts`;
   `DashboardGate` continua UX, não autorização.
 - Documento `users/{uid}` não será criado em 005. Namespace e Rules expressam
@@ -43,14 +44,18 @@ condicionado a checkpoint humano de região.
   dependência ou conexão automática com emulator; gates técnicos passaram.
 - `005-04` concluiu parser/converter de Portfolio com validação runtime,
   timestamps explícitos, writes parciais via `merge` e smoke sintético;
-  testes no Emulator permanecem futuros.
+  testes no Emulator foram concluídos em `005-07`.
 - `005-05` concluiu repository owner-scoped com paths derivados do Auth,
   create/list/get/update/delete, validação antes do SDK, server timestamps,
-  update sem upsert e erros SDK sanitizados; testes no Emulator permanecem
-  futuros.
+  update sem upsert e erros SDK sanitizados; acesso foi coberto no Emulator em
+  `005-07`.
 - `005-06` concluiu Rules versionadas com default deny, schema mínimo de
   Portfolio, timestamps server-side, ownership por path e negação explícita de
-  namespace/profile e entidades futuras; matriz comportamental aguarda 005-07.
+  namespace/profile e entidades futuras; matriz comportamental foi comprovada
+  em 005-07.
+- `005-07` concluiu Emulator Suite local com projeto demo, fixtures sintéticas,
+  testes `node:test` e cobertura de ownership, schema, anônimo e paths futuros;
+  `npm run test:rules` passou sem acesso produtivo.
 - Depois de 005-07 verde, primeira subtarefa elegível para avanço externo é
   `005-08-ativar-firestore-com-checkpoint-humano.md`; antes disso, a execução
   deve concluir contratos, acesso, Rules e testes locais.

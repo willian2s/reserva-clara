@@ -2,7 +2,7 @@
 
 - **Ticker:** `005`
 - **Número:** `07`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -96,3 +96,56 @@ npm run build
 - Emulator verde não prova Rules publicadas; separar evidência.
 - Se dependência ou CLI não puder ser instalada, manter task bloqueada e
   registrar erro concreto, sem marcar checklist.
+
+## Execução e evidências
+
+- **Data:** 2026-09-24.
+- **Implementado:** `firebase.json` configura somente Firestore Emulator na
+  porta 8080 e carrega `firestore.rules`; `.firebaserc` aponta exclusivamente
+  para o projeto demo `demo-reserva-clara`. Nenhum projeto produtivo aparece na
+  configuração.
+- **Dependências:** `@firebase/rules-unit-testing@5.0.2` e
+  `firebase-tools@13.35.1` foram adicionados como dependências de
+  desenvolvimento. O runner usa somente `node:test`; não foi introduzido
+  framework genérico.
+- **Cobertura:** testes exercitam CRUD owner, leitura/listagem owner-scoped,
+  isolamento `user-a`/`user-b`, anônimo, campos ausentes/extras, moeda inválida,
+  timestamp de cliente/tipo inválido, `createdAt` mutável, `updatedAt` sem
+  server timestamp, update cross-user, nome em branco, namespace raiz, `assets`,
+  `goals`, `emergencyReserve`, `transactions`, `allocationTargets`, `snapshots`
+  e caminho desconhecido. Nenhum teste usa `withSecurityRulesDisabled`.
+- **Execução:** `npm run test:rules` executa
+  `firebase emulators:exec --project demo-reserva-clara --only firestore
+  "node --test tests/firestore.rules.test.mjs"`, propagando falhas e
+  encerrando o Emulator Suite. O teste limpa fixtures antes/depois e chama
+  `cleanup()` do ambiente mesmo quando a limpeza final falha.
+- **Resultado:** comando Rules passou com 5 testes e 0 falhas; somente emulator
+  local foi acessado. `npm run lint`, `npm exec next typegen`, `npx tsc
+  --noEmit` e `npm run build` também passaram após a alteração.
+
+## Arquivos alterados
+
+- `.firebaserc`
+- `firebase.json`
+- `package.json`
+- `package-lock.json`
+- `tests/firestore.rules.test.mjs`
+- `docs/tasks/005-domain-model-firestore-foundation/005-07-configurar-emulator-e-testes-de-rules.md`
+
+## Decisões e desvios
+
+- O projeto demo é fixo e explícito no script e no `.firebaserc`, evitando
+  qualquer fallback para o projeto usado pelo Auth.
+- A versão `firebase-tools@13.35.1` foi fixada por compatibilidade com Java 17
+  registrada em 005-06; a CLI atual não foi usada.
+- Não foi criado `firestore.indexes.json`, pois testes usam somente caminhos e
+  listagem sem query composta. `firestore.rules` não precisou de alteração.
+
+## Riscos residuais e bloqueios
+
+- Emulator verde não comprova Rules publicadas nem autoriza conexão com banco
+  real. `005-08` continua bloqueada até checkpoint humano de região/ativação;
+  `005-09` continua bloqueada até publicação aprovada e smoke sintético.
+- `npm install` reportou avisos de engine para `superstatic` em Node 24 e 10
+  vulnerabilidades transitivas no conjunto da CLI; não foram aplicadas
+  atualizações forçadas fora do escopo.
