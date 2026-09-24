@@ -1,8 +1,8 @@
 # 006 — Portfolio Management
 
-- **Status geral:** `pending`
+- **Status geral:** `in_progress`
 - **Spec:** [006-portfolio-management.md](../../specs/006-portfolio-management.md)
-- **Progresso:** 0/8 subtarefas concluídas
+- **Progresso:** 1/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ financeiros calculados e sem antecipar a fase 007.
 
 ## Checklist
 
-- [ ] [006-01-estruturar-shell-auth-e-navegacao.md](006-01-estruturar-shell-auth-e-navegacao.md)
+- [x] [006-01-estruturar-shell-auth-e-navegacao.md](006-01-estruturar-shell-auth-e-navegacao.md)
 - [ ] [006-02-implementar-listagem-e-criacao.md](006-02-implementar-listagem-e-criacao.md)
 - [ ] [006-03-implementar-detalhe-e-acesso.md](006-03-implementar-detalhe-e-acesso.md)
 - [ ] [006-04-implementar-renomeacao.md](006-04-implementar-renomeacao.md)
@@ -36,5 +36,10 @@ financeiros calculados e sem antecipar a fase 007.
 - Pré-condição bloqueante de 007: nenhum write de Transaction pode ser aberto
   enquanto archive não estiver implementado, `allow delete` não for removido
   das Rules e teste negativo do Emulator não comprovar delete físico negado.
-- Execução futura exige leitura da documentação local Next 16 antes de alterar
-  rotas/layouts/parâmetros dinâmicos. Esta execução criou somente documentação.
+- Alterações de rotas/layouts seguem documentação local Next 16 lida antes da
+  implementação; parâmetros dinâmicos permanecem para subtarefas posteriores.
+- 006-01 concluída: AuthGate, grupo protegido, shell, CTA de Dashboard e bridge
+  de `/portfolios` implementados; gates técnicos passaram e revisão independente
+  não encontrou bloqueadores.
+- Validação manual em browser de sessão, troca de identidade e matriz completa de
+  hosts/assets permanece pendente por indisponibilidade de browser nesta execução.

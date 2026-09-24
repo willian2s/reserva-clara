@@ -79,7 +79,10 @@ export function proxy(request: NextRequest) {
 
   if (
     hostClass === "public" &&
-    (pathname === "/dashboard" || pathname.startsWith("/dashboard/"))
+    (pathname === "/dashboard" ||
+      pathname.startsWith("/dashboard/") ||
+      pathname === "/portfolios" ||
+      pathname.startsWith("/portfolios/"))
   ) {
     return redirectToFixedPath(APP_ORIGIN, pathname, 307);
   }
@@ -98,5 +101,10 @@ export function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login/:path*", "/dashboard/:path*"],
+  matcher: [
+    "/",
+    "/login/:path*",
+    "/dashboard/:path*",
+    "/portfolios/:path*",
+  ],
 };

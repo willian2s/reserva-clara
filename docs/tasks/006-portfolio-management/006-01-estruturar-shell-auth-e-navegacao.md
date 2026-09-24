@@ -2,7 +2,7 @@
 
 - **Ticker:** `006`
 - **Número:** `01`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -101,3 +101,54 @@ redirects Host sem interceptar `/brand/*` ou `/_next/*`.
 Registrar status, arquivos, decisão sobre transição de `DashboardGate`, comandos,
 matriz de hosts/auth, resultado dos gates e riscos residuais nesta task. Atualizar
 overview somente após definição de pronto.
+
+## Registro de execução
+
+### Status
+
+`completed`.
+
+### Arquivos alterados
+
+- `src/components/auth/auth-gate.tsx` — novo gate Client compartilhado.
+- `src/components/auth/dashboard-gate.tsx` — removido após extração do contrato.
+- `src/app/(app)/(protected)/layout.tsx` — novo grupo protegido, shell e navegação.
+- `src/app/(app)/(protected)/dashboard/page.tsx` — dashboard movido sem alterar URL e com CTA para `/portfolios`.
+- `src/app/(app)/dashboard/page.tsx` — removido após movimentação para o grupo protegido.
+- `src/proxy.ts` — matcher e bridge público/app para `/portfolios`.
+
+### Decisões e desvios
+
+- `DashboardGate` foi removido, não mantido como wrapper, para evitar listener duplicado.
+- `AuthGate` controla renderização do shell e dos `children`; conteúdo protegido só aparece após autenticação confirmada.
+- Subtree protegido recebe `key` interno derivado da identidade autenticada para remontar na troca de conta. UID não é exibido nem passado a páginas de Portfolio.
+- Route groups, layouts, `children` e proxy foram conferidos na documentação local instalada em `node_modules/next/dist/docs/`. Não houve desvio de API.
+- Nenhuma alteração foi feita em Firebase initializer, Rules, schema, dependências ou páginas de Portfolio.
+
+### Comandos executados
+
+- `npm run lint` — passou.
+- `npm exec next typegen` — passou.
+- `npx tsc --noEmit` — primeira execução encontrou referência stale em `.next/dev/types/validator.ts` após remoção da rota antiga; após regenerar tipos, passou.
+- `npm run build` — primeira execução reproduziu a mesma referência stale gerada; após regenerar tipos, compilação, TypeScript e geração de páginas passaram.
+- `git diff --check` — passou.
+- `npm run lint` — rerun final após todos os arquivos de código; passou.
+
+### Resultados e evidências
+
+- Build Next 16.3.5 reconheceu `/dashboard` preservada por route group e `/login`; não houve import Firebase em Server Components.
+- `AuthGate` possui estados `checking`, `authenticated` e `redirecting`, cleanup de `onAuthStateChanged`, loading com `role="status"`, `aria-live` e `aria-busy`.
+- Shell contém somente links para Dashboard e Carteiras; dashboard não consulta Firestore nem exibe valores financeiros.
+- Proxy mantém matcher restrito e adiciona `/portfolios/:path*` tanto ao matcher quanto à ponte público/app; assets e `/_next/*` não entram no matcher.
+- Revisão independente classificou implementação como pronta, sem bloqueadores.
+
+### Matriz de hosts/auth
+
+- Por inspeção: público redireciona `/portfolios` para origem app; app, localhost e preview permanecem same-origin; host desconhecido continua 404; matcher não cobre assets.
+- Por inspeção: anônimo recebe somente loading/redirect, sem shell ou `children`; sessão autenticada monta shell; troca de identidade remonta subtree.
+- Browser não estava disponível nesta execução; sessão restaurada, troca de conta e redirects reais permanecem validação manual residual.
+
+### Riscos residuais
+
+- `AuthGate` é somente UX; autorização continua nas Firebase Rules e não foi alterada.
+- Matriz manual em browser para auth, hosts e assets ainda precisa ser executada nas subtarefas de validação operacional.
