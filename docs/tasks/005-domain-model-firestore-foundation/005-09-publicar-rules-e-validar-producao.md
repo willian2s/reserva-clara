@@ -2,7 +2,7 @@
 
 - **Ticker:** `005`
 - **Número:** `09`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -88,3 +88,65 @@ conteúdo patrimonial.
 - Não executar comando se target não estiver confirmado.
 - Não deixar fixture permanente por falta de delete; parar e corrigir processo.
 - Não chamar produção validada somente porque Console mostra “deployed”.
+
+## Execução e evidências
+
+- **Data:** 2026-09-24.
+- **Status:** `completed`; deploy e smoke produtivo foram concluídos com uma
+  conta autorizada e fixture sintética temporária.
+- **Target:** `.firebaserc` aponta ao projeto Auth/Web confirmado no checkpoint de
+  `005-08`; `firebase.json` publica somente `firestore.rules` e mantém Emulator
+  local separado no script `test:rules`.
+- **Referência de rollback:** `evidences/005-09-firestore.rules.before-deploy`
+  guarda cópia sanitizada das Rules vigentes antes de qualquer deploy. Arquivo
+  foi adicionado ao diff desta execução e deve ser incluído no commit que
+  transportar esta evidência.
+- **Pré-validação local:** `JAVA_HOME=$(/usr/libexec/java_home -v 21) npm run
+  test:rules` passou com 5 testes e 0 falhas no projeto demo do Emulator; a
+  matriz cobre owner, anônimo, cross-user, schema inválido e paths futuros.
+- **Gates:** `npm run lint`, `npm exec next typegen`, `npx tsc --noEmit` e
+  `npm run build` passaram nessa ordem.
+- **CLI:** `npm exec -- firebase --version` passou e confirmou Firebase CLI
+  `15.31.0`; após autenticação autorizada, `firebase deploy
+  --only firestore:rules` compilou e liberou `firestore.rules` no projeto
+  configurado. Deploy publicou somente Rules.
+- **Database:** `npm exec -- firebase firestore:databases:list --project
+  <target-confirmado>` retornou database `(default)` em `STANDARD`/
+  `FIRESTORE_NATIVE`; project ID não foi registrado nesta evidência.
+- **Produção:** publicação confirmada pelo CLI. Smoke via Firebase Web SDK no
+  browser passou: owner create/read/update `PASS`; cross-user read/write em
+  namespace sintético diferente `DENIED`; anônimo read/write `DENIED`; cleanup
+  `PASS`. Nenhum UID, token, e-mail ou conteúdo patrimonial foi registrado.
+- **Evidência sanitizada:** `evidences/005-09-production-smoke.md`.
+- **Rollback conhecido:** restaurar a cópia sanitizada com
+  `cp docs/tasks/005-domain-model-firestore-foundation/evidences/005-09-firestore.rules.before-deploy firestore.rules`,
+  executar `firebase deploy --only firestore:rules`, repetir smoke produtivo e
+  registrar resultado sanitizado. Não há rollback a executar nesta tentativa,
+  pois deploy atual foi concluído sem erro.
+
+## Arquivos alterados
+
+- `docs/tasks/005-domain-model-firestore-foundation/evidences/005-09-firestore.rules.before-deploy`
+- `docs/tasks/005-domain-model-firestore-foundation/evidences/005-09-production-smoke.md`
+- `docs/tasks/005-domain-model-firestore-foundation/005-09-publicar-rules-e-validar-producao.md`
+- `docs/tasks/005-domain-model-firestore-foundation/005-00-overview.md`
+
+## Decisões e desvios
+
+- Não alterei `firestore.rules`, `.firebaserc`, `firebase.json` ou código da
+  aplicação: Rules locais já estavam testadas e target foi confirmado em
+  `005-08`.
+- Não usei Admin, Emulator para aceite produtivo, dados pessoais, UIDs, tokens,
+  contas ou screenshots.
+- Usei uma conta autorizada para owner/anônimo e namespace sintético diferente
+  para provar negação cross-user; segunda identidade não foi necessária para a
+  decisão de ownership por `request.auth.uid` versus `userId` do path.
+
+## Riscos residuais e bloqueios
+
+- O cross-user foi testado contra path sintético diferente, não contra uma
+  segunda sessão autenticada real; se requisito operacional exigir A→B com duas
+  contas, repetir matriz com segunda conta antes de ampliar o aceite.
+- O hash/estado remoto das Rules não foi obtido; publicação foi confirmada pelo
+  CLI e comportamento pelo cliente Web. As evidências aguardam inclusão no
+  commit da execução antes de serem consideradas preservadas no histórico.

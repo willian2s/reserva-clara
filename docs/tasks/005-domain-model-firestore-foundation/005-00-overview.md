@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [005-domain-model-firestore-foundation.md](../../specs/005-domain-model-firestore-foundation.md)
-- **Progresso:** 8/10 subtarefas concluídas
+- **Progresso:** 9/10 subtarefas concluídas
 
 ## Objetivo
 
@@ -21,7 +21,7 @@ condicionado a checkpoint humano de região.
 - [x] [005-06-versionar-security-rules.md](005-06-versionar-security-rules.md)
 - [x] [005-07-configurar-emulator-e-testes-de-rules.md](005-07-configurar-emulator-e-testes-de-rules.md)
 - [x] [005-08-ativar-firestore-com-checkpoint-humano.md](005-08-ativar-firestore-com-checkpoint-humano.md)
-- [ ] [005-09-publicar-rules-e-validar-producao.md](005-09-publicar-rules-e-validar-producao.md)
+- [x] [005-09-publicar-rules-e-validar-producao.md](005-09-publicar-rules-e-validar-producao.md)
 - [ ] [005-10-fechar-gates-e-documentacao.md](005-10-fechar-gates-e-documentacao.md)
 
 ## Observações
@@ -62,6 +62,12 @@ condicionado a checkpoint humano de região.
 - `005-07` concluiu Emulator Suite local com projeto demo, fixtures sintéticas,
   testes `node:test` e cobertura de ownership, schema, anônimo e paths futuros;
   `npm run test:rules` passou sem acesso produtivo.
+- `005-09` foi concluída: Rules publicadas após autenticação CLI; smoke Web
+  owner/anônimo/cross-user passou com uma conta e namespace sintético diferente;
+  fixture foi removida. Segunda identidade real não foi usada.
+- Se aceite operacional exigir duas sessões autenticadas para A→B, repetir
+  smoke com segunda conta antes de ampliar evidência; checklist atual cobre
+  negação por `request.auth.uid` versus `userId` do path.
 - Depois de 005-07 verde, primeira subtarefa elegível para avanço externo é
   `005-08-ativar-firestore-com-checkpoint-humano.md`; antes disso, a execução
   deve concluir contratos, acesso, Rules e testes locais.
