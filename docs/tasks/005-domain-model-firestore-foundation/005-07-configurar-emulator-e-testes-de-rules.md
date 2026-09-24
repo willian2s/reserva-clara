@@ -105,16 +105,16 @@ npm run build
   para o projeto demo `demo-reserva-clara`. Nenhum projeto produtivo aparece na
   configuração.
 - **Dependências:** `@firebase/rules-unit-testing@5.0.2` e
-  `firebase-tools@13.35.1` foram adicionados como dependências de
-  desenvolvimento. O runner usa somente `node:test`; não foi introduzido
-  framework genérico.
+  `firebase-tools@15.31.0` são dependências de desenvolvimento. O runner usa
+  somente `node:test`; não foi introduzido framework genérico.
 - **Cobertura:** testes exercitam CRUD owner, leitura/listagem owner-scoped,
   isolamento `user-a`/`user-b`, anônimo, campos ausentes/extras, moeda inválida,
   timestamp de cliente/tipo inválido, `createdAt` mutável, `updatedAt` sem
   server timestamp, update cross-user, nome em branco, namespace raiz, `assets`,
   `goals`, `emergencyReserve`, `transactions`, `allocationTargets`, `snapshots`
   e caminho desconhecido. Nenhum teste usa `withSecurityRulesDisabled`.
-- **Execução:** `npm run test:rules` executa
+- **Execução:** com JDK 21, `JAVA_HOME=$(/usr/libexec/java_home -v 21)
+  npm run test:rules` executa
   `firebase emulators:exec --project demo-reserva-clara --only firestore
   "node --test tests/firestore.rules.test.mjs"`, propagando falhas e
   encerrando o Emulator Suite. O teste limpa fixtures antes/depois e chama
@@ -125,6 +125,7 @@ npm run build
 
 ## Arquivos alterados
 
+- `.gitignore`
 - `.firebaserc`
 - `firebase.json`
 - `package.json`
@@ -136,8 +137,10 @@ npm run build
 
 - O projeto demo é fixo e explícito no script e no `.firebaserc`, evitando
   qualquer fallback para o projeto usado pelo Auth.
-- A versão `firebase-tools@13.35.1` foi fixada por compatibilidade com Java 17
-  registrada em 005-06; a CLI atual não foi usada.
+- `firebase-tools@15.31.0` foi fixado após disponibilização de JDK 21 para o
+  Emulator; Expo/React Native pode continuar usando JDK 17 em comandos próprios.
+- `firestore-debug.log` passou a ser ignorado e removido do versionamento, pois
+  é artefato gerado pelo Emulator.
 - Não foi criado `firestore.indexes.json`, pois testes usam somente caminhos e
   listagem sem query composta. `firestore.rules` não precisou de alteração.
 
@@ -146,6 +149,7 @@ npm run build
 - Emulator verde não comprova Rules publicadas nem autoriza conexão com banco
   real. `005-08` continua bloqueada até checkpoint humano de região/ativação;
   `005-09` continua bloqueada até publicação aprovada e smoke sintético.
-- `npm install` reportou avisos de engine para `superstatic` em Node 24 e 10
-  vulnerabilidades transitivas no conjunto da CLI; não foram aplicadas
-  atualizações forçadas fora do escopo.
+- `npm audit --omit=optional` reporta 5 vulnerabilidades moderadas transitivas
+  no tooling (`@opentelemetry/core`, `@google-cloud/pubsub`, `gaxios` e
+  `uuid`); `npm audit --omit=dev` não reporta vulnerabilidades de produção.
+  Não foram aplicadas atualizações forçadas fora do escopo.
