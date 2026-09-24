@@ -2,7 +2,7 @@
 
 - **Ticker:** `005`
 - **Número:** `06`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -90,3 +90,55 @@ cross-user. Substituir placeholder pelo script aprovado em 005-07.
 - Não usar `resource.data` em create onde não existe documento.
 - Não relaxar Timestamp para permitir cliente forjar `createdAt`.
 - Antes de 007, revisar exclusão e filhos para evitar órfãos.
+
+## Execução e evidências
+
+- **Data:** 2026-09-24.
+- **Implementado:** `firestore.rules` com `rules_version = '2'`, default deny
+  explícito, ownership por `request.auth.uid` e `{userId}`, acesso separado de
+  `get/list` para Portfolio próprio e create/update/delete owner-scoped.
+- **Schema:** Portfolio aceita somente `name`, `baseCurrency`, `createdAt` e
+  `updatedAt`; exige string não vazia após trim, tamanho máximo de 100, `BRL` e
+  Firestore `timestamp`. Campos extras, ausentes, tipos incorretos e moeda
+  diferente são rejeitados.
+- **Timestamps:** create exige `createdAt` e `updatedAt` iguais a
+  `request.time`; update exige `createdAt` imutável e `updatedAt` server-side.
+  Delete não usa `resource.data` e não promete cascata de subcoleções.
+- **Paths fechados:** `users/{uid}`, Asset, Goal, Reserve, Transaction,
+  allocationTargets, Snapshot e wildcard desconhecido permanecem negados. Não
+  houve uso de `DashboardGate`, deploy ou alteração de produção.
+- **Validação de Rules:** `firebase-tools@13.35.1 emulators:exec` com projeto
+  demo temporário compilou as Rules e encerrou o Firestore Emulator com sucesso.
+  Configuração temporária foi removida. A tentativa com `firebase-tools@latest`
+  não iniciou porque o ambiente possui Java 17 e a versão atual exige Java 21;
+  a validação aprovada usou a CLI compatível disponível.
+- **Gates:** `npm run lint`; `npm exec next typegen`; `npx tsc --noEmit`;
+  `npm run build`; `git diff --no-index --check /dev/null firestore.rules` —
+  todos passaram, sem diagnóstico de whitespace.
+
+## Arquivos alterados
+
+- `firestore.rules`
+- `docs/tasks/005-domain-model-firestore-foundation/005-00-overview.md`
+- `docs/tasks/005-domain-model-firestore-foundation/005-06-versionar-security-rules.md`
+
+## Decisões e desvios
+
+- Default deny recursivo vem antes dos matches específicos; regras futuras só
+  poderão abrir acesso com schema e ownership próprios.
+- `get/list` exigem ownership do path, permitindo query somente no namespace do
+  usuário autenticado. Nenhum allow depende apenas de autenticação.
+- A expressão de `name` rejeita valor composto apenas por whitespace e permite
+  whitespace interno, inclusive newline, mantendo compatibilidade com o parser
+  que normaliza `trim()` antes de expor o domínio.
+- Não foram criados `firebase.json`, testes comportamentais ou dependências;
+  configuração e matriz owner/A/B/anônimo pertencem à subtarefa 005-07.
+
+## Riscos residuais e bloqueios
+
+- 005-07 ainda precisa provar no Emulator Suite owner create/read/update/delete,
+  query/list, anônimo, cross-user, schema inválido, timestamps e paths futuros.
+- CLI atual do Firebase exige Java 21, ausente no ambiente local; 005-07 deve
+  confirmar versão de CLI/JDK aprovada para execução reproduzível.
+- Delete de Portfolio continua sem cascata; antes de abrir filhos em 007,
+  exclusão/arquivamento deve ser revisado.

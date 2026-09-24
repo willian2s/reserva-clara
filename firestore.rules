@@ -1,0 +1,84 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Explicit default deny. Every future path remains closed until it gets
+    // its own reviewed schema and ownership rule.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    function isValidPortfolio(data) {
+      return data.keys().hasOnly([
+          'name',
+          'baseCurrency',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasAll([
+          'name',
+          'baseCurrency',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.name is string &&
+        data.name.size() >= 1 &&
+        data.name.size() <= 100 &&
+        data.name.matches('[\\s\\S]*\\S[\\s\\S]*') &&
+        data.baseCurrency is string &&
+        data.baseCurrency == 'BRL' &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // The namespace is not a profile document in phase 005.
+    match /users/{userId} {
+      allow read, write: if false;
+    }
+
+    match /users/{userId}/portfolios/{portfolioId} {
+      allow get, list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+        isValidPortfolio(request.resource.data) &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time;
+
+      allow update: if isOwner(userId) &&
+        isValidPortfolio(request.resource.data) &&
+        request.resource.data.createdAt == resource.data.createdAt &&
+        request.resource.data.updatedAt == request.time;
+
+      allow delete: if isOwner(userId);
+    }
+
+    // Future paths stay explicitly denied until their own task defines rules.
+    match /users/{userId}/assets/{assetId} {
+      allow read, write: if false;
+    }
+
+    match /users/{userId}/goals/{goalId} {
+      allow read, write: if false;
+    }
+
+    match /users/{userId}/emergencyReserve {
+      allow read, write: if false;
+    }
+
+    match /users/{userId}/portfolios/{portfolioId}/transactions/{transactionId} {
+      allow read, write: if false;
+    }
+
+    match /users/{userId}/portfolios/{portfolioId}/allocationTargets/{targetId} {
+      allow read, write: if false;
+    }
+
+    match /users/{userId}/portfolios/{portfolioId}/snapshots/{snapshotId} {
+      allow read, write: if false;
+    }
+  }
+}

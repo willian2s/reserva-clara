@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [005-domain-model-firestore-foundation.md](../../specs/005-domain-model-firestore-foundation.md)
-- **Progresso:** 5/10 subtarefas concluídas
+- **Progresso:** 6/10 subtarefas concluídas
 
 ## Objetivo
 
@@ -18,7 +18,7 @@ condicionado a checkpoint humano de região.
 - [x] [005-03-integrar-firestore-web.md](005-03-integrar-firestore-web.md)
 - [x] [005-04-criar-converters-e-validacao-runtime.md](005-04-criar-converters-e-validacao-runtime.md)
 - [x] [005-05-criar-acesso-de-dados-de-portfolio.md](005-05-criar-acesso-de-dados-de-portfolio.md)
-- [ ] [005-06-versionar-security-rules.md](005-06-versionar-security-rules.md)
+- [x] [005-06-versionar-security-rules.md](005-06-versionar-security-rules.md)
 - [ ] [005-07-configurar-emulator-e-testes-de-rules.md](005-07-configurar-emulator-e-testes-de-rules.md)
 - [ ] [005-08-ativar-firestore-com-checkpoint-humano.md](005-08-ativar-firestore-com-checkpoint-humano.md)
 - [ ] [005-09-publicar-rules-e-validar-producao.md](005-09-publicar-rules-e-validar-producao.md)
@@ -43,10 +43,14 @@ condicionado a checkpoint humano de região.
   dependência ou conexão automática com emulator; gates técnicos passaram.
 - `005-04` concluiu parser/converter de Portfolio com validação runtime,
   timestamps explícitos, writes parciais via `merge` e smoke sintético;
-  Emulator/Rules permanecem futuros.
+  testes no Emulator permanecem futuros.
 - `005-05` concluiu repository owner-scoped com paths derivados do Auth,
   create/list/get/update/delete, validação antes do SDK, server timestamps,
-  update sem upsert e erros SDK sanitizados; Rules/emulator permanecem futuros.
+  update sem upsert e erros SDK sanitizados; testes no Emulator permanecem
+  futuros.
+- `005-06` concluiu Rules versionadas com default deny, schema mínimo de
+  Portfolio, timestamps server-side, ownership por path e negação explícita de
+  namespace/profile e entidades futuras; matriz comportamental aguarda 005-07.
 - Depois de 005-07 verde, primeira subtarefa elegível para avanço externo é
   `005-08-ativar-firestore-com-checkpoint-humano.md`; antes disso, a execução
   deve concluir contratos, acesso, Rules e testes locais.
