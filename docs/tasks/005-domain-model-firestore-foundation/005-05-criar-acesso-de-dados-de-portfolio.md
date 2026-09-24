@@ -2,7 +2,7 @@
 
 - **Ticker:** `005`
 - **Número:** `05`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -90,3 +90,50 @@ conta pessoal nem produção.
   de abrir Transactions.
 - Auto ID é suficiente para Portfolio, mas não para idempotência de Transaction.
 - Não adicionar listener realtime sem requisito de fase.
+
+## Execução e evidências
+
+- **Data:** 2026-09-24.
+- **Implementado:** repository owner-scoped com `createPortfolio`,
+  `getPortfolio`, `listPortfolios`, `updatePortfolio` e `deletePortfolio`;
+  UID é lido de `auth.currentUser` em cada operação e não é aceito como input.
+- **Paths e validação:** referências usam exclusivamente
+  `users/{uid}/portfolios`; IDs e inputs são validados antes das operações SDK.
+  Listagem usa leitura direta da coleção, sem índice composto.
+- **Writes e segurança:** create/update usam server timestamps dos mapeadores
+  existentes; update usa `updateDoc` após validar existência, evitando upsert;
+  falhas SDK são traduzidas para erro sanitizado. Delete remove somente o
+  documento pai e não promete cascata de subcoleções futuras.
+- **Comandos executados:** `npm run lint`; `npm exec next typegen`; `npx tsc
+  --noEmit`; `npm run build`; `git diff --check`.
+- **Resultados:** todos os gates passaram; smoke sintético sem Firebase
+  produtivo não foi adicionado porque não há runner/configuração de emulator
+  aprovada nesta subtarefa.
+
+## Arquivos alterados
+
+- `src/data/firestore/errors.ts`
+- `src/data/firestore/paths.ts`
+- `src/data/firestore/portfolio-repository.ts`
+- `docs/tasks/005-domain-model-firestore-foundation/005-00-overview.md`
+- `docs/tasks/005-domain-model-firestore-foundation/005-05-criar-acesso-de-dados-de-portfolio.md`
+
+## Decisões e desvios
+
+- `getPortfolio` retorna `null` para documento ausente, enquanto documentos
+  existentes passam pelo converter/parser; update diferencia ausência com erro
+  explícito.
+- `updateDoc` foi escolhido em vez de `setDoc(..., { merge: true })` para
+  impedir upsert acidental. O payload passa pelo mapeador e converter de update;
+  leitura prévia e posterior usam converter/parser.
+- Não foram criados UI, hooks, repository genérico, Rules, emulator,
+  configuração ou índices.
+
+## Riscos residuais e bloqueios
+
+- `deletePortfolio` não remove subcoleções; antes de abrir Transactions em 007,
+  exclusão/arquivamento deverá ser revisado.
+- Regras Firestore e isolamento cross-user aguardam 005-06/005-07; este
+  repository apenas enraíza paths no Auth e não substitui Rules.
+- Comportamento real de server timestamps e falhas de permissão aguardam
+  Emulator Suite, ativação do banco e Rules das subtarefas seguintes.
