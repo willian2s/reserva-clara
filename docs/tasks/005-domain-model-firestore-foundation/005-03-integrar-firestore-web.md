@@ -2,7 +2,7 @@
 
 - **Ticker:** `005`
 - **Número:** `03`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -83,3 +83,49 @@ ou dados.
 - Não importar `db` na landing ou no root layout.
 - Não conectar emulator automaticamente em produção.
 - Se Firebase config estiver incompleta, registrar bloqueio sem alterar env.
+
+## Execução e evidências
+
+- **Data:** 2026-09-24.
+- **Implementado:** `src/lib/firebase/client.ts` agora define boundary client com
+  `"use client"`, importa `getFirestore` e exporta `db` criado a partir do
+  mesmo `firebaseApp` usado por `auth`.
+- **Singleton confirmado:** fluxo existente com `getApps()` e
+  `initializeApp(firebaseConfig)` foi preservado; `getFirestore(firebaseApp)` não
+  cria segundo Firebase App.
+- **Boundary confirmado:** nenhum Server Component, layout ou landing importa
+  `client.ts`/Firestore; módulo permanece alcançado somente pelos componentes
+  client-side de Auth até a camada de dados das próximas subtarefas.
+- **Emulator:** nenhuma conexão automática ou env de emulator foi adicionada;
+  setup explícito permanece separado para a subtarefa 005-07.
+- **Comandos executados:** `npm run lint`; `npm exec next typegen`; `npx tsc
+  --noEmit`; `npm run build`; inspeção estrutural de imports Firestore; `git diff
+  --check`.
+- **Resultados:** todos os gates passaram; Next.js 16.3.5 compilou e gerou as
+  rotas existentes (`/`, `/dashboard`, `/login` e `/_not-found`); nenhuma nova
+  dependência, env, credencial, Rule, configuração de emulator ou acesso de
+  dados foi criado.
+
+## Arquivos alterados
+
+- `src/lib/firebase/client.ts`
+- `docs/tasks/005-domain-model-firestore-foundation/005-00-overview.md`
+- `docs/tasks/005-domain-model-firestore-foundation/005-03-integrar-firestore-web.md`
+
+## Decisões e desvios
+
+- `db` foi escolhido como nome exportado, seguindo convenção Firestore Web e o
+  contrato esperado pelas próximas subtarefas.
+- `"use client"` explicita que inicialização Auth/Firestore pertence ao boundary
+  browser-only existente; não houve alteração em login, Auth, DashboardGate ou
+  rotas.
+- Não houve desvio de escopo: SDK `firebase` existente foi reutilizado, sem
+  dependência ou variável de ambiente nova.
+
+## Riscos residuais e bloqueios
+
+- Valores reais de configuração Firebase não são exercitados pelos gates; conexão
+  com banco, Rules e isolamento aguardam as subtarefas de converter, repository e
+  Emulator.
+- Ativação do Firestore e escolha de região continuam checkpoint humano da
+  subtarefa 005-08; nenhuma operação real foi executada.
