@@ -458,6 +458,7 @@ recupera hard delete.
 6. [006-06-validar-regras-e-isolamento.md](../tasks/006-portfolio-management/006-06-validar-regras-e-isolamento.md) — revalidar Rules, repository boundary e matriz de ownership.
 7. [006-07-validar-acessibilidade-e-responsividade.md](../tasks/006-portfolio-management/006-07-validar-acessibilidade-e-responsividade.md) — provar UX mobile/desktop e teclado sem ampliar design system.
 8. [006-08-executar-gates-deploy-e-smoke.md](../tasks/006-portfolio-management/006-08-executar-gates-deploy-e-smoke.md) — gates finais, deployment Vercel, smoke produtivo e handoff 007.
+9. [006-09-customizar-pagina-404.md](../tasks/006-portfolio-management/006-09-customizar-pagina-404.md) — substituir 404 padrão por tela global customizada.
 
 ## Premissas explícitas
 

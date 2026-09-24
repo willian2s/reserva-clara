@@ -2,7 +2,7 @@
 
 - **Status geral:** `in_progress`
 - **Spec:** [006-portfolio-management.md](../../specs/006-portfolio-management.md)
-- **Progresso:** 2/8 subtarefas concluídas
+- **Progresso:** 3/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -20,6 +20,7 @@ financeiros calculados e sem antecipar a fase 007.
 - [ ] [006-06-validar-regras-e-isolamento.md](006-06-validar-regras-e-isolamento.md)
 - [ ] [006-07-validar-acessibilidade-e-responsividade.md](006-07-validar-acessibilidade-e-responsividade.md)
 - [ ] [006-08-executar-gates-deploy-e-smoke.md](006-08-executar-gates-deploy-e-smoke.md)
+- [x] [006-09-customizar-pagina-404.md](006-09-customizar-pagina-404.md)
 
 ## Observações
 
@@ -44,5 +45,8 @@ financeiros calculados e sem antecipar a fase 007.
 - 006-02 concluída: listagem owner-scoped, empty state, criação BRL, retry,
   reconciliação e gates técnicos implementados; revisão independente não encontrou
   bloqueadores.
+- 006-09 concluída: 404 global customizada usa classificação de host compartilhada
+  e retorno host-aware; renderização por requisição foi documentada como trade-off
+  aceito por ser fluxo excepcional.
 - Validação manual em browser de sessão, troca de identidade e matriz completa de
   hosts/assets permanece pendente por indisponibilidade de browser nesta execução.
