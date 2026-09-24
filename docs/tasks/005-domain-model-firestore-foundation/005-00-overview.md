@@ -1,8 +1,8 @@
 # 005 — Domain Model & Firestore Foundation
 
-- **Status geral:** pending
+- **Status geral:** completed
 - **Spec:** [005-domain-model-firestore-foundation.md](../../specs/005-domain-model-firestore-foundation.md)
-- **Progresso:** 9/10 subtarefas concluídas
+- **Progresso:** 10/10 subtarefas concluídas
 
 ## Objetivo
 
@@ -22,15 +22,13 @@ condicionado a checkpoint humano de região.
 - [x] [005-07-configurar-emulator-e-testes-de-rules.md](005-07-configurar-emulator-e-testes-de-rules.md)
 - [x] [005-08-ativar-firestore-com-checkpoint-humano.md](005-08-ativar-firestore-com-checkpoint-humano.md)
 - [x] [005-09-publicar-rules-e-validar-producao.md](005-09-publicar-rules-e-validar-producao.md)
-- [ ] [005-10-fechar-gates-e-documentacao.md](005-10-fechar-gates-e-documentacao.md)
+- [x] [005-10-fechar-gates-e-documentacao.md](005-10-fechar-gates-e-documentacao.md)
 
 ## Observações
 
-- Fase 005 permanece sem collections, documentos, Rule publicada, env produtivo
-  ou deploy nesta execução; o database default foi ativado em `005-08` sem
-  conteúdo. `005-02` implementa somente contratos puros de domínio, sem
-  persistência. `005-07` adiciona apenas dependências de desenvolvimento para
-  Emulator Suite e Rules Unit Testing.
+- Fase 005 não cria seed pessoal nem conteúdo patrimonial versionado. Database
+  default foi ativado em `005-08`; Rules foram publicadas e smoke sintético foi
+  concluído em `005-09`, com fixture removida.
 - Dependência central: Firebase Web existente em `src/lib/firebase/client.ts`;
   `DashboardGate` continua UX, não autorização.
 - Documento `users/{uid}` não será criado em 005. Namespace e Rules expressam
@@ -38,8 +36,8 @@ condicionado a checkpoint humano de região.
 - `Portfolio` é única entidade persistida da fundação. Asset, Transaction,
   allocation, Snapshot, Goal e Emergency Reserve ficam em contratos/limites
   futuros, sem collections abertas por wildcard.
-- Região do Firestore exige checkpoint humano. Uma task externa permanece
-  pending/blocked até decisão; `[x]` só depois da definição de pronto própria.
+- Região do Firestore foi decidida em checkpoint humano e registrada em `005-08`.
+  Configuração produtiva e validação por smoke permanecem evidências distintas.
 - `005-08` concluiu checkpoint humano e criação do database `(default)` no
   projeto Auth/Web: Native/Standard em `southamerica-east1`, modo produtivo,
   backups desativados e realtime ativado. Motivos registrados: residência no
@@ -68,6 +66,6 @@ condicionado a checkpoint humano de região.
 - Se aceite operacional exigir duas sessões autenticadas para A→B, repetir
   smoke com segunda conta antes de ampliar evidência; checklist atual cobre
   negação por `request.auth.uid` versus `userId` do path.
-- Depois de 005-07 verde, primeira subtarefa elegível para avanço externo é
-  `005-08-ativar-firestore-com-checkpoint-humano.md`; antes disso, a execução
-  deve concluir contratos, acesso, Rules e testes locais.
+- Fase 005 concluída. Fase 006 deve começar pela experiência Portfolio usando
+  contratos e repository existentes; delete/cascade deve ser decidido antes de
+  abrir subcoleções patrimoniais.

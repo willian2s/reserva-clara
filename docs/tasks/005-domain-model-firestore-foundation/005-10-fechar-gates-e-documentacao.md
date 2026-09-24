@@ -2,7 +2,7 @@
 
 - **Ticker:** `005`
 - **Número:** `10`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -94,3 +94,56 @@ typecheck.
 - Não incluir saída de comandos com env/UID/token nas evidências.
 - Se gate falhar, manter task `in_progress`/`blocked` e registrar erro concreto;
   não ampliar escopo para “fazer passar”.
+
+## Execução e evidências
+
+- **Data:** 2026-09-24.
+- **Status final:** `completed`; subtarefa concluída sem alteração de código,
+  configuração Firebase ou produção nesta execução.
+- **Comandos executados, na ordem aprovada:**
+  `JAVA_HOME=$(/usr/libexec/java_home -v 21) npm run test:rules`,
+  `npm run lint`, `npm exec next typegen`, `npx tsc --noEmit`,
+  `npm run build`, `git diff --check` e `git status --short`.
+- **Rules:** `npm run test:rules` passou com 5 testes e 0 falhas, usando somente
+  projeto demo do Emulator Suite. Mensagens `PERMISSION_DENIED` são tentativas
+  negativas esperadas da matriz de Rules; não indicam falha de teste.
+- **Gates:** lint, typegen, typecheck e build passaram na ordem prescrita. Build
+  gerou rotas existentes sem alteração de UI.
+- **Fronteiras:** `src/app` não importa Firebase/Firestore; landing e layouts não
+  acessam SDK ou repository. Acesso Firestore permanece em `src/data/firestore`
+  e no singleton client existente.
+- **Escopo/configuração:** não existe `firestore.indexes.json`; não há UI
+  financeira, seed pessoal, Firebase Admin, service account ou secret versionado.
+  `.env.local` e logs do Emulator permanecem ignorados.
+- **Produção/handoff:** evidências de `005-08` e `005-09` registram database
+  configurado, Rules publicadas e smoke sintético owner/anônimo/cross-user com
+  fixture removida. Fase 006 começa pela experiência Portfolio usando contratos
+  e repository existentes, sem schema novo.
+
+## Arquivos alterados
+
+- `docs/specs/005-domain-model-firestore-foundation.md`
+- `docs/tasks/005-domain-model-firestore-foundation/005-00-overview.md`
+- `docs/tasks/005-domain-model-firestore-foundation/005-10-fechar-gates-e-documentacao.md`
+
+Nenhum arquivo de aplicação, configuração, Rules, dependência ou evidência
+produtiva foi alterado nesta subtarefa.
+
+## Decisões e desvios
+
+- Foi usado o script aprovado `npm run test:rules`, com JDK 21 explícito exigido
+  pela Firebase CLI disponível; nenhum fallback produtivo foi usado.
+- Não houve desvio de escopo nem correção oportunista. Estado produtivo foi
+  consolidado a partir das evidências sanitizadas de `005-08` e `005-09`.
+- `firestore.indexes.json` permanece ausente porque nenhuma query composta exige
+  índice.
+
+## Riscos residuais e bloqueios
+
+- Smoke produtivo cross-user usou uma conta autorizada contra namespace sintético
+  diferente, não duas sessões autenticadas reais; ampliar isso exigiria conta de
+  teste adicional e nova evidência.
+- Hash remoto das Rules não foi registrado; publicação foi confirmada pelo CLI e
+  comportamento foi coberto pelo cliente Web/Emulator.
+- Antes de 007, semântica de delete/cascade de Portfolio deve ser revisada ao
+  abrir subcoleções filhas. Não há bloqueio para handoff 006.

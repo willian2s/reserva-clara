@@ -2,7 +2,7 @@
 
 ## Status
 
-`pending`
+`completed`
 
 ## Ticker
 
@@ -28,8 +28,7 @@ O checkout usa Next.js `16.3.5`, React `19.2.8`, TypeScript strict, App Router,
 Tailwind 4, Firebase Web `12.19.0` e npm. Não há arquivos em
 `.opencode/rules/`. A documentação local do Next indicada por `AGENTS.md`, em
 `node_modules/next/dist/docs/`, não está disponível neste checkout; esta fase
-não altera APIs Next nem layouts, e a futura implementação deve revalidar a
-documentação local antes de tocar em `src/`.
+não alterou APIs Next nem layouts.
 
 O Firebase Web já é inicializado uma vez em `src/lib/firebase/client.ts`, com
 sete variáveis `NEXT_PUBLIC_FIREBASE_*`, e exporta `auth` e `firebaseApp`. O
@@ -38,13 +37,12 @@ login Google usa `signInWithPopup`, `onAuthStateChanged` e
 redireciona anônimos para `/login` e renderiza somente shell não sensível. Ele é
 UX/client routing, não autorização de dados.
 
-Não existe hoje `getFirestore`, converter, parser de documentos, camada de
-persistência, modelo de domínio, `firebase.json`, `.firebaserc`,
-`firestore.rules`, `firestore.indexes.json`, configuração de Emulator Suite ou
-qualquer acesso Firestore em `src/`. `src/domain`, `src/services` e `src/types`
-contêm somente `.gitkeep`. `package.json` não possui test runner nem Firebase
-CLI separado; o pacote `firebase` já está instalado e a configuração existente
-já contém `projectId` suficiente para inicializar Firestore Web.
+`getFirestore`, converter, parser de documentos, camada de persistência, modelo
+de domínio, `firebase.json`, `.firebaserc`, `firestore.rules` e configuração de
+Emulator Suite foram implementados nesta fase. `firestore.indexes.json` não foi
+criado porque nenhuma query composta exige índice. O pacote `firebase` existente
+foi reutilizado; `firebase-tools` e `@firebase/rules-unit-testing` foram fixados
+como dependências de desenvolvimento para os testes locais.
 
 Documentação oficial Firebase/Firestore consultada em 2026-09-23 confirma que
 subcoleções podem ser organizadas sob documentos, Security Rules precisam ser
@@ -57,11 +55,11 @@ escolhida por inferência.
 
 ## Objetivo
 
-Definir e, em execução futura, implementar uma fundação de domínio e
+Definir e implementar uma fundação de domínio e
 persistência Firestore pequena, segura, testável e orientada a ownership, sem
 construir features de carteira/transações.
 
-Ao concluir a execução futura, a aplicação deverá ter:
+Após a execução, a aplicação tem:
 
 - contrato inicial de domínio e invariantes documentados;
 - ownership enraizado no Firebase Auth `uid`;
@@ -80,7 +78,7 @@ Ao concluir a execução futura, a aplicação deverá ter:
 
 ## Escopo
 
-### Incluído na execução futura da fase 005
+### Incluído na execução da fase 005
 
 - decisão agrupada de hierarquia, ownership, precisão e fonte da verdade
   registrada nesta spec;
@@ -436,7 +434,7 @@ falhar com erro sanitizado sem incluir conteúdo patrimonial em logs.
 
 ## Arquivos, módulos e contratos afetados
 
-### Alterações esperadas na execução futura
+### Alterações realizadas na execução
 
 - `src/lib/firebase/client.ts`: exportar Firestore da mesma instância Firebase;
 - `src/domain/*`: tipos de domínio/value objects e contratos futuros
@@ -446,9 +444,8 @@ falhar com erro sanitizado sem incluir conteúdo patrimonial em logs.
 - `.firebaserc`: alias do projeto Firebase confirmado, sem credenciais;
 - `firestore.rules`: Rules versionadas para namespace e Portfolio;
 - testes locais de Rules e fixture mínima fictícia;
-- `package.json`/lockfile: somente se a execução aprovada precisar de
-  `@firebase/rules-unit-testing`, Firebase CLI ou script de teste. Nenhuma
-  dependência será instalada nesta execução de planejamento.
+- `package.json`/lockfile: scripts e dependências de desenvolvimento para
+  `@firebase/rules-unit-testing`, Firebase CLI e teste reproduzível de Rules.
 
 ### Reutilização sem alteração esperada
 
@@ -493,7 +490,7 @@ falhar com erro sanitizado sem incluir conteúdo patrimonial em logs.
 
 Usar Local Emulator Suite, `@firebase/rules-unit-testing` e o runner nativo
 `node:test` ou equivalente mínimo aprovado, em vez de introduzir framework
-genérico sem necessidade. A execução futura deve:
+genérico sem necessidade. A execução realizada:
 
 1. carregar `firestore.rules` em projeto de emulator fictício;
 2. criar fixtures sintéticas mínimas com usuários `user-a` e `user-b`, sem
@@ -520,9 +517,9 @@ npx tsc --noEmit
 npm run build
 ```
 
-Adicionar comando de Rules somente se a futura implementação tiver script
-reprodutível. Build/typecheck não provam ownership. Inspecionar imports para
-confirmar que landing, layouts e Server Components não carregam Firestore.
+O script reproduzível `npm run test:rules` foi adicionado e executado. Build e
+typecheck não provam ownership; a inspeção confirmou que landing, layouts e
+Server Components não carregam Firestore.
 
 ### Produção e evidências
 
@@ -568,20 +565,20 @@ Após checkpoint de região, deploy aprovado e Rules emuladas:
 
 - `005` foi fornecido explicitamente e é preservado como ticker; não gerar
   número sequencial.
-- O mesmo projeto Firebase usado pelo Auth será o alvo Firestore, mas project
-  id e estado do banco devem ser confirmados sem copiar valores para docs/logs.
-- Não existe database Firestore confirmado neste checkout. A fase futura para no
-  checkpoint se Console não oferecer banco ou pedir região.
+- O mesmo projeto Firebase usado pelo Auth é o alvo Firestore; project ID e
+  credenciais não são registrados em docs/logs.
+- Database Firestore foi criado após checkpoint humano; região e modo estão
+  registrados em `005-08`, sem conteúdo patrimonial.
 - A recomendação é namespace sem documento `users/{uid}` e sem perfil; revisão
   humana pode alterar isso antes da implementação se surgir requisito real.
 - BRL é base V1 por coerência com produto; FX e multi-currency ficam adiados.
-- A decisão agrupada de domínio/Firestore está registrada nesta spec e deve ser
-  revisada antes do primeiro código.
-- Região do Firestore, custo/residência, disponibilidade de conta(s) de teste e
-  método de publicação são checkpoints humanos; não bloqueiam este plano, mas
-  bloqueiam a execução das subtarefas externas.
-- Nenhum documento real, collection, Rule publicada, env, dependência ou deploy
-  foi criado nesta execução.
+- A decisão agrupada de domínio/Firestore está registrada nesta spec e foi
+  revisada antes da implementação.
+- Região, custo/residência, disponibilidade de contas de teste e método de
+  publicação foram tratados como checkpoints humanos; Rules foram publicadas
+  somente após Emulator verde e smoke sintético.
+- Não foram criados dados patrimoniais pessoais, seed produtivo, Firebase Admin,
+  service account, secret versionado ou índice composto.
 
 ## Referências consultadas
 
@@ -619,3 +616,27 @@ Após checkpoint de região, deploy aprovado e Rules emuladas:
 - Next.js local docs check: `node_modules/next/dist/docs/` ausente; não há
   mudança Next planejada. Contrato anterior consultado:
   https://nextjs.org/docs/app/api-reference/file-conventions/proxy
+
+## Estado final da execução
+
+- **Data:** 2026-09-24.
+- **Status:** `completed`; as 10 subtarefas foram concluídas e o overview está
+  em `10/10`.
+- **Rules local:** `JAVA_HOME=$(/usr/libexec/java_home -v 21) npm run
+  test:rules` passou com 5 testes e 0 falhas, somente no projeto demo do
+  Emulator Suite.
+- **Gates:** `npm run lint`, `npm exec next typegen`, `npx tsc --noEmit`,
+  `npm run build` e `git diff --check` passaram nessa ordem.
+- **Produção:** evidências de `005-08` e `005-09` registram database configurado
+  após checkpoint humano, Rules publicadas e smoke sintético owner/anônimo/
+  cross-user com fixture removida. Configuração, publicação e smoke permanecem
+  distinguidos.
+- **Fronteiras:** landing, layouts e Server Components não importam Firestore;
+  React não acessa SDK Firestore diretamente. Não há UI financeira, seed pessoal,
+  Firebase Admin, service account, secret versionado ou `firestore.indexes.json`.
+- **Handoff 006:** iniciar experiência de Portfolio sobre contratos e repository
+  existentes. Revisar delete/cascade antes de abrir subcoleções patrimoniais;
+  idempotência de Transaction permanece decisão de 007.
+- **Riscos residuais:** smoke cross-user produtivo usou uma conta autorizada
+  contra namespace sintético diferente, não duas sessões reais; hash remoto das
+  Rules não foi registrado. Nenhum risco bloqueia handoff 006.
