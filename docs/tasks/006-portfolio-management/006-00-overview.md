@@ -2,7 +2,7 @@
 
 - **Status geral:** `in_progress`
 - **Spec:** [006-portfolio-management.md](../../specs/006-portfolio-management.md)
-- **Progresso:** 1/8 subtarefas concluídas
+- **Progresso:** 2/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -13,7 +13,7 @@ financeiros calculados e sem antecipar a fase 007.
 ## Checklist
 
 - [x] [006-01-estruturar-shell-auth-e-navegacao.md](006-01-estruturar-shell-auth-e-navegacao.md)
-- [ ] [006-02-implementar-listagem-e-criacao.md](006-02-implementar-listagem-e-criacao.md)
+- [x] [006-02-implementar-listagem-e-criacao.md](006-02-implementar-listagem-e-criacao.md)
 - [ ] [006-03-implementar-detalhe-e-acesso.md](006-03-implementar-detalhe-e-acesso.md)
 - [ ] [006-04-implementar-renomeacao.md](006-04-implementar-renomeacao.md)
 - [ ] [006-05-implementar-exclusao-segura.md](006-05-implementar-exclusao-segura.md)
@@ -41,5 +41,8 @@ financeiros calculados e sem antecipar a fase 007.
 - 006-01 concluída: AuthGate, grupo protegido, shell, CTA de Dashboard e bridge
   de `/portfolios` implementados; gates técnicos passaram e revisão independente
   não encontrou bloqueadores.
+- 006-02 concluída: listagem owner-scoped, empty state, criação BRL, retry,
+  reconciliação e gates técnicos implementados; revisão independente não encontrou
+  bloqueadores.
 - Validação manual em browser de sessão, troca de identidade e matriz completa de
   hosts/assets permanece pendente por indisponibilidade de browser nesta execução.

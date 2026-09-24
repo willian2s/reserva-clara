@@ -2,7 +2,7 @@
 
 - **Ticker:** `006`
 - **Número:** `02`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -108,3 +108,58 @@ write cego; create bem-sucedido; ausência de SDK/path em `src/app` e
 
 Registrar arquivos, mapeamento de estados, comandos, matriz de create/listagem,
 resultado e riscos residuais. Marcar somente esta task no overview quando pronta.
+
+## Registro de execução
+
+### Status
+
+`completed`.
+
+### Arquivos alterados
+
+- `src/app/(app)/(protected)/portfolios/page.tsx` — rota Server Component sem SDK.
+- `src/components/portfolio/portfolio-list.tsx` — leitura one-shot, estados, ordenação e cards.
+- `src/components/portfolio/portfolio-create-form.tsx` — validação, criação BRL, feedback e reconciliação.
+
+### Decisões e desvios
+
+- Repository permanece única fronteira de dados; componentes não importam Firebase SDK nem constroem paths.
+- Carga inicial usa guard contra Strict Mode e request ID contra resultados obsoletos; cleanup impede atualização após unmount.
+- Falha de create exige reconciliação bem-sucedida antes de liberar novo submit, evitando duplicação quando write pode ter persistido.
+- Empty state só aparece em `ready` com lista vazia; loading e erro não sugerem ausência de carteiras nem deixam create acionável.
+- Cards mostram somente nome, moeda BRL e data real. Nenhum saldo, patrimônio ou retorno foi adicionado.
+- Rota de detalhe permanece responsabilidade de 006-03; `router.push` segue o contrato mesmo enquanto destino ainda não existe.
+
+### Comandos executados
+
+- `npm run lint` — primeira execução falhou pela regra `react-hooks/set-state-in-effect`; inicialização foi reagendada via microtask e o gate final passou.
+- `npm exec next typegen` — passou.
+- `npx tsc --noEmit` — passou.
+- `npm run build` — passou; build reconheceu `/portfolios`.
+- `git diff --check` — passou.
+
+### Resultados e evidências
+
+- Estados implementados: `loading`, `ready`, `empty` e `error` com retry manual.
+- Listagem ordena `createdAt` decrescente e `id` crescente como desempate determinístico.
+- Formulário usa um único `Input`, `Label`, `parsePortfolioName`, `BASE_CURRENCY` e texto fixo de BRL.
+- Nome inválido não chama repository; erro de campo e erro operacional têm regiões e atributos ARIA separados.
+- Double submit bloqueado por ref/estado; falha de persistência mostra reconciliação, sem retry cego.
+- Inspeção estrutural confirmou ausência de `collection`, `getDocs`, `getDoc`, query ou paths Firestore na rota/componentes.
+- Revisão independente final aprovou subtarefa sem bloqueadores.
+
+### Matriz de create/listagem
+
+- Lista vazia: empty state explicativo e CTA `Criar primeira carteira`.
+- Lista com dados: cards responsivos com nome, BRL e data de criação.
+- Loading: mensagem live e formulário desabilitado.
+- Erro de leitura: mensagem sanitizada e `Tentar novamente`; create desabilitado até reconciliação da lista.
+- Nome vazio, whitespace ou fora do limite: mensagem de domínio e nenhum write.
+- Create válido: envia nome normalizado e BRL; sucesso navega para `/portfolios/{id}`.
+- Falha pós-write: submit fica bloqueado até `listPortfolios()` concluir com sucesso.
+
+### Riscos residuais
+
+- `/portfolios/[portfolioId]` ainda não existe; navegação após create chega a 404 até 006-03 implementar detalhe.
+- Smoke autenticado e validação manual de browser, teclado e mobile permanecem pendentes.
+- Não foi executado `npm run test:rules`; esta subtarefa não alterou Rules, parser, converter ou repository.
