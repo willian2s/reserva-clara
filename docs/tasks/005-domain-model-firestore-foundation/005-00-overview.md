@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [005-domain-model-firestore-foundation.md](../../specs/005-domain-model-firestore-foundation.md)
-- **Progresso:** 1/10 subtarefas concluídas
+- **Progresso:** 2/10 subtarefas concluídas
 
 ## Objetivo
 
@@ -14,7 +14,7 @@ condicionado a checkpoint humano de região.
 ## Checklist
 
 - [x] [005-01-baseline-e-decisoes-dominio.md](005-01-baseline-e-decisoes-dominio.md)
-- [ ] [005-02-definir-contratos-e-invariantes.md](005-02-definir-contratos-e-invariantes.md)
+- [x] [005-02-definir-contratos-e-invariantes.md](005-02-definir-contratos-e-invariantes.md)
 - [ ] [005-03-integrar-firestore-web.md](005-03-integrar-firestore-web.md)
 - [ ] [005-04-criar-converters-e-validacao-runtime.md](005-04-criar-converters-e-validacao-runtime.md)
 - [ ] [005-05-criar-acesso-de-dados-de-portfolio.md](005-05-criar-acesso-de-dados-de-portfolio.md)
@@ -26,8 +26,9 @@ condicionado a checkpoint humano de região.
 
 ## Observações
 
-- Fase 005 permanece somente documentação nesta execução; não criar banco,
-  collection, documento, Rule publicada, env, dependência ou deploy.
+- Fase 005 permanece sem banco, collection, documento, Rule publicada, env,
+  dependência ou deploy nesta execução; `005-02` implementa somente contratos
+  puros de domínio, sem persistência.
 - Dependência central: Firebase Web existente em `src/lib/firebase/client.ts`;
   `DashboardGate` continua UX, não autorização.
 - Documento `users/{uid}` não será criado em 005. Namespace e Rules expressam

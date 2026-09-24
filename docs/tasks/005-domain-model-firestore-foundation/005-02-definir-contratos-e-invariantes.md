@@ -2,7 +2,7 @@
 
 - **Ticker:** `005`
 - **Número:** `02`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -87,3 +87,55 @@ datas válidas/inválidas, expoente/float/overflow rejeitados.
 - Não confundir base currency com moeda/preço de Asset.
 - Não fixar ticker ou ativo pessoal como exemplo de domínio.
 - Antes de mudar precisão, revisar impacto em Rules e fases 007/009.
+
+## Execução e evidências
+
+- **Data:** 2026-09-24.
+- **Implementado:** contratos puros de Portfolio, inputs fechados, ID de
+  documento, erros explícitos e value objects para moeda ISO, dinheiro em
+  minor units, decimais canônicos, preço unitário, quantidade, basis points,
+  data civil e instantes.
+- **Contratos futuros:** Asset e Transaction foram documentados como tipos, com
+  Transaction limitada ao ledger inicial (`buy`, `sell`, `contribution`,
+  `withdrawal`) e sem persistência, Rules ou cálculo derivado.
+- **Validação runtime:** smoke compilado temporariamente com `tsc` e executado
+  com Node para BRL `12345`, USD, quantidade `"0.125"`, basis points `1250`,
+  data bissexta válida, expoente/float/overflow/data inválida, moeda inválida,
+  quantidade zero, BRL obrigatório e campo extra rejeitados.
+- **Comandos executados:** `npm run lint`; `npm exec next typegen`; `npx tsc
+  --noEmit`; `npm run build`; `git diff --check`; compilação isolada de
+  `src/domain/*.ts` e smoke Node temporário.
+- **Resultados:** todos os gates passaram; build Next.js 16.3.5 gerou as rotas
+  existentes; nenhum Firebase/Firestore foi inicializado ou acessado.
+- **Testes unitários:** não adicionados, pois repositório não possui runner
+  aprovado; invariantes foram cobertas pelo smoke do parser e ficam prontas para
+  os testes de parser da subtarefa 005-04.
+
+## Arquivos alterados
+
+- `src/domain/errors.ts`
+- `src/domain/value-objects.ts`
+- `src/domain/portfolio.ts`
+- `src/domain/asset.ts`
+- `src/domain/transaction.ts`
+- `src/domain/index.ts`
+- `docs/tasks/005-domain-model-firestore-foundation/005-00-overview.md`
+- `docs/tasks/005-domain-model-firestore-foundation/005-02-definir-contratos-e-invariantes.md`
+
+## Decisões e desvios
+
+- `CurrencyCode` valida códigos ISO 4217 conhecidos e não fica limitado a BRL,
+  enquanto `BaseCurrencyCode` mantém Portfolio V1 fixo em BRL; isso preserva
+  compatibilidade futura de moeda de Asset/preço sem abrir FX.
+- Quantidade e preço unitário exigem decimal positivo; MoneyMinor exige inteiro
+  seguro não negativo, e valores de contribuição/retirada exigem minor units
+  positivas. Nenhum valor decimal é convertido para `number`.
+- `createdAt`/`updatedAt` usam `Date` no domínio; conversão para Firestore
+  Timestamp fica exclusivamente na subtarefa 005-04.
+
+## Riscos residuais e bloqueios
+
+- A lista ISO 4217 é mantida localmente e deverá ser revisada se o contrato de
+  moedas crescer; não há FX, arredondamento ou cálculo financeiro nesta fase.
+- Persistência, parser de DTO Firestore, Rules e testes Emulator continuam nas
+  subtarefas seguintes.
