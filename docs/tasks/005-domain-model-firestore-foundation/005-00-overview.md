@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [005-domain-model-firestore-foundation.md](../../specs/005-domain-model-firestore-foundation.md)
-- **Progresso:** 7/10 subtarefas concluídas
+- **Progresso:** 8/10 subtarefas concluídas
 
 ## Objetivo
 
@@ -20,16 +20,17 @@ condicionado a checkpoint humano de região.
 - [x] [005-05-criar-acesso-de-dados-de-portfolio.md](005-05-criar-acesso-de-dados-de-portfolio.md)
 - [x] [005-06-versionar-security-rules.md](005-06-versionar-security-rules.md)
 - [x] [005-07-configurar-emulator-e-testes-de-rules.md](005-07-configurar-emulator-e-testes-de-rules.md)
-- [ ] [005-08-ativar-firestore-com-checkpoint-humano.md](005-08-ativar-firestore-com-checkpoint-humano.md)
+- [x] [005-08-ativar-firestore-com-checkpoint-humano.md](005-08-ativar-firestore-com-checkpoint-humano.md)
 - [ ] [005-09-publicar-rules-e-validar-producao.md](005-09-publicar-rules-e-validar-producao.md)
 - [ ] [005-10-fechar-gates-e-documentacao.md](005-10-fechar-gates-e-documentacao.md)
 
 ## Observações
 
-- Fase 005 permanece sem banco, collection, documento, Rule publicada, env
-  produtivo ou deploy nesta execução; `005-02` implementa somente contratos
-  puros de domínio, sem persistência. `005-07` adiciona apenas dependências de
-  desenvolvimento para Emulator Suite e Rules Unit Testing.
+- Fase 005 permanece sem collections, documentos, Rule publicada, env produtivo
+  ou deploy nesta execução; o database default foi ativado em `005-08` sem
+  conteúdo. `005-02` implementa somente contratos puros de domínio, sem
+  persistência. `005-07` adiciona apenas dependências de desenvolvimento para
+  Emulator Suite e Rules Unit Testing.
 - Dependência central: Firebase Web existente em `src/lib/firebase/client.ts`;
   `DashboardGate` continua UX, não autorização.
 - Documento `users/{uid}` não será criado em 005. Namespace e Rules expressam
@@ -39,6 +40,11 @@ condicionado a checkpoint humano de região.
   futuros, sem collections abertas por wildcard.
 - Região do Firestore exige checkpoint humano. Uma task externa permanece
   pending/blocked até decisão; `[x]` só depois da definição de pronto própria.
+- `005-08` concluiu checkpoint humano e criação do database `(default)` no
+  projeto Auth/Web: Native/Standard em `southamerica-east1`, modo produtivo,
+  backups desativados e realtime ativado. Motivos registrados: residência no
+  Brasil e latência para usuários. Estado é `configurado`, não `validado`; não
+  há collections/documentos e Rules não foram publicadas.
 - Não criar `firestore.indexes.json` sem query composta real.
 - `005-03` concluiu singleton Firestore Web no boundary client, sem nova env,
   dependência ou conexão automática com emulator; gates técnicos passaram.
