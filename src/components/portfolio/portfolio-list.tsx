@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 
 import { listPortfolios } from "@/data/firestore/portfolio-repository";
 import type { Portfolio } from "@/domain/portfolio";
@@ -152,9 +153,16 @@ export function PortfolioList() {
             <ul className="grid gap-4 sm:grid-cols-2" aria-label="Suas carteiras">
               {portfolios.map((portfolio) => (
                 <li key={portfolio.id}>
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle>{portfolio.name}</CardTitle>
+                    <Card className="h-full">
+                      <CardHeader>
+                        <CardTitle>
+                          <Link
+                            className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                            href={`/portfolios/${portfolio.id}`}
+                          >
+                            {portfolio.name}
+                          </Link>
+                        </CardTitle>
                       <CardDescription>Carteira em {portfolio.baseCurrency}</CardDescription>
                     </CardHeader>
                     <CardContent>

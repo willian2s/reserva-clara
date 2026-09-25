@@ -2,7 +2,7 @@
 
 - **Status geral:** `in_progress`
 - **Spec:** [006-portfolio-management.md](../../specs/006-portfolio-management.md)
-- **Progresso:** 3/9 subtarefas concluídas
+- **Progresso:** 4/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -14,7 +14,7 @@ financeiros calculados e sem antecipar a fase 007.
 
 - [x] [006-01-estruturar-shell-auth-e-navegacao.md](006-01-estruturar-shell-auth-e-navegacao.md)
 - [x] [006-02-implementar-listagem-e-criacao.md](006-02-implementar-listagem-e-criacao.md)
-- [ ] [006-03-implementar-detalhe-e-acesso.md](006-03-implementar-detalhe-e-acesso.md)
+- [x] [006-03-implementar-detalhe-e-acesso.md](006-03-implementar-detalhe-e-acesso.md)
 - [ ] [006-04-implementar-renomeacao.md](006-04-implementar-renomeacao.md)
 - [ ] [006-05-implementar-exclusao-segura.md](006-05-implementar-exclusao-segura.md)
 - [ ] [006-06-validar-regras-e-isolamento.md](006-06-validar-regras-e-isolamento.md)
@@ -48,5 +48,8 @@ financeiros calculados e sem antecipar a fase 007.
 - 006-09 concluída: 404 global customizada usa classificação de host compartilhada
   e retorno host-aware; renderização por requisição foi documentada como trade-off
   aceito por ser fluxo excepcional.
-- Validação manual em browser de sessão, troca de identidade e matriz completa de
-  hosts/assets permanece pendente por indisponibilidade de browser nesta execução.
+- 006-03 concluída: detalhe dinâmico owner-scoped, estados de loading e
+  indisponibilidade unificados, retry, retorno e links acessíveis da listagem;
+  gates técnicos e Rules Emulator passaram. Validação manual permanece pendente.
+- Usuário confirmou validação manual bem-sucedida; casos específicos e matriz
+  completa de hosts/assets não foram discriminados no relato.
