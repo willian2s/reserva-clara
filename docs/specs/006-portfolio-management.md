@@ -99,6 +99,8 @@ rentabilidade, posição ou qualquer outro valor derivado.
 - Usuário consegue criar carteira válida, e ela persiste após refresh/relogin.
 - Múltiplas carteiras podem coexistir e aparecem owner-scoped.
 - Usuário consegue abrir `/portfolios/[portfolioId]`.
+- Usuário consegue abrir `/portfolios/[portfolioId]/settings` para administrar
+  a carteira sem misturar ações administrativas ao contexto patrimonial.
 - Usuário consegue renomear carteira com nome válido.
 - Usuário consegue excluir carteira conforme hard delete de 006 e confirmação.
 - Input inválido não chega ao Firestore.
@@ -179,6 +181,7 @@ Rotas canônicas:
 /dashboard
 /portfolios
 /portfolios/[portfolioId]
+/portfolios/[portfolioId]/settings
 ```
 
 Organização prevista, preservando URLs por route groups:
@@ -193,6 +196,7 @@ src/app/
       dashboard/page.tsx
       portfolios/page.tsx
       portfolios/[portfolioId]/page.tsx
+      portfolios/[portfolioId]/settings/page.tsx
 ```
 
 `(protected)/layout.tsx` compõe `AuthGate` e um shell de navegação mínimo com
@@ -220,7 +224,8 @@ Não criar contexto global nem duplicar `onAuthStateChanged` em cada página.
 Leituras são one-shot. Listagem ordena em memória por `createdAt` decrescente,
 com `id` como desempate determinístico, sem ordenação customizável pelo usuário,
 paginação ou índice composto. Create/rename atualizam o estado com o retorno do
-repository; delete retorna à coleção e provoca nova leitura ao montar.
+repository; rename permanece em settings; delete retorna à coleção e provoca
+nova leitura ao montar.
 
 ### Empty → create → detail
 
@@ -242,28 +247,34 @@ repository; delete retorna à coleção e provoca nova leitura ao montar.
    não repete o mesmo create, pois o repository usa auto ID e não fornece
    idempotência quando o write pode ter persistido sem leitura de confirmação.
 
-### Detail, rename e delete
+### Detail, settings, rename e delete
 
 Detalhe mostra nome, BRL, data de criação quando útil e texto explícito de que a
 carteira ainda não possui recursos patrimoniais nesta fase. Não mostra saldo,
 rentabilidade, posições ou cards financeiros vazios.
+O detalhe não contém formulários nem ações administrativas; oferece link explícito
+e acessível para `/portfolios/{id}/settings`.
 
 ID inválido, `null`, erro de permission-denied e falha de leitura convergem para
 “Não foi possível acessar esta carteira.” com voltar para `/portfolios` e retry.
 Não usar `notFound()` baseado em consulta client-only nem revelar existência
 cross-user.
 
-Renomear usa o mesmo `parsePortfolioName`. Nome normalizado igual ao atual não
-faz write e informa que nada mudou. Nome válido chama `updatePortfolio`, mantém
-o usuário no detalhe e anuncia sucesso. Falha permite retry sem expor exception.
+Settings carrega a carteira por `getPortfolio`, exibe nome e `baseCurrency` reais e
+trata loading, indisponibilidade e falha de leitura com estado sanitizado e retry.
+Renomear existe somente em `/portfolios/{id}/settings` e usa o mesmo
+`parsePortfolioName`. Nome normalizado igual ao atual não faz write e informa que
+nada mudou. Nome válido chama `updatePortfolio`, mantém o usuário em settings,
+atualiza o estado com o retorno e anuncia sucesso. Falha permite retry sem expor
+exception. `baseCurrency` é somente leitura.
 
-Excluir fica no detalhe. Primeiro clique abre confirmação inline com nome da
-carteira, explicação de que a ação é permanente e instrução para digitar
-exatamente o nome atual. O botão `Deletar permanentemente` permanece disabled
-até o texto coincidir; `Cancelar` fecha a confirmação. Após a segunda etapa,
-ações ficam disabled, `deletePortfolio` é chamado e, no sucesso, usa
-`router.replace("/portfolios")`. Não usar cascade, undo ou confirmação baseada
-somente em clique único.
+Excluir ficará em `/portfolios/{id}/settings`, nunca no detalhe. Primeiro clique
+abre confirmação inline com nome da carteira, explicação de que a ação é
+permanente e instrução para digitar exatamente o nome atual. O botão `Deletar
+permanentemente` permanece disabled até o texto coincidir; `Cancelar` fecha a
+confirmação. Após a segunda etapa, ações ficam disabled, `deletePortfolio` é
+chamado e, no sucesso, usa `router.replace("/portfolios")`. Não usar cascade,
+undo ou confirmação baseada somente em clique único.
 
 ### Delete e compatibilidade com 007
 
@@ -340,10 +351,13 @@ documento. Logs opcionais devem registrar somente operação e categoria sanitiz
 - `src/app/(app)/(protected)/portfolios/page.tsx`: entrada Server da listagem.
 - `src/app/(app)/(protected)/portfolios/[portfolioId]/page.tsx`: entrada Server
   do detalhe; parâmetros dinâmicos devem seguir a documentação local Next 16.
+- `src/app/(app)/(protected)/portfolios/[portfolioId]/settings/page.tsx`: entrada
+  Server das configurações administrativas; parâmetros dinâmicos devem seguir a
+  documentação local Next 16.
 - `src/components/auth/auth-gate.tsx`: listener compartilhado, loading e
   redirect de UX.
 - `src/components/portfolio/*`: componentes Client para listagem, formulário,
-  detalhe, rename, delete e mensagens locais.
+  detalhe patrimonial, configurações, rename, delete e mensagens locais.
 
 ### Reutilização sem alteração esperada
 
@@ -425,9 +439,10 @@ Build não substitui prova de Auth, ownership, acessibilidade ou produção.
 - Nome vazio, whitespace, 101 caracteres e Unicode no limite: mensagem e nenhum
   write inválido.
 - Create: loading, double click, erro/retry e sucesso.
-- Rename: nome atual, inválido, igual após trim, loading, erro e sucesso.
-- Delete: abrir confirmação, cancelar, teclado, confirmar, erro e retorno à
-  lista.
+- Rename em `/portfolios/[portfolioId]/settings`: nome atual, inválido, igual
+  após trim, loading, erro e sucesso; detalhe sem formulário ou ação de rename.
+- Delete em `/portfolios/[portfolioId]/settings`: abrir confirmação, cancelar,
+  teclado, confirmar, erro e retorno à lista.
 - ID aleatório, ID inválido e ID pertencente a outra conta: mesma experiência
   indisponível, sem vazamento.
 - Mobile, tablet, desktop, zoom, teclado, foco, live regions e contraste.
@@ -438,7 +453,7 @@ Build não substitui prova de Auth, ownership, acessibilidade ou produção.
 
 Após gates e revisão humana, publicar o deployment normal da `main` na Vercel.
 Executar smoke autenticado no host app com fixture sintética mínima: listar,
-criar, refresh, abrir, renomear, excluir e verificar ausência. Remover fixture
+criar, refresh, abrir, acessar settings, renomear, excluir e verificar ausência. Remover fixture
 ao final. Repetir cenário anônimo e, se duas contas de teste estiverem
 autorizadas, verificar tentativa A→B; não registrar identidade, UID, token ou
 nome da fixture.
@@ -453,8 +468,8 @@ recupera hard delete.
 1. [006-01-estruturar-shell-auth-e-navegacao.md](../tasks/006-portfolio-management/006-01-estruturar-shell-auth-e-navegacao.md) — criar grupo protegido, AuthGate, navegação mínima, dashboard CTA e bridge de host.
 2. [006-02-implementar-listagem-e-criacao.md](../tasks/006-portfolio-management/006-02-implementar-listagem-e-criacao.md) — entregar listagem owner-scoped, estados e formulário de criação BRL.
 3. [006-03-implementar-detalhe-e-acesso.md](../tasks/006-portfolio-management/006-03-implementar-detalhe-e-acesso.md) — entregar URL dinâmica, leitura one-shot e estado de acesso indisponível.
-4. [006-04-implementar-renomeacao.md](../tasks/006-portfolio-management/006-04-implementar-renomeacao.md) — entregar rename com invariantes e feedback.
-5. [006-05-implementar-exclusao-segura.md](../tasks/006-portfolio-management/006-05-implementar-exclusao-segura.md) — entregar confirmação, hard delete e retorno seguro.
+4. [006-04-implementar-renomeacao.md](../tasks/006-portfolio-management/006-04-implementar-renomeacao.md) — entregar rename em settings com invariantes e feedback.
+5. [006-05-implementar-exclusao-segura.md](../tasks/006-portfolio-management/006-05-implementar-exclusao-segura.md) — entregar confirmação em settings, hard delete e retorno seguro.
 6. [006-06-validar-regras-e-isolamento.md](../tasks/006-portfolio-management/006-06-validar-regras-e-isolamento.md) — revalidar Rules, repository boundary e matriz de ownership.
 7. [006-07-validar-acessibilidade-e-responsividade.md](../tasks/006-portfolio-management/006-07-validar-acessibilidade-e-responsividade.md) — provar UX mobile/desktop e teclado sem ampliar design system.
 8. [006-08-executar-gates-deploy-e-smoke.md](../tasks/006-portfolio-management/006-08-executar-gates-deploy-e-smoke.md) — gates finais, deployment Vercel, smoke produtivo e handoff 007.

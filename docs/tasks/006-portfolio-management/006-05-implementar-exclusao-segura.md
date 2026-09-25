@@ -6,18 +6,19 @@
 
 ## Objetivo
 
-Implementar hard delete de Portfolio somente no detalhe, com confirmação
-explícita, feedback acessível e sem cascade client-side.
+Implementar hard delete de Portfolio somente em
+`/portfolios/[portfolioId]/settings`, com confirmação explícita, feedback
+acessível e sem cascade client-side.
 
 ## Resultado esperado
 
-Usuário identifica carteira, pode cancelar a exclusão sem efeito e, após segunda
-confirmação, remove o documento próprio via `deletePortfolio` e retorna à lista.
-Falhas permanecem recuperáveis.
+Usuário identifica carteira em settings, pode cancelar a exclusão sem efeito e,
+após segunda confirmação, remove o documento próprio via `deletePortfolio` e
+retorna à lista. Falhas permanecem recuperáveis.
 
 ## Escopo incluído
 
-- Ação de delete visível e operável por teclado no detalhe.
+- Ação de delete visível e operável por teclado em settings.
 - Confirmação inline em duas etapas, sem depender de hover ou clique único.
 - Mostrar nome atual, instrução de digitação exata e texto de permanência.
 - Exigir que o usuário digite exatamente o nome normalizado exibido; manter o
@@ -49,15 +50,15 @@ Falhas permanecem recuperáveis.
 
 ## Arquivos e símbolos prováveis
 
-- `src/components/portfolio/portfolio-detail.tsx` ou componente local de
-  confirmação.
+- `src/components/portfolio/portfolio-settings.tsx` ou componente local de
+  confirmação em settings.
 - `src/data/firestore/portfolio-repository.ts` somente se uma falha concreta do
   contrato atual aparecer; não refatorar oportunisticamente.
 
 ## Passos de implementação futura
 
-1. Renderizar confirmação inline após primeiro acionamento e mover foco para o
-   input; devolver foco ao trigger ao cancelar.
+1. Renderizar confirmação inline em settings após primeiro acionamento e mover
+   foco para o input; devolver foco ao trigger ao cancelar.
 2. Exibir nome atual e instrução clara; comparar com nome normalizado sem expor
    ID ou path.
 3. Manter `Deletar permanentemente` disabled até a comparação exata passar.
@@ -75,14 +76,14 @@ npx tsc --noEmit
 npm run build
 ```
 
-Manual: abrir confirmação, foco no input, nome incorreto, nome exato, cancelar,
-teclado, confirmar, double click, erro/reconciliação, retorno à lista, refresh e
-tentativa de delete cross-user. Confirmar ausência do documento próprio no smoke
+Manual em settings: abrir confirmação, foco no input, nome incorreto, nome exato,
+cancelar, teclado, confirmar, double click, erro/reconciliação, retorno à lista,
+refresh e tentativa de delete cross-user. Confirmar ausência do documento próprio no smoke
 autorizado e ausência de qualquer operação em Transactions.
 
 ## Definição de pronto
 
-- Dois passos explícitos identificam a carteira; digitação exata habilita ação
+- Dois passos explícitos em settings identificam a carteira; digitação exata habilita ação
   permanente somente após confirmação do alvo.
 - Cancelar não escreve nem remove dados.
 - Delete usa repository existente, fica owner-scoped e não faz cascade.

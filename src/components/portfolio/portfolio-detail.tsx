@@ -1,23 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
-import { getPortfolio } from "@/data/firestore/portfolio-repository";
-import type { Portfolio } from "@/domain/portfolio";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
 } from "@/components/ui/card";
+import { usePortfolio } from "@/components/portfolio/use-portfolio";
 
 const DETAIL_ERROR_MESSAGE = "Não foi possível acessar esta carteira.";
-
-type PortfolioDetailState =
-  | { status: "loading"; portfolioId: string }
-  | { status: "ready"; portfolioId: string; portfolio: Portfolio }
-  | { status: "unavailable"; portfolioId: string };
 
 function formatCreatedAt(createdAt: Date) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -26,88 +19,7 @@ function formatCreatedAt(createdAt: Date) {
 }
 
 export function PortfolioDetail({ portfolioId }: { portfolioId: string }) {
-  const [detailState, setDetailState] = useState<PortfolioDetailState>({
-    status: "loading",
-    portfolioId,
-  });
-  const isMountedRef = useRef(false);
-  const requestIdRef = useRef(0);
-
-  const loadPortfolio = useCallback(
-    (requestedPortfolioId: string, requestId: number) => {
-      void getPortfolio(requestedPortfolioId)
-        .then((portfolio) => {
-          if (
-            !isMountedRef.current ||
-            requestId !== requestIdRef.current
-          ) {
-            return;
-          }
-
-          setDetailState(
-            portfolio
-              ? {
-                  status: "ready",
-                  portfolioId: requestedPortfolioId,
-                  portfolio,
-                }
-              : { status: "unavailable", portfolioId: requestedPortfolioId },
-          );
-        })
-        .catch(() => {
-          if (
-            !isMountedRef.current ||
-            requestId !== requestIdRef.current
-          ) {
-            return;
-          }
-
-          // All repository read failures intentionally share one message.
-          setDetailState({
-            status: "unavailable",
-            portfolioId: requestedPortfolioId,
-          });
-        });
-    },
-    [],
-  );
-
-  useEffect(() => {
-    isMountedRef.current = true;
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    let effectIsActive = true;
-
-    // Deferring the first call avoids duplicate reads from Strict Mode's
-    // setup-cleanup-setup cycle while keeping the read after AuthGate mounts.
-    queueMicrotask(() => {
-      if (effectIsActive) {
-        loadPortfolio(portfolioId, requestId);
-      }
-    });
-
-    return () => {
-      effectIsActive = false;
-      isMountedRef.current = false;
-      requestIdRef.current += 1;
-    };
-  }, [loadPortfolio, portfolioId]);
-
-  const retry = useCallback(() => {
-    if (!isMountedRef.current) {
-      return;
-    }
-
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    setDetailState({ status: "loading", portfolioId });
-    loadPortfolio(portfolioId, requestId);
-  }, [loadPortfolio, portfolioId]);
-
-  const currentState =
-    detailState.portfolioId === portfolioId
-      ? detailState
-      : { status: "loading" as const, portfolioId };
+  const { state: currentState, retry } = usePortfolio(portfolioId);
 
   return (
     <section className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6 lg:px-10 lg:py-14">
@@ -180,6 +92,21 @@ export function PortfolioDetail({ portfolioId }: { portfolioId: string }) {
               Recursos patrimoniais estarão disponíveis em fases futuras. Esta
               carteira ainda não exibe saldo, valores ou posições.
             </p>
+            <div className="space-y-3 border-t border-border pt-5">
+              <h3 className="font-heading text-lg font-semibold">
+                Administração da carteira
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Alterações administrativas ficam separadas do contexto
+                patrimonial desta carteira.
+              </p>
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                href={`/portfolios/${currentState.portfolio.id}/settings`}
+              >
+                Configurações da carteira
+              </Link>
+            </div>
             <Link
               className={buttonVariants({ variant: "outline" })}
               href="/portfolios"

@@ -2,20 +2,22 @@
 
 - **Status geral:** `in_progress`
 - **Spec:** [006-portfolio-management.md](../../specs/006-portfolio-management.md)
-- **Progresso:** 4/9 subtarefas concluídas
+- **Progresso:** 5/9 subtarefas concluídas
 
 ## Objetivo
 
 Entregar experiência owner-scoped de Portfolio sobre contratos e repository da
-fase 005: listar, criar, abrir, renomear e excluir carteiras, sem dados
-financeiros calculados e sem antecipar a fase 007.
+fase 005: listar/criar em `/portfolios`, abrir contexto patrimonial em
+`/portfolios/[portfolioId]` e administrar rename/delete em
+`/portfolios/[portfolioId]/settings`, sem dados financeiros calculados e sem
+antecipar a fase 007.
 
 ## Checklist
 
 - [x] [006-01-estruturar-shell-auth-e-navegacao.md](006-01-estruturar-shell-auth-e-navegacao.md)
 - [x] [006-02-implementar-listagem-e-criacao.md](006-02-implementar-listagem-e-criacao.md)
 - [x] [006-03-implementar-detalhe-e-acesso.md](006-03-implementar-detalhe-e-acesso.md)
-- [ ] [006-04-implementar-renomeacao.md](006-04-implementar-renomeacao.md)
+- [x] [006-04-implementar-renomeacao.md](006-04-implementar-renomeacao.md)
 - [ ] [006-05-implementar-exclusao-segura.md](006-05-implementar-exclusao-segura.md)
 - [ ] [006-06-validar-regras-e-isolamento.md](006-06-validar-regras-e-isolamento.md)
 - [ ] [006-07-validar-acessibilidade-e-responsividade.md](006-07-validar-acessibilidade-e-responsividade.md)
@@ -24,8 +26,10 @@ financeiros calculados e sem antecipar a fase 007.
 
 ## Observações
 
-- Rotas canônicas: `/portfolios` e `/portfolios/[portfolioId]`; `/dashboard`
-  aponta para a coleção sem duplicar listagem.
+- Rotas canônicas: `/portfolios`, `/portfolios/[portfolioId]` e
+  `/portfolios/[portfolioId]/settings`; `/portfolios` lista/cria, detalhe mostra
+  contexto patrimonial e settings concentra administração. `/dashboard` aponta
+  para a coleção sem duplicar listagem.
 - AuthGate compartilhado será somente UX; Firestore Rules continuam autorização.
 - Fetch V1 é one-shot. Não adicionar React Query, SWR, Redux, Zustand ou
   listener realtime sem requisito novo.
@@ -51,5 +55,17 @@ financeiros calculados e sem antecipar a fase 007.
 - 006-03 concluída: detalhe dinâmico owner-scoped, estados de loading e
   indisponibilidade unificados, retry, retorno e links acessíveis da listagem;
   gates técnicos e Rules Emulator passaram. Validação manual permanece pendente.
-- Usuário confirmou validação manual bem-sucedida; casos específicos e matriz
-  completa de hosts/assets não foram discriminados no relato.
+- 006-04 concluída e revisada após mudança de UX: rename foi removido do detalhe
+  e movido exclusivamente para settings; detalhe oferece link explícito e
+  acessível para configurações. Settings reutiliza parser/repository da fase 005,
+  evita write quando nome normalizado não muda, preserva draft durante loading,
+  bloqueia concorrência, sanitiza falhas e atualiza estado com retorno do update.
+  Hook compartilhado mantém leitura owner-scoped, loading, indisponibilidade e
+  retry sem duplicar contrato. Gates técnicos e Rules Emulator passaram; validação
+  manual da nova rota foi confirmada pelo usuário; casos específicos não foram
+  discriminados no relato.
+- 006-05 permanece `pending`: delete será planejado e implementado somente em
+  `/portfolios/[portfolioId]/settings`, nunca no detalhe. Nenhuma lógica de
+  exclusão foi adicionada nesta revisão.
+- Usuário confirmou validação manual bem-sucedida de settings; casos específicos
+  e matriz completa de hosts/assets não foram discriminados no relato.
