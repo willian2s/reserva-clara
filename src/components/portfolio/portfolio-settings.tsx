@@ -382,7 +382,7 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
         <Card>
           <CardHeader>
             <p className="text-sm font-medium text-primary">Carteira</p>
-            <h2 className="font-heading text-2xl font-semibold tracking-tight">
+            <h2 className="font-heading break-words text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">
               {currentState.portfolio.name}
             </h2>
             <p className="text-sm text-muted-foreground">
@@ -494,7 +494,9 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
                     </h4>
                     <p className="text-sm text-foreground">
                       Você está excluindo a carteira{" "}
-                      <strong>{currentState.portfolio.name}</strong>.
+                      <strong className="break-words [overflow-wrap:anywhere]">
+                        {currentState.portfolio.name}
+                      </strong>.
                     </p>
                     <p
                       id="portfolio-delete-instructions"

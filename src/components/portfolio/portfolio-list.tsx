@@ -11,7 +11,6 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { PortfolioCreateForm } from "@/components/portfolio/portfolio-create-form";
 
@@ -140,7 +139,9 @@ export function PortfolioList() {
           {listState.status === "ready" && portfolios.length === 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>Nenhuma carteira ainda</CardTitle>
+                <h2 className="font-heading text-base leading-snug font-semibold">
+                  Nenhuma carteira ainda
+                </h2>
                 <CardDescription>
                   Seu patrimônio, com clareza. Crie uma carteira para organizar
                   um conjunto de recursos em um só lugar.
@@ -153,16 +154,16 @@ export function PortfolioList() {
             <ul className="grid gap-4 sm:grid-cols-2" aria-label="Suas carteiras">
               {portfolios.map((portfolio) => (
                 <li key={portfolio.id}>
-                    <Card className="h-full">
-                      <CardHeader>
-                        <CardTitle>
-                          <Link
-                            className="underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-                            href={`/portfolios/${portfolio.id}`}
-                          >
-                            {portfolio.name}
-                          </Link>
-                        </CardTitle>
+                  <Card className="h-full">
+                    <CardHeader>
+                      <h2 className="font-heading text-base leading-snug font-semibold break-words [overflow-wrap:anywhere]">
+                        <Link
+                          className="inline-flex min-h-11 w-full items-center underline underline-offset-4 focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                          href={`/portfolios/${portfolio.id}`}
+                        >
+                          {portfolio.name}
+                        </Link>
+                      </h2>
                       <CardDescription>Carteira em {portfolio.baseCurrency}</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -170,7 +171,7 @@ export function PortfolioList() {
                         Criada em {formatCreatedAt(portfolio.createdAt)}
                       </p>
                     </CardContent>
-                  </Card>
+                    </Card>
                 </li>
               ))}
             </ul>
@@ -179,9 +180,9 @@ export function PortfolioList() {
 
         <Card className="order-1 lg:order-2">
           <CardHeader>
-            <CardTitle>
+            <h2 className="font-heading text-base leading-snug font-semibold">
               {isEmpty ? "Criar primeira carteira" : "Nova carteira"}
-            </CardTitle>
+            </h2>
             <CardDescription>
               Dê um nome para identificar este conjunto de patrimônio.
             </CardDescription>

@@ -31,11 +31,12 @@ export function PortfolioCreateForm({
   const [nameError, setNameError] = useState("");
   const [operationError, setOperationError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNavigating, setIsNavigating] = useState(false);
   const [isReconciling, setIsReconciling] = useState(false);
   const [reconciliationRequired, setReconciliationRequired] = useState(false);
   const submittingRef = useRef(false);
   const inputErrorId = "portfolio-name-error";
-  const isDisabled = disabled || isSubmitting || isReconciling;
+  const isDisabled = disabled || isSubmitting || isNavigating || isReconciling;
   const isSubmitDisabled = isDisabled || reconciliationRequired;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -64,6 +65,8 @@ export function PortfolioCreateForm({
     setNameError("");
     setOperationError("");
 
+    let navigationStarted = false;
+
     try {
       const portfolio = await createPortfolio({
         name: normalizedName,
@@ -71,6 +74,8 @@ export function PortfolioCreateForm({
       });
 
       router.push(`/portfolios/${portfolio.id}`);
+      navigationStarted = true;
+      setIsNavigating(true);
     } catch (error: unknown) {
       if (error instanceof DomainError) {
         setNameError(INVALID_NAME_MESSAGE);
@@ -79,13 +84,15 @@ export function PortfolioCreateForm({
         setOperationError(CREATE_ERROR_MESSAGE);
       }
     } finally {
-      submittingRef.current = false;
-      setIsSubmitting(false);
+      if (!navigationStarted) {
+        submittingRef.current = false;
+        setIsSubmitting(false);
+      }
     }
   };
 
   const handleReconcile = async () => {
-    if (disabled || isSubmitting || isReconciling) {
+    if (disabled || isSubmitting || isNavigating || isReconciling) {
       return;
     }
 
@@ -140,7 +147,7 @@ export function PortfolioCreateForm({
             type="button"
             variant="outline"
             onClick={() => void handleReconcile()}
-            disabled={disabled || isSubmitting || isReconciling}
+            disabled={disabled || isSubmitting || isNavigating || isReconciling}
             aria-busy={isReconciling}
           >
             {isReconciling ? "Verificando carteiras..." : "Verificar carteiras"}
@@ -153,7 +160,11 @@ export function PortfolioCreateForm({
         </p>
       )}
       <p className="min-h-5 text-sm text-muted-foreground" role="status" aria-live="polite">
-        {isSubmitting ? "Salvando sua carteira..." : ""}
+        {isSubmitting
+          ? isNavigating
+            ? "Abrindo sua carteira..."
+            : "Salvando sua carteira..."
+          : ""}
       </p>
     </form>
   );

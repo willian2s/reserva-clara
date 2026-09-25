@@ -77,7 +77,7 @@ export function PortfolioDetail({ portfolioId }: { portfolioId: string }) {
         <Card>
           <CardHeader>
             <p className="text-sm font-medium text-primary">Carteira</p>
-            <h2 className="font-heading text-2xl font-semibold tracking-tight">
+            <h2 className="font-heading break-words text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">
               {currentState.portfolio.name}
             </h2>
             <p className="text-sm text-muted-foreground">

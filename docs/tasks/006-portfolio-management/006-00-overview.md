@@ -2,7 +2,7 @@
 
 - **Status geral:** `in_progress`
 - **Spec:** [006-portfolio-management.md](../../specs/006-portfolio-management.md)
-- **Progresso:** 7/9 subtarefas concluídas
+- **Progresso:** 8/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -20,7 +20,7 @@ antecipar a fase 007.
 - [x] [006-04-implementar-renomeacao.md](006-04-implementar-renomeacao.md)
 - [x] [006-05-implementar-exclusao-segura.md](006-05-implementar-exclusao-segura.md)
 - [x] [006-06-validar-regras-e-isolamento.md](006-06-validar-regras-e-isolamento.md)
-- [ ] [006-07-validar-acessibilidade-e-responsividade.md](006-07-validar-acessibilidade-e-responsividade.md)
+- [x] [006-07-validar-acessibilidade-e-responsividade.md](006-07-validar-acessibilidade-e-responsividade.md)
 - [ ] [006-08-executar-gates-deploy-e-smoke.md](006-08-executar-gates-deploy-e-smoke.md)
 - [x] [006-09-customizar-pagina-404.md](006-09-customizar-pagina-404.md)
 
@@ -81,3 +81,8 @@ antecipar a fase 007.
   timestamps e paths raiz/futuros/desconhecidos foram revalidados; UI de
   Portfolio não importa SDK Firestore nem constrói paths. Smoke produtivo e
   validação visual permanecem nos gates 006-07/006-08.
+- 006-07 concluída: correções de headings, skip link, targets, overflow e
+  double submit implementadas; lint, typegen, TypeScript, build, diff check e
+  Emulator (5/5) passaram. Usuário confirmou validação manual completa de
+  teclado, foco, estados, responsividade, zoom/orientação, contraste e árvore
+  acessível/leitor de tela.
