@@ -2,7 +2,7 @@
 
 - **Ticker:** `006`
 - **Número:** `06`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -92,3 +92,62 @@ fixtures sintéticas; não registrar project ID produtivo, UID, token ou nomes.
 Registrar comandos, quantidade de testes, resultado, diff de Rules, inspeção de
 imports, cenários cross-user/anônimo e riscos residuais. Overview só avança este
 item após prova completa.
+
+## Arquivos alterados
+
+- `docs/tasks/006-portfolio-management/006-06-validar-regras-e-isolamento.md`
+  — registro desta validação.
+- `docs/tasks/006-portfolio-management/006-00-overview.md` — checklist e
+  progresso.
+- `firestore.rules`, `tests/firestore.rules.test.mjs`, parser, converter, paths,
+  repository e UI — sem alterações.
+
+## Decisões e desvios
+
+- Rules permaneceram inalteradas; nenhum deploy de Rules foi executado.
+- Nenhuma incompatibilidade concreta foi encontrada; não houve alteração de
+  contrato ou teste.
+- Autenticação Firebase em componentes de Auth permanece existente e esperada;
+  componentes de Portfolio não importam SDK Firestore nem constroem paths.
+- Smoke produtivo e validação manual de browser permanecem fora desta subtarefa,
+  destinados aos gates 006-07/006-08.
+
+## Comandos executados
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 21) npm run test:rules
+npm run lint
+npm exec next typegen && npx tsc --noEmit
+npm run build
+git diff --check
+```
+
+## Resultados e evidências
+
+- Emulator Suite passou: 5 testes, 5 aprovados, 0 falhas, projeto demo
+  `demo-reserva-clara`, sem acesso à produção.
+- Owner CRUD/listagem passou, incluindo create/read/list/update/delete e
+  timestamps server-side; update preserva `createdAt`.
+- Isolamento A/B passou para read, list, create, update e delete; cada owner
+  listou somente sua fixture sintética.
+- Anônimo falhou conforme esperado em read e write.
+- Schema inválido negado em 6 casos: campo ausente, campo extra, moeda USD,
+  timestamp cliente, tipo de timestamp inválido e nome em branco.
+- Paths raiz, futuros e desconhecidos negados em read/write: `users/{uid}`,
+  `assets`, `goals`, `emergencyReserve`, `transactions`, `allocationTargets`,
+  `snapshots` e path desconhecido.
+- `firestore.rules` sem diff; SHA-256 no working tree e em `HEAD` coincidente:
+  `9261f12eefdadcf171c8e0526df7c518fbce18df421ac406755e7db26fd067e5`.
+- Inspeção estrutural confirmou imports de Portfolio somente de funções do
+  `portfolio-repository.ts`; nenhuma ocorrência de SDK Firestore ou helpers de
+  path em `src/app` e `src/components/portfolio`.
+- Detalhe e settings convergem ausência, falha de leitura e permission denied
+  para `Não foi possível acessar esta carteira.`.
+- Lint, typegen, TypeScript, build e `git diff --check` passaram.
+
+## Riscos residuais
+
+- Não há testes de UI/repository dedicados nem smoke produtivo nesta subtarefa;
+  gates 006-07/006-08 permanecem necessários.
+- Hard delete continua válido somente enquanto não houver subcoleções; archive e
+  remoção futura de `allow delete` seguem gate bloqueante de 007.

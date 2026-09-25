@@ -2,7 +2,7 @@
 
 - **Status geral:** `in_progress`
 - **Spec:** [006-portfolio-management.md](../../specs/006-portfolio-management.md)
-- **Progresso:** 6/9 subtarefas concluídas
+- **Progresso:** 7/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -19,7 +19,7 @@ antecipar a fase 007.
 - [x] [006-03-implementar-detalhe-e-acesso.md](006-03-implementar-detalhe-e-acesso.md)
 - [x] [006-04-implementar-renomeacao.md](006-04-implementar-renomeacao.md)
 - [x] [006-05-implementar-exclusao-segura.md](006-05-implementar-exclusao-segura.md)
-- [ ] [006-06-validar-regras-e-isolamento.md](006-06-validar-regras-e-isolamento.md)
+- [x] [006-06-validar-regras-e-isolamento.md](006-06-validar-regras-e-isolamento.md)
 - [ ] [006-07-validar-acessibilidade-e-responsividade.md](006-07-validar-acessibilidade-e-responsividade.md)
 - [ ] [006-08-executar-gates-deploy-e-smoke.md](006-08-executar-gates-deploy-e-smoke.md)
 - [x] [006-09-customizar-pagina-404.md](006-09-customizar-pagina-404.md)
@@ -76,3 +76,8 @@ antecipar a fase 007.
   discriminados no relato.
 - Usuário confirmou validação manual bem-sucedida de settings; casos específicos
   e matriz completa de hosts/assets não foram discriminados no relato.
+- 006-06 concluída: Emulator Suite passou com 5 testes e Rules permaneceram sem
+  alteração. CRUD/list owner, isolamento A/B, anônimo, schema fechado,
+  timestamps e paths raiz/futuros/desconhecidos foram revalidados; UI de
+  Portfolio não importa SDK Firestore nem constrói paths. Smoke produtivo e
+  validação visual permanecem nos gates 006-07/006-08.
