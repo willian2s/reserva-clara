@@ -2,7 +2,7 @@
 
 - **Ticker:** `006`
 - **Número:** `05`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -106,3 +106,72 @@ autorizado e ausência de qualquer operação em Transactions.
 Registrar arquivos, fluxo de confirmação, comandos, matriz de cancelamento/delete,
 resultado e risco residual de irreversibilidade. Atualizar somente 006-05 no
 overview.
+
+## Registro de execução
+
+### Status
+
+`completed`.
+
+### Arquivos alterados
+
+- `src/components/portfolio/portfolio-settings.tsx` — ação de exclusão somente
+  em settings, confirmação inline em duas etapas, foco, estados de pending/erro,
+  bloqueio de concorrência e retorno por `router.replace`.
+
+### Decisões e desvios
+
+- Confirmação exige digitação exata do nome normalizado exibido; o botão
+  `Deletar permanentemente` permanece disabled até coincidir.
+- Cancelamento limpa confirmação e devolve foco ao trigger. Foco inicial é
+  aplicado ao input por `ref`/`useEffect`.
+- Exclusão chama somente `deletePortfolio(portfolioId)`, sem leitura adicional,
+  pre-check, cascade, SDK ou path na UI. Erros ficam na confirmação com mensagem
+  sanitizada e input preservado para retry.
+- Durante delete, formulário de rename, confirmação e navegação administrativa
+  ficam bloqueados; estado textual `role=status` anuncia pending e erro usa
+  `role=alert`/`aria-live`.
+- Ao trocar `portfolioId`, confirmação, nome digitado e mensagens são invalidados
+  antes de permitir nova confirmação; operação pendente mantém bloqueio até seu
+  encerramento. Trigger expõe `aria-expanded`/`aria-controls` e foco de cancelar
+  retorna após o fechamento renderizado. Após delete confirmado, o lock permanece
+  até a navegação para evitar segunda submissão durante `router.replace`.
+- Hard delete continua válido somente enquanto Portfolio não possuir filhos; a
+  transição para archive e remoção futura de `allow delete` nas Rules permanece
+  gate bloqueante de 007.
+
+### Comandos executados
+
+- `npm run lint` — passou.
+- `npm exec next typegen` — passou.
+- `npx tsc --noEmit` — passou.
+- `npm run build` — passou; build reconheceu `/portfolios/[portfolioId]/settings`.
+- `git diff --check` — passou.
+- `JAVA_HOME=$(/usr/libexec/java_home -v 21) npm run test:rules` — passou; 5
+  testes, 0 falhas, Rules sem alteração; Emulator reexecutado.
+
+### Resultados e evidências
+
+- A ação administrativa existe somente no Client Component de settings; detalhe,
+  repository, schema, converter, parser e Rules não foram alterados.
+- Fluxos implementados: abrir confirmação, nome incorreto disabled, nome exato,
+  cancelar sem write, teclado/tab order, foco, double submit, falha recuperável
+  sem perda de input e sucesso com `router.replace("/portfolios")`.
+- Operação mantém ownership no repository existente e remove somente documento
+  pai conforme contrato 006; nenhum caminho de subcoleção ou Transaction é tocado.
+- Usuário confirmou validação manual autenticada funcionando em settings, incluindo
+  fluxo de confirmação, cancelamento, exclusão e retorno à lista.
+- Revisão independente encontrou risco de confirmação stale em troca de rota e
+  trigger reabrível, além de janela de dupla submissão após sucesso; riscos foram
+  corrigidos, com os gates técnicos e Rules Emulator reexecutados sem falhas.
+
+### Riscos residuais
+
+- Validação manual autenticada de foco, teclado, erro real, double click e
+  ausência do documento após delete permanece pendente; projeto não possui runner
+  automatizado de UI.
+- Exclusão é irreversível e não oferece undo. Gate de archive/007 continua
+  bloqueado até mudança coordenada de domínio, repository, Rules e testes.
+- Navegação global do shell não recebe estado pending desta subtarefa; saída por
+  navegação externa durante request permanece risco residual não coberto pelo
+  bloqueio local.

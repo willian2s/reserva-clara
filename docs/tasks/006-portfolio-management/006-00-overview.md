@@ -2,7 +2,7 @@
 
 - **Status geral:** `in_progress`
 - **Spec:** [006-portfolio-management.md](../../specs/006-portfolio-management.md)
-- **Progresso:** 5/9 subtarefas concluídas
+- **Progresso:** 6/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -18,7 +18,7 @@ antecipar a fase 007.
 - [x] [006-02-implementar-listagem-e-criacao.md](006-02-implementar-listagem-e-criacao.md)
 - [x] [006-03-implementar-detalhe-e-acesso.md](006-03-implementar-detalhe-e-acesso.md)
 - [x] [006-04-implementar-renomeacao.md](006-04-implementar-renomeacao.md)
-- [ ] [006-05-implementar-exclusao-segura.md](006-05-implementar-exclusao-segura.md)
+- [x] [006-05-implementar-exclusao-segura.md](006-05-implementar-exclusao-segura.md)
 - [ ] [006-06-validar-regras-e-isolamento.md](006-06-validar-regras-e-isolamento.md)
 - [ ] [006-07-validar-acessibilidade-e-responsividade.md](006-07-validar-acessibilidade-e-responsividade.md)
 - [ ] [006-08-executar-gates-deploy-e-smoke.md](006-08-executar-gates-deploy-e-smoke.md)
@@ -64,8 +64,15 @@ antecipar a fase 007.
   retry sem duplicar contrato. Gates técnicos e Rules Emulator passaram; validação
   manual da nova rota foi confirmada pelo usuário; casos específicos não foram
   discriminados no relato.
-- 006-05 permanece `pending`: delete será planejado e implementado somente em
-  `/portfolios/[portfolioId]/settings`, nunca no detalhe. Nenhuma lógica de
-  exclusão foi adicionada nesta revisão.
+- 006-05 concluída: exclusão existe somente em settings com confirmação inline
+  em duas etapas, digitação exata do nome normalizado, foco e feedback acessíveis,
+  bloqueio de concorrência, retry sanitizado e `router.replace("/portfolios")`.
+  `deletePortfolio` remove somente o documento pai; nenhuma operação de
+  subcoleção, cascade ou Transaction foi adicionada. Hard delete permanece válido
+  somente antes de filhos; archive e remoção futura de `allow delete` continuam
+  gate bloqueante de 007. Revisão independente corrigiu confirmação stale em
+  troca de rota e trigger reabrível. Validação manual autenticada permanece
+  confirmada pelo usuário como funcionando; casos individuais não foram
+  discriminados no relato.
 - Usuário confirmou validação manual bem-sucedida de settings; casos específicos
   e matriz completa de hosts/assets não foram discriminados no relato.
