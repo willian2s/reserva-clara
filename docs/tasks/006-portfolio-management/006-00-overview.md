@@ -1,8 +1,8 @@
 # 006 — Portfolio Management
 
-- **Status geral:** `in_progress`
+- **Status geral:** `completed`
 - **Spec:** [006-portfolio-management.md](../../specs/006-portfolio-management.md)
-- **Progresso:** 8/9 subtarefas concluídas
+- **Progresso:** 9/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -21,7 +21,7 @@ antecipar a fase 007.
 - [x] [006-05-implementar-exclusao-segura.md](006-05-implementar-exclusao-segura.md)
 - [x] [006-06-validar-regras-e-isolamento.md](006-06-validar-regras-e-isolamento.md)
 - [x] [006-07-validar-acessibilidade-e-responsividade.md](006-07-validar-acessibilidade-e-responsividade.md)
-- [ ] [006-08-executar-gates-deploy-e-smoke.md](006-08-executar-gates-deploy-e-smoke.md)
+- [x] [006-08-executar-gates-deploy-e-smoke.md](006-08-executar-gates-deploy-e-smoke.md)
 - [x] [006-09-customizar-pagina-404.md](006-09-customizar-pagina-404.md)
 
 ## Observações
@@ -86,3 +86,9 @@ antecipar a fase 007.
   Emulator (5/5) passaram. Usuário confirmou validação manual completa de
   teclado, foco, estados, responsividade, zoom/orientação, contraste e árvore
   acessível/leitor de tela.
+- 006-08 concluída: Rules Emulator 5/5, lint, typegen, TypeScript, build e diff
+  check passaram; rotas, proxy, metadata, imports e ausência de secrets
+  versionados foram inspecionados. Usuário confirmou deployment produtivo e
+  smoke funcionando conforme esperado, sem registrar URL, identidade, fixture
+  ou conteúdo sensível. Handoff 007 segue bloqueado até archive, remoção de
+  `allow delete` e teste negativo do Emulator.

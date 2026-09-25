@@ -1,6 +1,6 @@
 # 006 — Portfolio Management
 
-- **Status:** `pending`
+- **Status:** `completed`
 - **Ticker:** `006`
 
 ## Contexto

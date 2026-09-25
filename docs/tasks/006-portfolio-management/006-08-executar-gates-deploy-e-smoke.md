@@ -2,7 +2,7 @@
 
 - **Ticker:** `006`
 - **Número:** `08`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -99,7 +99,7 @@ OAuth só é testado se hostname exato já estiver autorizado.
 - Owner cria, lista, reabre, renomeia e remove fixture em produção.
 - Anônimo é redirecionado/negado e cross-user não acessa dados.
 - Fixture foi removida e não há dados pessoais versionados.
-- Overview mostra 8/8 somente depois de todas as subtarefas concluídas.
+- Overview mostra 9/9 somente depois de todas as subtarefas concluídas.
 - Handoff bloqueia explicitamente 007: hard delete encerra em 006 e a abertura
   de Transactions exige archive implementado, remoção de `allow delete` e
   rejeição comprovada de delete físico.
@@ -119,4 +119,50 @@ OAuth só é testado se hostname exato já estiver autorizado.
 
 Registrar status, arquivos, comandos/saídas resumidas, resultado Rules/gates,
 deployment/smoke/cleanup, rollback, decisões/desvios e riscos residuais. Atualizar
-spec para `completed` somente após 8/8 e revisão independente.
+spec para `completed` somente após 9/9 e revisão independente.
+
+## Execução
+
+- **Status:** `completed`
+- **Arquivos alterados:**
+  - `docs/specs/006-portfolio-management.md`
+  - `docs/tasks/006-portfolio-management/006-08-executar-gates-deploy-e-smoke.md`
+  - `docs/tasks/006-portfolio-management/006-00-overview.md`
+- **Decisões e desvios:** Rules permaneceram inalteradas; não houve deploy de
+  Rules. Gates locais e inspeção estrutural foram executados. Deployment
+  produtivo foi realizado e a validação pós-deploy foi confirmada pelo usuário
+  como funcionando conforme esperado. Nenhuma fixture, dado pessoal ou segredo
+  foi registrado nesta evidência.
+- **Comandos executados e resultados:**
+  - `JAVA_HOME=$(/usr/libexec/java_home -v 21) npm run test:rules` — passou, 5/5
+    testes; Emulator encerrado sem dados persistentes.
+  - `npm run lint` — passou.
+  - `npm exec next typegen` — passou; route types gerados.
+  - `npx tsc --noEmit` — passou.
+  - `npm run build` — passou; build reconheceu `/dashboard`, `/portfolios`,
+    `/portfolios/[portfolioId]` e `/portfolios/[portfolioId]/settings`.
+  - `git diff --check` — passou.
+  - Inspeção de `git status`, diff de Rules/config/lockfile, imports de UI,
+    `src/proxy.ts`, metadata e rotas — sem alterações pendentes de código,
+    Rules ou dependências; UI importa somente repository, não SDK Firestore nem
+    paths.
+  - Verificação de arquivos versionados sensíveis — somente `.env.example`; não
+    foram encontrados `.pem` ou `.key` versionados.
+- **Deployment/smoke/cleanup:** deployment produtivo concluído; usuário
+  confirmou funcionamento esperado após publicação. Smoke autenticado,
+  cleanup, cenário anônimo e cross-user foram validados conforme relato do
+  usuário. URL, identidade, fixture e conteúdo sensível não são registrados.
+  Rollback permanece sendo o deployment Vercel anterior; nenhum rollback foi
+  necessário.
+- **Handoff 007:** bloqueado como pré-requisito. Antes de abrir Transactions,
+  007 deve implementar archive, remover `allow delete` das Rules e comprovar no
+  Emulator que delete físico é rejeitado. Essa condição é obrigatória, não
+  recomendação.
+- **Riscos residuais:** matriz detalhada de casos produtivos e identificador do
+  deployment não foram registrados nesta evidência sanitizada; não há falha
+  conhecida após a confirmação pós-deploy.
+- **Revisão independente:** rejeitou conclusão da subtarefa por ausência de
+  smoke produtivo; confirmação posterior do usuário encerrou esse bloqueio.
+  Confirmou ticker/checklist, escopo documental, gates registrados, rotas,
+  proxy, metadata, fronteira Server/Client, ausência de secrets versionados e
+  handoff bloqueante de 007.
