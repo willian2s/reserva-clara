@@ -1,4 +1,9 @@
-import { InvalidDomainInputError, InvalidDomainValueError } from "./errors";
+import {
+  InvalidDateError,
+  InvalidDecimalError,
+  InvalidDomainInputError,
+  InvalidDomainValueError,
+} from "./errors";
 
 const BASE_CURRENCY = "BRL" as const;
 const ISO_4217_CODES = new Set([
@@ -201,6 +206,7 @@ declare const positiveDecimalStringBrand: unique symbol;
 declare const basisPointsBrand: unique symbol;
 declare const documentIdBrand: unique symbol;
 declare const civilDateBrand: unique symbol;
+declare const timestampPartsBrand: unique symbol;
 
 /** Canonical decimal persisted as text: no exponent, float or ambiguous zeros. */
 export type DecimalString = string & {
@@ -225,6 +231,14 @@ export type DocumentId = string & {
 /** Civil business date, independent from timezone and local Date parsing. */
 export type CivilDate = string & {
   readonly [civilDateBrand]: "CivilDate";
+};
+
+/** Firebase Timestamp precision without importing the Firebase SDK into domain. */
+export type TimestampParts = Readonly<{
+  seconds: number;
+  nanoseconds: number;
+}> & {
+  readonly [timestampPartsBrand]: "TimestampParts";
 };
 
 export type MoneyMinor = Readonly<{
@@ -304,36 +318,63 @@ export function parseDocumentId(value: unknown): DocumentId {
   return value as DocumentId;
 }
 
-const DECIMAL_PATTERN = /^-?(?:0|[1-9]\d*)(?:\.\d+)?$/;
+export const PERSISTED_DECIMAL_PATTERN =
+  /^(?:0|[1-9][0-9]{0,29})(?:\.[0-9]{0,17}[1-9])?$/;
+const INPUT_DECIMAL_PATTERN = /^-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/;
+export const DECIMAL_MAX_INTEGER_DIGITS = 30;
+export const DECIMAL_MAX_FRACTION_DIGITS = 18;
 
 export function parseDecimalString(value: unknown): DecimalString {
-  if (typeof value !== "string" || !DECIMAL_PATTERN.test(value)) {
-    throw new InvalidDomainValueError(
+  if (typeof value !== "string" || !INPUT_DECIMAL_PATTERN.test(value)) {
+    throw new InvalidDecimalError(
       "decimal",
-      "must be a canonical decimal string without exponent",
+      "must be a decimal string without exponent or ambiguous zeros",
     );
   }
 
   const isNegative = value.startsWith("-");
   const unsignedValue = isNegative ? value.slice(1) : value;
   const [integerPart, fractionPart] = unsignedValue.split(".");
+
+  if (
+    integerPart.length > DECIMAL_MAX_INTEGER_DIGITS ||
+    (fractionPart?.length ?? 0) > DECIMAL_MAX_FRACTION_DIGITS
+  ) {
+    throw new InvalidDecimalError(
+      "decimal",
+      "must contain at most 30 integer and 18 fractional digits",
+    );
+  }
+
   const normalizedFraction = fractionPart?.replace(/0+$/, "");
   const normalizedUnsigned = normalizedFraction
     ? `${integerPart}.${normalizedFraction}`
     : integerPart;
 
   if (isNegative && normalizedUnsigned === "0") {
-    throw new InvalidDomainValueError("decimal", "negative zero is not canonical");
+    throw new InvalidDecimalError("decimal", "negative zero is not canonical");
   }
 
   return `${isNegative ? "-" : ""}${normalizedUnsigned}` as DecimalString;
+}
+
+/** Parses only the exact grammar accepted by Firestore Rules. */
+export function parsePersistedDecimalString(value: unknown): DecimalString {
+  if (typeof value !== "string" || !PERSISTED_DECIMAL_PATTERN.test(value)) {
+    throw new InvalidDecimalError(
+      "decimal",
+      "must use the canonical persisted decimal grammar",
+    );
+  }
+
+  return value as DecimalString;
 }
 
 export function parseNonNegativeDecimalString(value: unknown): DecimalString {
   const decimal = parseDecimalString(value);
 
   if (decimal.startsWith("-")) {
-    throw new InvalidDomainValueError("decimal", "must not be negative");
+    throw new InvalidDecimalError("decimal", "must not be negative");
   }
 
   return decimal;
@@ -343,7 +384,7 @@ export function parsePositiveDecimalString(value: unknown): PositiveDecimalStrin
   const decimal = parseNonNegativeDecimalString(value);
 
   if (decimal === "0") {
-    throw new InvalidDomainValueError("decimal", "must be greater than zero");
+    throw new InvalidDecimalError("decimal", "must be greater than zero");
   }
 
   return decimal as PositiveDecimalString;
@@ -404,6 +445,24 @@ export function parseUnitPrice(value: unknown): UnitPrice {
   };
 }
 
+export function parsePersistedUnitPrice(value: unknown): UnitPrice {
+  if (!isRecord(value)) {
+    throw new InvalidDomainInputError("unitPrice", "must be an object");
+  }
+
+  assertExactKeys(value, ["currency", "decimal"], "unitPrice");
+  const decimal = parsePersistedDecimalString(value.decimal);
+
+  if (decimal === "0") {
+    throw new InvalidDecimalError("decimal", "must be greater than zero");
+  }
+
+  return {
+    currency: parseCurrencyCode(value.currency),
+    decimal: decimal as PositiveDecimalString,
+  };
+}
+
 export function createUnitPrice(
   currency: string,
   decimal: string,
@@ -415,6 +474,16 @@ export type Quantity = PositiveDecimalString;
 
 export function parseQuantity(value: unknown): Quantity {
   return parsePositiveDecimalString(value);
+}
+
+export function parsePersistedQuantity(value: unknown): Quantity {
+  const decimal = parsePersistedDecimalString(value);
+
+  if (decimal === "0") {
+    throw new InvalidDecimalError("quantity", "must be greater than zero");
+  }
+
+  return decimal as Quantity;
 }
 
 export function parseBasisPoints(value: unknown): BasisPoints {
@@ -435,7 +504,7 @@ export function parseBasisPoints(value: unknown): BasisPoints {
 
 export function parseCivilDate(value: unknown): CivilDate {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    throw new InvalidDomainValueError(
+    throw new InvalidDateError(
       "effectiveDate",
       "must use YYYY-MM-DD format",
     );
@@ -447,7 +516,7 @@ export function parseCivilDate(value: unknown): CivilDate {
   const day = Number(dayText);
 
   if (year === 0 || month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month)) {
-    throw new InvalidDomainValueError("effectiveDate", "must be a real calendar date");
+    throw new InvalidDateError("effectiveDate", "must be a real calendar date");
   }
 
   return value as CivilDate;
@@ -468,4 +537,31 @@ export function parseInstant(value: unknown, field = "instant"): Date {
   }
 
   return new Date(value.getTime());
+}
+
+export function parseTimestampParts(value: unknown, field = "createdAt"): TimestampParts {
+  if (!isRecord(value)) {
+    throw new InvalidDomainValueError(field, "must be a Timestamp value");
+  }
+
+  assertExactKeys(value, ["seconds", "nanoseconds"], field);
+
+  if (
+    typeof value.seconds !== "number" ||
+    !Number.isSafeInteger(value.seconds) ||
+    typeof value.nanoseconds !== "number" ||
+    !Number.isInteger(value.nanoseconds) ||
+    value.nanoseconds < 0 ||
+    value.nanoseconds > 999_999_999
+  ) {
+    throw new InvalidDomainValueError(
+      field,
+      "must preserve integer seconds and nanoseconds between 0 and 999999999",
+    );
+  }
+
+  return {
+    seconds: value.seconds,
+    nanoseconds: value.nanoseconds,
+  } as TimestampParts;
 }

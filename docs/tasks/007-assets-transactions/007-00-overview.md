@@ -3,7 +3,7 @@
 - **Status geral:** `in_progress`
 - **Ticker:** `007`
 - **Spec:** [007-assets-transactions.md](../../specs/007-assets-transactions.md)
-- **Progresso:** 1/8 subtarefas concluídas
+- **Progresso:** 2/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -14,7 +14,7 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 ## Checklist
 
 - [x] [007-01-implementar-archive-e-gate-de-lifecycle.md](007-01-implementar-archive-e-gate-de-lifecycle.md)
-- [ ] [007-02-fechar-contratos-e-reducer-decimal.md](007-02-fechar-contratos-e-reducer-decimal.md)
+- [x] [007-02-fechar-contratos-e-reducer-decimal.md](007-02-fechar-contratos-e-reducer-decimal.md)
 - [ ] [007-03-implementar-persistencia-de-assets.md](007-03-implementar-persistencia-de-assets.md)
 - [ ] [007-04-implementar-persistencia-de-transactions.md](007-04-implementar-persistencia-de-transactions.md)
 - [ ] [007-05-abrir-rules-e-testes-do-emulator.md](007-05-abrir-rules-e-testes-do-emulator.md)
@@ -37,5 +37,8 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - Reducer/repository protege quantidade não negativa; Security Rules validam
   ownership/schema/referências, mas não conseguem agregar ledger contra SDK
   direto. Garantia forte exigirá boundary server/aggregate futura.
+- 007-02 concluída: contratos V1, decimais canônicos, TimestampParts, ordenação
+  total e reducer `bigint` passaram nos testes puros e gates técnicos; parser,
+  persistência, Rules abertas e UI permanecem nas próximas subtarefas.
 - Nenhuma operação produtiva, deploy, seed ou mudança de Console faz parte deste
   planejamento.

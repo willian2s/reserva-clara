@@ -2,7 +2,7 @@
 
 - **Ticker:** `007`
 - **Número:** `02`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -63,7 +63,66 @@ Executar testes de domínio adicionados, `npm run lint`, `npm exec next typegen`
 
 ## Registro de execução
 
-- **Arquivos alterados:** preencher ao executar.
-- **Decisões/desvios:** registrar qualquer ajuste aos limites; não usar `parseFloat`.
-- **Comandos/resultados/evidências:** preencher ao executar.
-- **Riscos residuais:** documentar limite operacional de ledger completo.
+### Arquivos alterados
+
+- `src/domain/asset.ts` — contrato Asset V1, enum fechado, normalização e
+  `identityKey` derivada.
+- `src/domain/transaction.ts` — união persistível somente `buy`/`sell`, parser
+  de campos fechados e Timestamp com segundos/nanosegundos.
+- `src/domain/value-objects.ts` — gramática decimal canônica, limites 30/18,
+  parsers de input/persistência e validação de Timestamp.
+- `src/domain/errors.ts` — erros sanitizados de decimal, data, referência,
+  quantidade insuficiente e conflito.
+- `src/domain/decimal-reducer.ts` — comparação, soma, subtração, ordenação e
+  reducer puro com `bigint`.
+- `src/domain/index.ts` — export do reducer.
+- `tests/domain.test.mjs` — testes puros de contratos, decimais, ordenação e
+  reducer usando `node:test`.
+- `scripts/run-domain-tests.mjs` — compilação temporária do domínio para o
+  runner nativo, sem dependência nova.
+- `package.json` — script `test:domain`.
+
+### Decisões e desvios
+
+- Input decimal aceita zeros fracionários finais e normaliza antes do write;
+  `parsePersisted*` aceita somente a gramática canônica sem zeros finais.
+- O limite de 30 dígitos inteiros e 18 fracionários é aplicado explicitamente
+  também ao input, sem `parseFloat` ou `number` para cálculo decimal.
+- `Transaction.createdAt` usa `TimestampParts` agnóstico ao Firebase, mantendo
+  `seconds` e `nanoseconds`; Portfolio permanece com `Date`.
+- `parseTransactionDocument` e `parseAssetDocument` são estritos para dados
+  persistidos; construtores de input fazem a normalização prevista.
+- O reducer aceita uma coleção sem `assetId` explícito somente quando todos os
+  eventos pertencem ao mesmo Asset; mistura de Assets falha com referência
+  inválida. Venda acima do saldo falha antes de qualquer write.
+- IDs são comparados por code units (`<`/`>`) para não depender de locale.
+
+### Comandos/resultados/evidências
+
+```bash
+npm run test:domain
+npm run test:rules
+npm run lint
+npm exec next typegen && npx tsc --noEmit
+npm run build
+git diff --check
+```
+
+- `test:domain`: 5 testes aprovados, 0 falhas; cobriu normalização, campos
+  extras, kinds futuros, limites, canonicalização, carry/borrow, backfill,
+  empate por timestamp/ID, quantidade zero, múltiplos Assets e venda negativa.
+- `test:rules`: 7 testes aprovados, 0 falhas; Rules de 007 continuam fechadas.
+- Lint, typecheck com typegen, build e `git diff --check` passaram.
+- Build preservou somente as rotas existentes; nenhum path de Asset/Transaction
+  foi aberto nesta subtarefa.
+
+### Riscos residuais
+
+- O reducer lê o ledger completo fornecido pelo chamador; crescimento além do
+  limite operacional de leitura continua exigindo aggregate/snapshot em fase
+  futura, sem introduzir Position nesta subtarefa.
+- Security Rules ainda não agregam o ledger contra SDK direto; a garantia de
+  quantidade não negativa depende do repository confiável e permanece risco
+  documentado para as subtarefas de persistência.
+- Parser/converter Firestore, repository, Rules abertas e UI permanecem nas
+  subtarefas seguintes.
