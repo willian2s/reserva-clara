@@ -3,7 +3,7 @@
 - **Status geral:** `in_progress`
 - **Ticker:** `007`
 - **Spec:** [007-assets-transactions.md](../../specs/007-assets-transactions.md)
-- **Progresso:** 2/8 subtarefas concluídas
+- **Progresso:** 3/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -15,7 +15,7 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 
 - [x] [007-01-implementar-archive-e-gate-de-lifecycle.md](007-01-implementar-archive-e-gate-de-lifecycle.md)
 - [x] [007-02-fechar-contratos-e-reducer-decimal.md](007-02-fechar-contratos-e-reducer-decimal.md)
-- [ ] [007-03-implementar-persistencia-de-assets.md](007-03-implementar-persistencia-de-assets.md)
+- [x] [007-03-implementar-persistencia-de-assets.md](007-03-implementar-persistencia-de-assets.md)
 - [ ] [007-04-implementar-persistencia-de-transactions.md](007-04-implementar-persistencia-de-transactions.md)
 - [ ] [007-05-abrir-rules-e-testes-do-emulator.md](007-05-abrir-rules-e-testes-do-emulator.md)
 - [ ] [007-06-implementar-catalogo-de-assets.md](007-06-implementar-catalogo-de-assets.md)
@@ -40,5 +40,9 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - 007-02 concluída: contratos V1, decimais canônicos, TimestampParts, ordenação
   total e reducer `bigint` passaram nos testes puros e gates técnicos; parser,
   persistência, Rules abertas e UI permanecem nas próximas subtarefas.
+- 007-03 concluída: paths, parser/converter fechados, registry somente com
+  `assetId`, criação atômica owner-scoped e listagem com validação bidirecional
+  passaram nos gates técnicos; Rules e testes Emulator específicos de Asset
+  permanecem para 007-05.
 - Nenhuma operação produtiva, deploy, seed ou mudança de Console faz parte deste
   planejamento.

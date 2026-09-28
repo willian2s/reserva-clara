@@ -25,3 +25,25 @@ export function portfolioDocumentPath(uid: string, portfolioId: string): string 
   assertPathSegment(portfolioId, "id");
   return `${portfolioCollectionPath(uid)}/${portfolioId}`;
 }
+
+export function assetCollectionPath(uid: string): string {
+  assertPathSegment(uid, "uid");
+  return `users/${uid}/assets`;
+}
+
+export function assetDocumentPath(uid: string, assetId: string): string {
+  assertPathSegment(uid, "uid");
+  assertPathSegment(assetId, "assetId");
+  return `${assetCollectionPath(uid)}/${assetId}`;
+}
+
+export function assetIdentityCollectionPath(uid: string): string {
+  assertPathSegment(uid, "uid");
+  return `users/${uid}/assetIdentities`;
+}
+
+export function assetIdentityDocumentPath(uid: string, identityKey: string): string {
+  assertPathSegment(uid, "uid");
+  assertPathSegment(identityKey, "identityKey");
+  return `${assetIdentityCollectionPath(uid)}/${identityKey}`;
+}

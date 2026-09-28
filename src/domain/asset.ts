@@ -116,6 +116,36 @@ export function createAssetIdentityKey(
   return `${parseAssetSymbol(symbol)}~${parseAssetMarket(market)}~${parseAssetType(assetType)}~${parseCurrencyCode(currency)}` as AssetIdentityKey;
 }
 
+export function parseAssetIdentityKey(value: unknown): AssetIdentityKey {
+  if (typeof value !== "string") {
+    throw new InvalidDomainValueError("identityKey", "must be a string");
+  }
+
+  const segments = value.split("~");
+  if (segments.length !== 4) {
+    throw new InvalidDomainValueError(
+      "identityKey",
+      "must contain symbol, market, asset type and currency segments",
+    );
+  }
+
+  const identityKey = createAssetIdentityKey(
+    segments[0],
+    segments[1],
+    segments[2],
+    segments[3],
+  );
+
+  if (identityKey !== value) {
+    throw new InvalidDomainValueError(
+      "identityKey",
+      "must match the canonical asset identity",
+    );
+  }
+
+  return identityKey;
+}
+
 export function parseAssetInput(value: unknown): AssetInput {
   if (!isRecord(value)) {
     throw new InvalidDomainInputError("asset", "must be an object");
