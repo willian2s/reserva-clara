@@ -8,7 +8,7 @@ export class InvalidFirestoreDocumentError extends Error {
   }
 }
 
-export type FirestoreOperation = "create" | "get" | "list" | "update" | "delete";
+export type FirestoreOperation = "create" | "get" | "list" | "update";
 
 export class UnauthenticatedError extends Error {
   readonly code = "UNAUTHENTICATED" as const;

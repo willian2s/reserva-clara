@@ -16,6 +16,7 @@ service cloud.firestore {
       return data.keys().hasOnly([
           'name',
           'baseCurrency',
+          'archivedAt',
           'createdAt',
           'updatedAt'
         ]) &&
@@ -32,7 +33,41 @@ service cloud.firestore {
         data.baseCurrency is string &&
         data.baseCurrency == 'BRL' &&
         data.createdAt is timestamp &&
-        data.updatedAt is timestamp;
+        data.updatedAt is timestamp &&
+        (!data.keys().hasAny(['archivedAt']) ||
+          data.archivedAt == null ||
+          data.archivedAt is timestamp);
+    }
+
+    function isAllowedArchiveTransition() {
+      return (
+        (
+          !resource.data.keys().hasAny(['archivedAt']) &&
+          (!request.resource.data.keys().hasAny(['archivedAt']) ||
+            request.resource.data.archivedAt == null ||
+            request.resource.data.archivedAt == request.time)
+        ) || (
+          resource.data.keys().hasAny(['archivedAt']) &&
+          request.resource.data.keys().hasAny(['archivedAt']) &&
+          (request.resource.data.archivedAt == resource.data.archivedAt ||
+            request.resource.data.archivedAt == null ||
+            request.resource.data.archivedAt == request.time)
+        )
+      ) && (
+        !isArchiveStateChanged() ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'archivedAt',
+          'updatedAt'
+        ])
+      );
+    }
+
+    function isArchiveStateChanged() {
+      return resource.data.keys().hasAny(['archivedAt']) !=
+          request.resource.data.keys().hasAny(['archivedAt']) ||
+        (resource.data.keys().hasAny(['archivedAt']) &&
+          request.resource.data.keys().hasAny(['archivedAt']) &&
+          resource.data.archivedAt != request.resource.data.archivedAt);
     }
 
     // The namespace is not a profile document in phase 005.
@@ -46,14 +81,15 @@ service cloud.firestore {
       allow create: if isOwner(userId) &&
         isValidPortfolio(request.resource.data) &&
         request.resource.data.createdAt == request.time &&
-        request.resource.data.updatedAt == request.time;
+        request.resource.data.updatedAt == request.time &&
+        (!request.resource.data.keys().hasAny(['archivedAt']) ||
+          request.resource.data.archivedAt == null);
 
       allow update: if isOwner(userId) &&
         isValidPortfolio(request.resource.data) &&
         request.resource.data.createdAt == resource.data.createdAt &&
-        request.resource.data.updatedAt == request.time;
-
-      allow delete: if isOwner(userId);
+        request.resource.data.updatedAt == request.time &&
+        isAllowedArchiveTransition();
     }
 
     // Future paths stay explicitly denied until their own task defines rules.

@@ -1,9 +1,9 @@
 # 007 — Assets & Transactions
 
-- **Status geral:** `planned`
+- **Status geral:** `in_progress`
 - **Ticker:** `007`
 - **Spec:** [007-assets-transactions.md](../../specs/007-assets-transactions.md)
-- **Progresso:** 0/8 subtarefas concluídas
+- **Progresso:** 1/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -13,7 +13,7 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 
 ## Checklist
 
-- [ ] [007-01-implementar-archive-e-gate-de-lifecycle.md](007-01-implementar-archive-e-gate-de-lifecycle.md)
+- [x] [007-01-implementar-archive-e-gate-de-lifecycle.md](007-01-implementar-archive-e-gate-de-lifecycle.md)
 - [ ] [007-02-fechar-contratos-e-reducer-decimal.md](007-02-fechar-contratos-e-reducer-decimal.md)
 - [ ] [007-03-implementar-persistencia-de-assets.md](007-03-implementar-persistencia-de-assets.md)
 - [ ] [007-04-implementar-persistencia-de-transactions.md](007-04-implementar-persistencia-de-transactions.md)
@@ -26,7 +26,9 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 
 - Gate bloqueante: 007-01 precisa remover `deletePortfolio`, retirar
   `allow delete` das Rules e provar no Emulator que delete físico falha antes de
-  qualquer write de Transaction ser liberado.
+  qualquer write de Transaction ser liberado. 007-01 concluída: archive/restore,
+  compatibilidade legada, listagens separadas e delete negado passaram em 7
+  testes do Emulator; Assets/Transactions continuam fechados.
 - Asset é user-scoped e compartilhável entre Portfolios; Transaction é filho de
   Portfolio. Documentos principais usam auto IDs; registry técnico garante
   identidade Asset única e não aparece na UI.

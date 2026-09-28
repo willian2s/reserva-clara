@@ -11,6 +11,7 @@ import {
 import {
   parseCreatePortfolioInput,
   parseUpdatePortfolioInput,
+  parsePortfolioArchivedAt,
   parsePortfolioName,
   type Portfolio,
 } from "@/domain/portfolio";
@@ -29,6 +30,7 @@ import {
 type PortfolioFirestoreWriteData = Readonly<{
   name: string;
   baseCurrency: BaseCurrencyCode;
+  archivedAt: Timestamp | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }>;
@@ -46,6 +48,7 @@ function parsePortfolioForWrite(value: unknown): Portfolio {
     id: parseDocumentId(value.id),
     name: parsePortfolioName(value.name),
     baseCurrency: parseBaseCurrencyCode(value.baseCurrency),
+    archivedAt: parsePortfolioArchivedAt(value.archivedAt),
     createdAt: parseInstant(value.createdAt, "createdAt"),
     updatedAt: parseInstant(value.updatedAt, "updatedAt"),
   };
@@ -57,6 +60,10 @@ export function portfolioToFirestore(value: unknown): PortfolioFirestoreWriteDat
   return {
     name: portfolio.name,
     baseCurrency: portfolio.baseCurrency,
+    archivedAt:
+      portfolio.archivedAt === null
+        ? null
+        : Timestamp.fromDate(portfolio.archivedAt),
     createdAt: Timestamp.fromDate(parseInstant(portfolio.createdAt, "createdAt")),
     updatedAt: Timestamp.fromDate(parseInstant(portfolio.updatedAt, "updatedAt")),
   };
@@ -70,6 +77,7 @@ export function createPortfolioFirestoreData(
   return {
     name: portfolio.name,
     baseCurrency: portfolio.baseCurrency,
+    archivedAt: null,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   };
@@ -82,6 +90,20 @@ export function updatePortfolioFirestoreData(
 
   return {
     name: portfolio.name,
+    updatedAt: serverTimestamp(),
+  };
+}
+
+export function archivePortfolioFirestoreData(): PartialWithFieldValue<Portfolio> {
+  return {
+    archivedAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+}
+
+export function restorePortfolioFirestoreData(): PartialWithFieldValue<Portfolio> {
+  return {
+    archivedAt: null,
     updatedAt: serverTimestamp(),
   };
 }
@@ -120,9 +142,19 @@ function parseWriteTimestamp(
   return Timestamp.fromDate(parseInstant(value, field));
 }
 
+function parseWriteArchivedAt(value: unknown): Timestamp | null | FieldValue {
+  if (isFieldValue(value)) {
+    return value;
+  }
+
+  const archivedAt = parsePortfolioArchivedAt(value);
+
+  return archivedAt === null ? null : Timestamp.fromDate(archivedAt);
+}
+
 function hasRequiredPortfolioFields(value: Record<string, unknown>): boolean {
-  return ["name", "baseCurrency", "createdAt", "updatedAt"].every((field) =>
-    Object.hasOwn(value, field),
+  return ["name", "baseCurrency", "archivedAt", "createdAt", "updatedAt"].every(
+    (field) => Object.hasOwn(value, field),
   );
 }
 
@@ -149,6 +181,10 @@ function toFirestoreData(
 
   if (Object.hasOwn(value, "baseCurrency")) {
     data.baseCurrency = parseWriteBaseCurrency(value.baseCurrency);
+  }
+
+  if (Object.hasOwn(value, "archivedAt")) {
+    data.archivedAt = parseWriteArchivedAt(value.archivedAt);
   }
 
   if (Object.hasOwn(value, "createdAt")) {

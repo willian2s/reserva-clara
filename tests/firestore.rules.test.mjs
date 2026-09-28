@@ -27,6 +27,14 @@ const portfolioPath = (userId, portfolioId) =>
 const validPortfolio = (name = 'Synthetic Portfolio') => ({
   name,
   baseCurrency: 'BRL',
+  archivedAt: null,
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp(),
+});
+
+const legacyPortfolio = (name = 'Legacy Portfolio') => ({
+  name,
+  baseCurrency: 'BRL',
   createdAt: serverTimestamp(),
   updatedAt: serverTimestamp(),
 });
@@ -56,7 +64,7 @@ test.after(async () => {
   }
 });
 
-test('owner can create, read, list, update, and delete Portfolio', async () => {
+test('owner can create, read, list, and update active Portfolio', async () => {
   const firestore = testEnv.authenticatedContext('user-a').firestore();
   const reference = doc(firestore, portfolioPath('user-a', 'portfolio-a'));
 
@@ -66,6 +74,7 @@ test('owner can create, read, list, update, and delete Portfolio', async () => {
   assert.equal(created.exists(), true);
   assert.equal(created.data()?.name, 'Synthetic Portfolio');
   assert.equal(created.data()?.baseCurrency, 'BRL');
+  assert.equal(created.data()?.archivedAt, null);
   assert.ok(created.data()?.createdAt instanceof Timestamp);
   assert.ok(created.data()?.updatedAt instanceof Timestamp);
 
@@ -85,6 +94,7 @@ test('owner can create, read, list, update, and delete Portfolio', async () => {
 
   const updated = await assertSucceeds(getDoc(reference));
   assert.equal(updated.data()?.name, 'Updated Synthetic Portfolio');
+  assert.equal(updated.data()?.archivedAt, null);
   assert.deepEqual(updated.data()?.createdAt, created.data()?.createdAt);
   assert.ok(updated.data()?.updatedAt instanceof Timestamp);
 
@@ -103,9 +113,102 @@ test('owner can create, read, list, update, and delete Portfolio', async () => {
     }),
   );
 
-  await assertSucceeds(deleteDoc(reference));
-  const deleted = await assertSucceeds(getDoc(reference));
-  assert.equal(deleted.exists(), false);
+  await assertFails(deleteDoc(reference));
+  const stillPresent = await assertSucceeds(getDoc(reference));
+  assert.equal(stillPresent.exists(), true);
+});
+
+test('owner can archive and restore Portfolio, while delete stays denied', async () => {
+  const firestore = testEnv.authenticatedContext('user-a').firestore();
+  const emptyReference = doc(firestore, portfolioPath('user-a', 'portfolio-empty'));
+  const activeReference = doc(firestore, portfolioPath('user-a', 'portfolio-active'));
+  const archivedReference = doc(
+    firestore,
+    portfolioPath('user-a', 'portfolio-archived'),
+  );
+
+  await assertSucceeds(setDoc(emptyReference, validPortfolio('Empty Fixture')));
+  await assertSucceeds(setDoc(activeReference, validPortfolio('Active Fixture')));
+  await assertSucceeds(
+    setDoc(archivedReference, validPortfolio('Archived Fixture')),
+  );
+
+  await assertFails(deleteDoc(emptyReference));
+  await assertFails(deleteDoc(activeReference));
+  await assertFails(
+    updateDoc(activeReference, {
+      name: 'Archive With Unexpected Rename',
+      archivedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }),
+  );
+
+  await assertSucceeds(
+    updateDoc(archivedReference, {
+      archivedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }),
+  );
+
+  const archived = await assertSucceeds(getDoc(archivedReference));
+  assert.ok(archived.data()?.archivedAt instanceof Timestamp);
+  await assertFails(deleteDoc(archivedReference));
+
+  await assertSucceeds(
+    updateDoc(archivedReference, {
+      archivedAt: null,
+      updatedAt: serverTimestamp(),
+    }),
+  );
+
+  const restored = await assertSucceeds(getDoc(archivedReference));
+  assert.equal(restored.data()?.archivedAt, null);
+  assert.equal(restored.data()?.name, 'Archived Fixture');
+});
+
+test('legacy Portfolio without archivedAt reads as active and supports lifecycle', async () => {
+  const firestore = testEnv.authenticatedContext('user-a').firestore();
+  const reference = doc(firestore, portfolioPath('user-a', 'portfolio-legacy'));
+
+  await assertSucceeds(setDoc(reference, legacyPortfolio()));
+
+  const legacy = await assertSucceeds(getDoc(reference));
+  assert.equal(legacy.exists(), true);
+  assert.equal(Object.hasOwn(legacy.data(), 'archivedAt'), false);
+
+  await assertSucceeds(
+    updateDoc(reference, {
+      name: 'Renamed Legacy Portfolio',
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  await assertFails(
+    updateDoc(reference, {
+      name: 'Archive With Unexpected Rename',
+      archivedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }),
+  );
+
+  await assertSucceeds(
+    updateDoc(reference, {
+      archivedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  const archived = await assertSucceeds(getDoc(reference));
+  assert.ok(archived.data()?.archivedAt instanceof Timestamp);
+
+  await assertSucceeds(
+    updateDoc(reference, {
+      archivedAt: null,
+      updatedAt: serverTimestamp(),
+    }),
+  );
+  const restored = await assertSucceeds(getDoc(reference));
+  assert.equal(restored.data()?.archivedAt, null);
+  assert.equal(restored.data()?.name, 'Renamed Legacy Portfolio');
+  await assertFails(deleteDoc(reference));
 });
 
 test('users cannot read, write, or list another user namespace', async () => {
@@ -197,6 +300,13 @@ test('invalid Portfolio schema is rejected', async () => {
       data: {
         ...validPortfolio('Invalid Timestamp Type'),
         createdAt: 'not-a-timestamp',
+      },
+    },
+    {
+      name: 'archive timestamp with invalid type',
+      data: {
+        ...validPortfolio('Invalid Archive Timestamp Type'),
+        archivedAt: 'not-a-timestamp',
       },
     },
     {
