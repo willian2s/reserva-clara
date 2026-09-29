@@ -3,7 +3,7 @@
 - **Status geral:** `in_progress`
 - **Ticker:** `007`
 - **Spec:** [007-assets-transactions.md](../../specs/007-assets-transactions.md)
-- **Progresso:** 5/8 subtarefas concluídas
+- **Progresso:** 6/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -18,7 +18,7 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - [x] [007-03-implementar-persistencia-de-assets.md](007-03-implementar-persistencia-de-assets.md)
 - [x] [007-04-implementar-persistencia-de-transactions.md](007-04-implementar-persistencia-de-transactions.md)
 - [x] [007-05-abrir-rules-e-testes-do-emulator.md](007-05-abrir-rules-e-testes-do-emulator.md)
-- [ ] [007-06-implementar-catalogo-de-assets.md](007-06-implementar-catalogo-de-assets.md)
+- [x] [007-06-implementar-catalogo-de-assets.md](007-06-implementar-catalogo-de-assets.md)
 - [ ] [007-07-implementar-ledger-e-ux-de-transactions.md](007-07-implementar-ledger-e-ux-de-transactions.md)
 - [ ] [007-08-executar-gates-e-handoff.md](007-08-executar-gates-e-handoff.md)
 
@@ -55,5 +55,13 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
   fechado, ownership, vínculo atômico, `exists`, `getAfter`, archive gate e
   append-only; Emulator passou em 13 testes. Sell schema-válido direto continua
   sendo limite deliberado das Rules, coberto pelo reducer/repository.
+- 007-06 concluída: rota protegida `/assets`, listagem owner-scoped, criação com
+  identidade normalizada, estados loading/empty/error/retry, reconciliação
+  explícita e acessibilidade passaram lint, typegen, TypeScript, build, Emulator
+  e revisão independente. Não há teste automatizado de UI porque o repositório
+  ainda não possui runner de componentes.
+- Bloqueio operacional anterior de 007-06 foi resolvido: após a regularização
+  das Rules no ambiente manual, o usuário confirmou sucesso em todos os testes
+  do catálogo. Nenhum deploy foi executado pelo agente.
 - Nenhuma operação produtiva, deploy, seed ou mudança de Console faz parte deste
   planejamento.
