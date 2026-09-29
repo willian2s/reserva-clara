@@ -1,9 +1,9 @@
 # 007 — Assets & Transactions
 
-- **Status geral:** `in_progress`
+- **Status geral:** `completed`
 - **Ticker:** `007`
 - **Spec:** [007-assets-transactions.md](../../specs/007-assets-transactions.md)
-- **Progresso:** 8/9 subtarefas concluídas
+- **Progresso:** 9/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -21,7 +21,7 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - [x] [007-06-implementar-catalogo-de-assets.md](007-06-implementar-catalogo-de-assets.md)
 - [x] [007-07-implementar-ledger-e-ux-de-transactions.md](007-07-implementar-ledger-e-ux-de-transactions.md)
 - [x] [007-09-persistir-taxas-em-transactions.md](007-09-persistir-taxas-em-transactions.md)
-- [ ] [007-08-executar-gates-e-handoff.md](007-08-executar-gates-e-handoff.md)
+- [x] [007-08-executar-gates-e-handoff.md](007-08-executar-gates-e-handoff.md)
 
 ## Observações
 
@@ -75,5 +75,9 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - Bloqueio operacional anterior de 007-06 foi resolvido: após a regularização
   das Rules no ambiente manual, o usuário confirmou sucesso em todos os testes
   do catálogo. Nenhum deploy foi executado pelo agente.
+- 007-08: gates automatizados passaram e a revisão independente não encontrou
+  bloqueadores após a correção da máscara decimal. O usuário confirmou o smoke
+  manual autenticado em ambiente autorizado; o checkpoint humano foi aceito,
+  sem registrar dados pessoais, e o handoff para 008/009 foi encerrado.
 - Nenhuma operação produtiva, deploy, seed ou mudança de Console faz parte deste
   planejamento.

@@ -2,7 +2,8 @@
 
 ## Status
 
-`planned`
+`completed` — gates técnicos concluídos e smoke manual autenticado confirmado
+pelo checkpoint humano do handoff.
 
 ## Ticker
 
@@ -421,10 +422,11 @@ buy/sell, refresh, backfill, erro de venda, cross-user, teclado e viewport.
 ## Handoffs
 
 - **008 — Quotes/BRAPI:** pode mapear provider fora de Asset e sem alterar
-  identidade; não converter preço para float.
+  identidade; não converter preço para float nem usar `number` como representação
+  monetária.
 - **009 — Positions/Allocation:** deve derivar posição exclusivamente de
   Transaction + Asset + Quotes; nenhum Position mutável deve virar fonte de
-  verdade.
+  verdade nem substituir o ledger.
 - **012 — History/Snapshots:** pode materializar leitura derivada com versão e
   consistência explícitas; não substituir ledger.
 

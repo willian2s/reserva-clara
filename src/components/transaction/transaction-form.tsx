@@ -89,6 +89,7 @@ function normalizeBrazilianDecimal(value: string) {
 }
 
 function maskBrazilianDecimal(value: string) {
+  const sign = /^\s*-/.test(value) ? "-" : "";
   const sanitized = value.replace(/[^0-9,]/g, "");
   const commaIndex = sanitized.indexOf(",");
   const hasFraction = commaIndex >= 0;
@@ -96,7 +97,7 @@ function maskBrazilianDecimal(value: string) {
     ? sanitized.slice(0, commaIndex)
     : sanitized;
   const rawFraction = hasFraction
-    ? sanitized.slice(commaIndex + 1).slice(0, 17)
+    ? sanitized.slice(commaIndex + 1).slice(0, 18)
     : "";
   const integer = rawInteger.replace(/^0+(?=\d)/, "").slice(0, 30);
   const groupedInteger = (integer || (hasFraction ? "0" : "")).replace(
@@ -104,7 +105,7 @@ function maskBrazilianDecimal(value: string) {
     ".",
   );
 
-  return `${groupedInteger}${hasFraction ? `,${rawFraction}` : ""}`;
+  return `${sign}${groupedInteger}${hasFraction ? `,${rawFraction}` : ""}`;
 }
 
 function maskBrazilianDate(value: string) {
