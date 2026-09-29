@@ -11,7 +11,7 @@ automaticamente para 008 ou 009.
 
 ## Dependências
 
-- 007-01 a 007-07 concluídas e revisadas.
+- 007-01 a 007-07 e 007-09 concluídas e revisadas.
 - Revisão independente do diff e dos artefatos SDD disponível.
 - Checkpoint humano para qualquer smoke produtivo.
 
@@ -35,7 +35,7 @@ automaticamente para 008 ou 009.
 ## Critérios de aceite
 
 - Todos os gates pertinentes passam ou falhas ficam explicitamente registradas.
-- Overview chega a 8/8 somente se esta subtarefa e todas anteriores estiverem
+- Overview chega a 9/9 somente se esta subtarefa e todas anteriores estiverem
   concluídas.
 - Nenhuma subtarefa seguinte é iniciada automaticamente.
 - Handoff para 008 preserva Asset como identidade e para 009 preserva ledger

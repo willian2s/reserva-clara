@@ -21,15 +21,21 @@ export const TRANSACTION_FIELDS = [
   "assetId",
   "quantity",
   "unitPrice",
+  "fee",
   "effectiveDate",
   "createdAt",
 ] as const;
+
+const LEGACY_TRANSACTION_FIELDS = TRANSACTION_FIELDS.filter(
+  (field) => field !== "fee",
+);
 
 export type TransactionFirestoreData = Readonly<{
   kind: Transaction["kind"];
   assetId: Transaction["assetId"];
   quantity: Transaction["quantity"];
   unitPrice: Transaction["unitPrice"];
+  fee: Transaction["fee"];
   effectiveDate: Transaction["effectiveDate"];
   createdAt: Timestamp;
 }>;
@@ -38,13 +44,21 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function hasOwn(value: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
+}
+
 function invalid(field: string): never {
   throw new InvalidFirestoreDocumentError(field);
 }
 
 function assertExactFields(value: Record<string, unknown>): void {
   const actualFields = Object.keys(value).sort();
-  const expectedFields = [...TRANSACTION_FIELDS].sort();
+  const expectedFields = [
+    ...(hasOwn(value, "fee")
+      ? TRANSACTION_FIELDS
+      : LEGACY_TRANSACTION_FIELDS),
+  ].sort();
 
   if (
     actualFields.length !== expectedFields.length ||
@@ -97,6 +111,7 @@ export function parseTransactionDocument(id: unknown, data: unknown): Transactio
         assetId: data.assetId,
         quantity: data.quantity,
         unitPrice: data.unitPrice,
+        fee: data.fee,
         effectiveDate: data.effectiveDate,
         createdAt: timestamp,
       },

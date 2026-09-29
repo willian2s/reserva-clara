@@ -3,7 +3,7 @@
 - **Status geral:** `in_progress`
 - **Ticker:** `007`
 - **Spec:** [007-assets-transactions.md](../../specs/007-assets-transactions.md)
-- **Progresso:** 6/8 subtarefas concluídas
+- **Progresso:** 8/9 subtarefas concluídas
 
 ## Objetivo
 
@@ -19,7 +19,8 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - [x] [007-04-implementar-persistencia-de-transactions.md](007-04-implementar-persistencia-de-transactions.md)
 - [x] [007-05-abrir-rules-e-testes-do-emulator.md](007-05-abrir-rules-e-testes-do-emulator.md)
 - [x] [007-06-implementar-catalogo-de-assets.md](007-06-implementar-catalogo-de-assets.md)
-- [ ] [007-07-implementar-ledger-e-ux-de-transactions.md](007-07-implementar-ledger-e-ux-de-transactions.md)
+- [x] [007-07-implementar-ledger-e-ux-de-transactions.md](007-07-implementar-ledger-e-ux-de-transactions.md)
+- [x] [007-09-persistir-taxas-em-transactions.md](007-09-persistir-taxas-em-transactions.md)
 - [ ] [007-08-executar-gates-e-handoff.md](007-08-executar-gates-e-handoff.md)
 
 ## Observações
@@ -60,6 +61,17 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
   explícita e acessibilidade passaram lint, typegen, TypeScript, build, Emulator
   e revisão independente. Não há teste automatizado de UI porque o repositório
   ainda não possui runner de componentes.
+- 007-07 concluída: rota protegida de Transactions, ledger ordenado por contrato,
+  formulário mínimo de buy/sell, archive read-only, estados loading/empty/error,
+  reconciliação por intenção/ID e link no detalhe de Portfolio passaram lint,
+  typegen, TypeScript, build, Emulator, diff check e revisão independente. A
+  validação manual de browser permanece para o handoff 007-08. A linguagem
+  visível foi simplificada para “operações”, “histórico” e “ativos”.
+- Nova necessidade registrada: taxas serão persistidas como valor monetário fixo
+  opcional em Transaction V2. A 007-09 foi criada para compatibilizar contrato,
+  parser, repository, Rules, testes e formulário; 007-09 foi concluída e 007-08
+  aguarda o handoff final. Datas e decimais da UI seguem a convenção brasileira
+  (`dd/mm/aaaa` e vírgula decimal).
 - Bloqueio operacional anterior de 007-06 foi resolvido: após a regularização
   das Rules no ambiente manual, o usuário confirmou sucesso em todos os testes
   do catálogo. Nenhum deploy foi executado pelo agente.

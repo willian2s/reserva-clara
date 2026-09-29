@@ -95,6 +95,11 @@ service cloud.firestore {
         value.matches('^(0|[1-9][0-9]{0,29})(\\.[0-9]{0,17}[1-9])?$');
     }
 
+    function isCanonicalNonNegativeDecimal(value) {
+      return value is string &&
+        value.matches('^(0|[1-9][0-9]{0,29})(\\.[0-9]{0,17}[1-9])?$');
+    }
+
     function isLeapDay(value) {
       return value.matches(
         '^([0-9]{2}(0[48]|[2468][048]|[13579][26])|([02468][048]|[13579][26])00)-02-29$'
@@ -120,22 +125,35 @@ service cloud.firestore {
         isCanonicalPositiveDecimal(value.decimal);
     }
 
+    function isValidFee(value) {
+      return value == null || (
+        value is map &&
+        value.keys().hasOnly(['currency', 'decimal']) &&
+        value.keys().hasAll(['currency', 'decimal']) &&
+        isIso4217(value.currency) &&
+        value.decimal != '0' &&
+        isCanonicalNonNegativeDecimal(value.decimal)
+      );
+    }
+
     function isValidTransaction(data) {
       return data.keys().hasOnly([
           'kind',
           'assetId',
           'quantity',
           'unitPrice',
+          'fee',
           'effectiveDate',
           'createdAt'
         ]) && data.keys().hasAll([
-          'kind', 'assetId', 'quantity', 'unitPrice', 'effectiveDate', 'createdAt'
+          'kind', 'assetId', 'quantity', 'unitPrice', 'fee', 'effectiveDate', 'createdAt'
         ]) &&
         data.kind is string &&
         data.kind in ['buy', 'sell'] &&
         isDocumentId(data.assetId) &&
         isCanonicalPositiveDecimal(data.quantity) &&
         isValidUnitPrice(data.unitPrice) &&
+        isValidFee(data.fee) &&
         isCivilDate(data.effectiveDate) &&
         data.createdAt is timestamp;
     }

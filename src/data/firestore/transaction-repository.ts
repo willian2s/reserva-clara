@@ -14,6 +14,7 @@ import {
 import {
   createTransaction as createDomainTransaction,
   parseTransactionInput,
+  transactionPayloadEquals,
   type Transaction,
   type TransactionInput,
 } from "@/domain/transaction";
@@ -130,14 +131,7 @@ async function executeFirestore<T>(
 }
 
 function hasSamePayload(left: Transaction, right: TransactionInput): boolean {
-  return (
-    left.kind === right.kind &&
-    left.assetId === right.assetId &&
-    left.quantity === right.quantity &&
-    left.unitPrice.currency === right.unitPrice.currency &&
-    left.unitPrice.decimal === right.unitPrice.decimal &&
-    left.effectiveDate === right.effectiveDate
-  );
+  return transactionPayloadEquals(left, right);
 }
 
 function transactionForValidation(

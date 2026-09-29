@@ -62,6 +62,7 @@ const validTransaction = (overrides = {}) => ({
   assetId: 'asset-a',
   quantity: '1.25',
   unitPrice: { currency: 'BRL', decimal: '100.5' },
+  fee: null,
   effectiveDate: '2026-01-15',
   createdAt: serverTimestamp(),
   ...overrides,
@@ -532,11 +533,17 @@ test('owner can create valid buy and sell Transactions, including schema limits'
       validTransaction({ effectiveDate: '2024-02-29' }),
     ),
   );
+  await assertSucceeds(
+    setDoc(
+      doc(firestore, transactionPath('user-a', 'portfolio-a', 'transaction-fee')),
+      validTransaction({ fee: { currency: 'USD', decimal: '1.25' } }),
+    ),
+  );
 
   const listed = await assertSucceeds(
     getDocs(collection(firestore, 'users/user-a/portfolios/portfolio-a/transactions')),
   );
-  assert.equal(listed.size, 3);
+  assert.equal(listed.size, 4);
 
   const invalidCases = [
     ['future kind', { kind: 'income' }],
@@ -555,6 +562,13 @@ test('owner can create valid buy and sell Transactions, including schema limits'
     ['zero unit price', { unitPrice: { currency: 'BRL', decimal: '0' } }],
     ['unit price leading zero', { unitPrice: { currency: 'BRL', decimal: '01' } }],
     ['invalid currency', { unitPrice: { currency: 'ZZZ', decimal: '10' } }],
+    ['invalid fee shape', { fee: { currency: 'BRL', decimal: 10 } }],
+    ['fee extra field', { fee: { currency: 'BRL', decimal: '1', extra: true } }],
+    ['fee negative', { fee: { currency: 'BRL', decimal: '-1' } }],
+    ['fee zero object', { fee: { currency: 'BRL', decimal: '0' } }],
+    ['fee exponent', { fee: { currency: 'BRL', decimal: '1e2' } }],
+    ['fee leading zero', { fee: { currency: 'BRL', decimal: '01' } }],
+    ['fee invalid currency', { fee: { currency: 'ZZZ', decimal: '1' } }],
     ['invalid date', { effectiveDate: '2026-02-30' }],
     ['non-leap February 29', { effectiveDate: '2023-02-29' }],
     ['zero year date', { effectiveDate: '0000-01-01' }],

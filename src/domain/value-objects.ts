@@ -256,6 +256,11 @@ export type UnitPrice = Readonly<{
   decimal: PositiveDecimalString;
 }>;
 
+export type Fee = Readonly<{
+  currency: CurrencyCode;
+  decimal: DecimalString;
+}>;
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -445,6 +450,34 @@ export function parseUnitPrice(value: unknown): UnitPrice {
   };
 }
 
+export function parseFee(value: unknown): Fee | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  if (!isRecord(value)) {
+    throw new InvalidDomainInputError("fee", "must be null or an object");
+  }
+
+  assertExactKeys(value, ["currency", "decimal"], "fee");
+
+  let currency: CurrencyCode;
+  try {
+    currency = parseCurrencyCode(value.currency);
+  } catch {
+    throw new InvalidDomainValueError("fee", "must use an ISO 4217 currency");
+  }
+
+  let decimal: DecimalString;
+  try {
+    decimal = parseNonNegativeDecimalString(value.decimal);
+  } catch {
+    throw new InvalidDecimalError("fee", "must be a non-negative decimal");
+  }
+
+  return decimal === "0" ? null : { currency, decimal };
+}
+
 export function parsePersistedUnitPrice(value: unknown): UnitPrice {
   if (!isRecord(value)) {
     throw new InvalidDomainInputError("unitPrice", "must be an object");
@@ -461,6 +494,34 @@ export function parsePersistedUnitPrice(value: unknown): UnitPrice {
     currency: parseCurrencyCode(value.currency),
     decimal: decimal as PositiveDecimalString,
   };
+}
+
+export function parsePersistedFee(value: unknown): Fee | null {
+  if (value === undefined || value === null) {
+    return null;
+  }
+
+  if (!isRecord(value)) {
+    throw new InvalidDomainInputError("fee", "must be null or an object");
+  }
+
+  assertExactKeys(value, ["currency", "decimal"], "fee");
+
+  let currency: CurrencyCode;
+  try {
+    currency = parseCurrencyCode(value.currency);
+  } catch {
+    throw new InvalidDomainValueError("fee", "must use an ISO 4217 currency");
+  }
+
+  let decimal: DecimalString;
+  try {
+    decimal = parsePersistedDecimalString(value.decimal);
+  } catch {
+    throw new InvalidDecimalError("fee", "must use a canonical decimal");
+  }
+
+  return decimal === "0" ? null : { currency, decimal };
 }
 
 export function createUnitPrice(

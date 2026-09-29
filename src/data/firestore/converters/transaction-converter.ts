@@ -28,12 +28,17 @@ type TransactionFirestoreWriteData = Readonly<{
   assetId: Transaction["assetId"];
   quantity: Transaction["quantity"];
   unitPrice: Transaction["unitPrice"];
+  fee: Transaction["fee"];
   effectiveDate: Transaction["effectiveDate"];
   createdAt: Timestamp;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasOwn(value: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
 }
 
 function timestampFromParts(value: TimestampParts): Timestamp {
@@ -48,6 +53,7 @@ export function transactionToFirestore(value: unknown): TransactionFirestoreWrit
     assetId: transaction.assetId,
     quantity: transaction.quantity,
     unitPrice: transaction.unitPrice,
+    fee: transaction.fee,
     effectiveDate: transaction.effectiveDate,
     createdAt: timestampFromParts(
       parseTimestampParts(transaction.createdAt, "createdAt"),
@@ -65,13 +71,16 @@ export function createTransactionFirestoreData(
     assetId: transaction.assetId,
     quantity: transaction.quantity,
     unitPrice: transaction.unitPrice,
+    fee: transaction.fee,
     effectiveDate: transaction.effectiveDate,
     createdAt: serverTimestamp(),
   };
 }
 
 function hasRequiredTransactionFields(value: Record<string, unknown>): boolean {
-  return TRANSACTION_FIELDS.every((field) => Object.hasOwn(value, field));
+  return TRANSACTION_FIELDS.every((field) =>
+    field === "fee" || hasOwn(value, field),
+  );
 }
 
 function toFirestoreData(

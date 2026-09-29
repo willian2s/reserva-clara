@@ -61,6 +61,8 @@ alocação e fluxo de caixa continuam fora desta fase.
 - Transaction privada em
   `users/{uid}/portfolios/{portfolioId}/transactions/{transactionId}`;
 - somente `buy` e `sell` persistidos em V1;
+- taxa monetária fixa opcional persistida em Transaction V2, com leitura
+  compatível de Transaction V1 legada;
 - parser/converter/runtime validation e Rules fechadas para Asset, registry e
   Transaction;
 - repository orientado ao domínio, sem SDK Firestore nos componentes React;
@@ -77,7 +79,7 @@ alocação e fluxo de caixa continuam fora desta fase.
 
 ### Fora de escopo
 
-- `contribution`, `withdrawal`, `income`, `dividend`, `fee`, `tax`, `transfer`,
+- `contribution`, `withdrawal`, `income`, `dividend`, `tax`, `transfer`,
   `reversal` e `adjustment` persistidos ou expostos na UI;
 - custos, impostos, corretagem, emolumentos ou desconto ocultos em preço,
   quantidade ou valor calculado;
@@ -143,9 +145,11 @@ alocação e fluxo de caixa continuam fora desta fase.
 
 ### Transaction e ledger
 
-13. Transaction V1 é união discriminada somente por `kind: "buy" | "sell"` e
+13. Transaction V2 é união discriminada somente por `kind: "buy" | "sell"` e
     contém exatamente `assetId`, `quantity`, `unitPrice`, `effectiveDate`,
-    `createdAt` e `kind`.
+    `createdAt`, `kind` e `fee`. Documentos V1 legados sem `fee` continuam
+    legíveis e são interpretados como `fee: null`; novas escritas sempre
+    persistem o campo.
 14. `assetId` referencia Asset do mesmo `uid`; Rules e repository rejeitam
     referência inexistente ou pertencente a outro owner. Asset não é copiado
     para o documento Transaction.
@@ -158,30 +162,36 @@ alocação e fluxo de caixa continuam fora desta fase.
 16. `unitPrice.currency` é ISO 4217 uppercase. Nenhuma conversão para BRL ou
     multiplicação de preço por quantidade é persistida; moeda diferente de BRL
     pode ser armazenada, mas não é convertida nesta fase.
-17. `effectiveDate` é data civil real `YYYY-MM-DD`; `createdAt` é Timestamp
+17. `fee` é opcional na entrada e representa um valor monetário fixo absoluto,
+    nunca percentual: `null` significa ausência e um valor usa
+    `{ currency, decimal }`, com `decimal` não negativo e moeda ISO 4217
+    uppercase. Taxa zero é normalizada para `null`; não há conversão, soma,
+    total ou arredondamento implícito, e a taxa não altera quantidade nem
+    validação de `sell`.
+18. `effectiveDate` é data civil real `YYYY-MM-DD`; `createdAt` é Timestamp
     server-side. Data de negócio não usa timezone local.
-18. Transaction é append-only: não há update/delete público, UI ou Rule. Retry
+19. Transaction é append-only: não há update/delete público, UI ou Rule. Retry
     de uma mesma intenção reutiliza `transactionId` auto-gerado antes do write;
     documento existente compara somente `kind`, `assetId`, `quantity`,
-    `unitPrice` e `effectiveDate` (não `createdAt`). Payload diferente é
+    `unitPrice`, `effectiveDate` e `fee` (não `createdAt`). Payload diferente é
     conflito, não overwrite.
-19. Write usa Firestore transaction otimista: lê Portfolio, Asset, registry
+20. Write usa Firestore transaction otimista: lê Portfolio, Asset, registry
     quando necessário e ledger relevante; valida estado cronológico; grava
     somente depois das leituras. Rules também validam o estado `getAfter()` da
     Portfolio, impedindo batch que arquive e crie Transaction no mesmo commit.
     Concorrência detectada pelo SDK reinicia a operação. Sem Position auxiliar
     ou contador de saldo.
-20. Reducer ordena por `effectiveDate ASC`, `createdAt ASC`, `documentId ASC`.
+21. Reducer ordena por `effectiveDate ASC`, `createdAt ASC`, `documentId ASC`.
     Para `sell`, quantidade acumulada do Asset antes do evento deve ser maior ou
     igual à venda; resultado negativo é rejeitado pelo repository. Eventos
     históricos devem ser inseridos em ordem de negócio válida, mesmo quando
     chegam depois. Rules não conseguem agregar todo o ledger e não prometem
     impedir um cliente autenticado de escrever um sell schema-válido via SDK
     direto; esse limite fica explícito como risco residual.
-21. Soma/subtração do reducer usa representação inteira/string ou `bigint` em
+22. Soma/subtração do reducer usa representação inteira/string ou `bigint` em
     memória, nunca `number` decimal. Normalização, escala e limites são testados
     com casos de fração, zeros, carry/borrow e tentativa negativa.
-22. Correção de erro de lançamento não é mutação silenciosa. V1 orienta usuário
+23. Correção de erro de lançamento não é mutação silenciosa. V1 orienta usuário
     a não apagar evento e registra handoff para evento compensatório futuro.
 
 ### Segurança e persistência
@@ -214,8 +224,9 @@ alocação e fluxo de caixa continuam fora desta fase.
     `/portfolios/[portfolioId]/transactions` lista ledger e oferece create
     somente para Portfolio ativa. Portfolio arquivada fica read-only e informa
     motivo sem perder histórico.
-31. Formulário de Transaction exige Asset existente, kind, quantidade, preço,
-    moeda e data; não oferece taxas, total calculado, posição ou rentabilidade.
+31. Formulário de operação exige Ativo existente, compra/venda, quantidade,
+    preço, moeda e data; oferece taxa fixa opcional com moeda e valor, sem
+    total calculado, posição ou rentabilidade.
 32. Lista usa ordem determinística do domínio, apresenta evento real e estados
     sanitizados. Falha ambígua não repete write automaticamente; a ação de
     reconciliação relê ledger usando mesma intenção quando aplicável.
@@ -251,6 +262,7 @@ users/{uid}
       assetId: string
       quantity: string
       unitPrice: { currency: string, decimal: string }
+      fee: null | { currency: string, decimal: string }
       effectiveDate: "YYYY-MM-DD"
       createdAt: Timestamp
 ```
@@ -320,20 +332,23 @@ camada abstrata para entidades futuras.
    — rota `/assets`, criação, listagem e estados acessíveis.
 7. [007-07-implementar-ledger-e-ux-de-transactions.md](../tasks/007-assets-transactions/007-07-implementar-ledger-e-ux-de-transactions.md)
    — rota de ledger, formulário buy/sell e Portfolio arquivada read-only.
-8. [007-08-executar-gates-e-handoff.md](../tasks/007-assets-transactions/007-08-executar-gates-e-handoff.md)
+8. [007-09-persistir-taxas-em-transactions.md](../tasks/007-assets-transactions/007-09-persistir-taxas-em-transactions.md)
+   — compatibilizar Transaction V2, taxa fixa opcional e UI da operação.
+9. [007-08-executar-gates-e-handoff.md](../tasks/007-assets-transactions/007-08-executar-gates-e-handoff.md)
    — gates, evidências, revisão, rollout e handoff 008/009.
 
 ## Estratégia de testes e validação
 
 ### Domínio e persistência
 
-- Parser: campos exatos, normalização, enum, identidade, decimal, data real,
-  Timestamp com nanos e IDs.
+- Parser: campos exatos, normalização, enum, identidade, decimal, taxa fixa,
+  data real, Timestamp com nanos, IDs e compatibilidade de documento legado sem
+  `fee`.
 - Reducer: buy/sell em ordem, mesmo dia, backfill, empate por ID, frações,
   overflow de escala, venda maior que saldo e concorrência.
 - Repository: UID interno, archive gate, Asset registry atômico, referência
-  owner-scoped, ID repetido com payload igual/diferente, erro ambíguo sem
-  overwrite.
+  owner-scoped, taxa normalizada, ID repetido com payload igual/diferente, erro
+  ambíguo sem overwrite.
 
 ### Emulator Rules
 
@@ -398,6 +413,7 @@ buy/sell, refresh, backfill, erro de venda, cross-user, teclado e viewport.
 | Retry duplicar evento | ID auto-gerado por intenção, payload imutável, conflito explícito e reconciliação sem retry cego. |
  | Decimal virar floating point | Strings persistidas em gramática canônica, parser normaliza input antes do write, Rules rejeitam bruto não canônico, `bigint`/escala em memória, limites e casos de carry/borrow. |
 | Asset duplicar provider/ticker | Provider fora do schema; identidade exige quatro dimensões e registry determinístico. |
+| Taxa ser confundida com percentual ou total | V2 persiste somente valor monetário fixo opcional `{currency, decimal}`; não calcula total, conversão, base ou arredondamento. |
 | Rules serem tratadas como filtro | Query owner-scoped, testes cross-user e parser/repository sem confiar em filtro de cliente. |
 | UI sugerir patrimônio fictício | Sem total, posição, cotação ou performance; revisão visual contra escopo. |
 | SDK Firestore vazar para Server Component | Implementação client-only confinada a repository; documentação Next 16 e build/typecheck. |
@@ -417,7 +433,10 @@ buy/sell, refresh, backfill, erro de venda, cross-user, teclado e viewport.
 - `007` foi fornecido pelo contexto da solicitação e permanece ticker fixo.
 - Asset user-scoped e Transaction portfolio-scoped preservam contratos 005.
 - BRL continua base de Portfolio, mas V1 não calcula FX; `unitPrice.currency`
-  é armazenada e exibida.
+  e `fee.currency` são armazenadas e exibidas.
+- Taxa significa valor monetário fixo absoluto, opcional na entrada e
+  normalizado como `null` quando ausente ou zero; percentual, base de cálculo,
+  total e conversão cambial continuam fora de escopo.
 - Não há decisão pendente bloqueante para criar o plano. A escolha de registry
   é deliberada porque unicidade Asset é invariável útil e auto IDs continuam
   necessários no documento principal.

@@ -7,14 +7,17 @@ import type {
   DocumentId,
   Quantity,
   TimestampParts,
+  Fee,
   UnitPrice,
 } from "./value-objects";
 import {
   parseCivilDate,
   parseDocumentId,
   parsePersistedQuantity,
+  parsePersistedFee,
   parsePersistedUnitPrice,
   parseQuantity,
+  parseFee,
   parseTimestampParts,
   parseUnitPrice,
 } from "./value-objects";
@@ -37,6 +40,7 @@ export type Transaction = Readonly<{
   assetId: DocumentId;
   quantity: Quantity;
   unitPrice: UnitPrice;
+  fee: Fee | null;
   effectiveDate: CivilDate;
   createdAt: TimestampParts;
 }>;
@@ -46,15 +50,37 @@ export type TradeTransaction = Transaction;
 export type TransactionData = Omit<Transaction, "id">;
 
 export type TransactionInput = Readonly<
-  Pick<TransactionData, "kind" | "assetId" | "quantity" | "unitPrice" | "effectiveDate">
+  Pick<TransactionData, "kind" | "assetId" | "quantity" | "unitPrice" | "effectiveDate"> & {
+    fee?: Fee | null;
+  }
 >;
 
 export type TransactionMetadata = Readonly<{
   id: unknown;
 }>;
 
+export function transactionPayloadEquals(
+  transaction: Transaction,
+  input: TransactionInput,
+): boolean {
+  return (
+    transaction.kind === input.kind &&
+    transaction.assetId === input.assetId &&
+    transaction.quantity === input.quantity &&
+    transaction.unitPrice.currency === input.unitPrice.currency &&
+    transaction.unitPrice.decimal === input.unitPrice.decimal &&
+    transaction.fee?.currency === input.fee?.currency &&
+    transaction.fee?.decimal === input.fee?.decimal &&
+    transaction.effectiveDate === input.effectiveDate
+  );
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasOwn(value: Record<string, unknown>, key: string): boolean {
+  return Object.prototype.hasOwnProperty.call(value, key);
 }
 
 function assertExactKeys(
@@ -76,6 +102,17 @@ function assertExactKeys(
   }
 }
 
+function assertTransactionKeys(
+  value: Record<string, unknown>,
+  requiredKeys: readonly string[],
+): void {
+  assertExactKeys(
+    value,
+    [...requiredKeys, ...(hasOwn(value, "fee") ? ["fee"] : [])],
+    "transaction",
+  );
+}
+
 export function parseTransactionKind(value: unknown): TransactionKind {
   if (value !== "buy" && value !== "sell") {
     throw new InvalidDomainInputError(
@@ -92,11 +129,7 @@ export function parseTransactionInput(value: unknown): TransactionInput {
     throw new InvalidDomainInputError("transaction", "must be an object");
   }
 
-  assertExactKeys(
-    value,
-    ["kind", "assetId", "quantity", "unitPrice", "effectiveDate"],
-    "transaction",
-  );
+  assertTransactionKeys(value, ["kind", "assetId", "quantity", "unitPrice", "effectiveDate"]);
 
   let assetId: DocumentId;
   try {
@@ -110,6 +143,7 @@ export function parseTransactionInput(value: unknown): TransactionInput {
     assetId,
     quantity: parseQuantity(value.quantity),
     unitPrice: parseUnitPrice(value.unitPrice),
+    fee: parseFee(value.fee),
     effectiveDate: parseCivilDate(value.effectiveDate),
   };
 }
@@ -119,11 +153,14 @@ export function parseTransactionData(value: unknown): TransactionData {
     throw new InvalidDomainInputError("transaction", "must be an object");
   }
 
-  assertExactKeys(
-    value,
-    ["kind", "assetId", "quantity", "unitPrice", "effectiveDate", "createdAt"],
-    "transaction",
-  );
+  assertTransactionKeys(value, [
+    "kind",
+    "assetId",
+    "quantity",
+    "unitPrice",
+    "effectiveDate",
+    "createdAt",
+  ]);
 
   let assetId: DocumentId;
   try {
@@ -137,6 +174,7 @@ export function parseTransactionData(value: unknown): TransactionData {
     assetId,
     quantity: parseQuantity(value.quantity),
     unitPrice: parseUnitPrice(value.unitPrice),
+    fee: parseFee(value.fee),
     effectiveDate: parseCivilDate(value.effectiveDate),
     createdAt: parseTimestampParts(value.createdAt, "createdAt"),
   };
@@ -147,11 +185,14 @@ export function parsePersistedTransactionData(value: unknown): TransactionData {
     throw new InvalidDomainInputError("transaction", "must be an object");
   }
 
-  assertExactKeys(
-    value,
-    ["kind", "assetId", "quantity", "unitPrice", "effectiveDate", "createdAt"],
-    "transaction",
-  );
+  assertTransactionKeys(value, [
+    "kind",
+    "assetId",
+    "quantity",
+    "unitPrice",
+    "effectiveDate",
+    "createdAt",
+  ]);
 
   let assetId: DocumentId;
   try {
@@ -165,6 +206,7 @@ export function parsePersistedTransactionData(value: unknown): TransactionData {
     assetId,
     quantity: parsePersistedQuantity(value.quantity),
     unitPrice: parsePersistedUnitPrice(value.unitPrice),
+    fee: parsePersistedFee(value.fee),
     effectiveDate: parseCivilDate(value.effectiveDate),
     createdAt: parseTimestampParts(value.createdAt, "createdAt"),
   };
@@ -197,11 +239,16 @@ export function parseTransaction(value: unknown): Transaction {
     throw new InvalidDomainInputError("transaction", "must be an object");
   }
 
-  assertExactKeys(
-    value,
-    ["id", "kind", "assetId", "quantity", "unitPrice", "effectiveDate", "createdAt"],
-    "transaction",
-  );
+  assertExactKeys(value, [
+    "id",
+    "kind",
+    "assetId",
+    "quantity",
+    "unitPrice",
+    "effectiveDate",
+    "createdAt",
+    ...(hasOwn(value, "fee") ? ["fee"] : []),
+  ], "transaction");
 
   return createTransaction(
     {
@@ -209,6 +256,7 @@ export function parseTransaction(value: unknown): Transaction {
       assetId: value.assetId,
       quantity: value.quantity,
       unitPrice: value.unitPrice,
+      fee: value.fee,
       effectiveDate: value.effectiveDate,
       createdAt: value.createdAt,
     },

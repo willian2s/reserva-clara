@@ -13,6 +13,7 @@ const transaction = ({
   assetId = "asset-a",
   kind = "buy",
   quantity = "1",
+  fee = null,
   effectiveDate = "2026-01-01",
   seconds = 1,
   nanoseconds = 0,
@@ -23,6 +24,7 @@ const transaction = ({
     kind,
     quantity,
     unitPrice: { currency: "BRL", decimal: "10.00" },
+    fee,
     effectiveDate,
     createdAt: { seconds, nanoseconds },
   });
@@ -82,7 +84,73 @@ test("decimal operations use exact carry, borrow and comparison", () => {
 test("Transaction is a closed buy/sell contract and preserves Timestamp precision", () => {
   const parsed = transaction({ id: "tx-a", quantity: "1.2300", seconds: 42, nanoseconds: 123 });
   assert.equal(parsed.quantity, "1.23");
+  assert.equal(parsed.fee, null);
   assert.deepEqual(parsed.createdAt, { seconds: 42, nanoseconds: 123 });
+  assert.deepEqual(
+    transaction({
+      id: "tx-fee",
+      fee: { currency: "USD", decimal: "1.2300" },
+    }).fee,
+    { currency: "USD", decimal: "1.23" },
+  );
+  assert.equal(
+    domain.parseTransactionInput({
+      kind: "buy",
+      assetId: "asset-a",
+      quantity: "1",
+      unitPrice: { currency: "BRL", decimal: "10" },
+      effectiveDate: "2026-01-01",
+    }).fee,
+    null,
+  );
+  assert.equal(
+    domain.parseTransactionInput({
+      kind: "buy",
+      assetId: "asset-a",
+      quantity: "1",
+      unitPrice: { currency: "BRL", decimal: "10" },
+      fee: { currency: "BRL", decimal: "0.000" },
+      effectiveDate: "2026-01-01",
+    }).fee,
+    null,
+  );
+  assert.throws(
+    () => domain.parseTransactionInput({
+      kind: "buy",
+      assetId: "asset-a",
+      quantity: "1",
+      unitPrice: { currency: "BRL", decimal: "10" },
+      fee: { currency: "BRL", decimal: "-1" },
+      effectiveDate: "2026-01-01",
+    }),
+    errorCode("INVALID_DECIMAL"),
+  );
+  const feeTransaction = transaction({
+    id: "tx-fee-match",
+    fee: { currency: "BRL", decimal: "1" },
+  });
+  assert.equal(
+    domain.transactionPayloadEquals(feeTransaction, {
+      kind: feeTransaction.kind,
+      assetId: feeTransaction.assetId,
+      quantity: feeTransaction.quantity,
+      unitPrice: feeTransaction.unitPrice,
+      fee: feeTransaction.fee,
+      effectiveDate: feeTransaction.effectiveDate,
+    }),
+    true,
+  );
+  assert.equal(
+    domain.transactionPayloadEquals(feeTransaction, {
+      kind: feeTransaction.kind,
+      assetId: feeTransaction.assetId,
+      quantity: feeTransaction.quantity,
+      unitPrice: feeTransaction.unitPrice,
+      fee: { currency: "BRL", decimal: "2" },
+      effectiveDate: feeTransaction.effectiveDate,
+    }),
+    false,
+  );
   assert.throws(
     () => transaction({ id: "tx-future", kind: "dividend" }),
     errorCode("INVALID_DOMAIN_INPUT"),
@@ -98,6 +166,17 @@ test("Transaction is a closed buy/sell contract and preserves Timestamp precisio
     }),
     errorCode("INVALID_DECIMAL"),
   );
+  assert.equal(
+    domain.parsePersistedTransactionData({
+      kind: parsed.kind,
+      assetId: parsed.assetId,
+      quantity: parsed.quantity,
+      unitPrice: parsed.unitPrice,
+      effectiveDate: parsed.effectiveDate,
+      createdAt: parsed.createdAt,
+    }).fee,
+    null,
+  );
 });
 
 test("reducer sorts backfill, same-day ties and rejects mixed assets or negative balance", () => {
@@ -107,6 +186,18 @@ test("reducer sorts backfill, same-day ties and rejects mixed assets or negative
     transaction({ id: "buy-early", quantity: "0.25", effectiveDate: "2026-01-01", seconds: 2 }),
   ];
   assert.equal(domain.reduceTransactionQuantity(events), "0.75");
+  assert.equal(
+    domain.reduceTransactionQuantity([
+      transaction({ id: "without-fee", quantity: "1" }),
+      transaction({
+        id: "with-fee",
+        quantity: "1",
+        effectiveDate: "2026-01-02",
+        fee: { currency: "BRL", decimal: "999.99" },
+      }),
+    ]),
+    "2",
+  );
   assert.equal(
     domain.sortTransactions([
       transaction({ id: "B", seconds: 2 }),
