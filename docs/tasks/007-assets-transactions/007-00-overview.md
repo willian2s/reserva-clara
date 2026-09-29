@@ -3,7 +3,7 @@
 - **Status geral:** `in_progress`
 - **Ticker:** `007`
 - **Spec:** [007-assets-transactions.md](../../specs/007-assets-transactions.md)
-- **Progresso:** 3/8 subtarefas concluídas
+- **Progresso:** 4/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -16,7 +16,7 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - [x] [007-01-implementar-archive-e-gate-de-lifecycle.md](007-01-implementar-archive-e-gate-de-lifecycle.md)
 - [x] [007-02-fechar-contratos-e-reducer-decimal.md](007-02-fechar-contratos-e-reducer-decimal.md)
 - [x] [007-03-implementar-persistencia-de-assets.md](007-03-implementar-persistencia-de-assets.md)
-- [ ] [007-04-implementar-persistencia-de-transactions.md](007-04-implementar-persistencia-de-transactions.md)
+- [x] [007-04-implementar-persistencia-de-transactions.md](007-04-implementar-persistencia-de-transactions.md)
 - [ ] [007-05-abrir-rules-e-testes-do-emulator.md](007-05-abrir-rules-e-testes-do-emulator.md)
 - [ ] [007-06-implementar-catalogo-de-assets.md](007-06-implementar-catalogo-de-assets.md)
 - [ ] [007-07-implementar-ledger-e-ux-de-transactions.md](007-07-implementar-ledger-e-ux-de-transactions.md)
@@ -43,6 +43,13 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - 007-03 concluída: paths, parser/converter fechados, registry somente com
   `assetId`, criação atômica owner-scoped e listagem com validação bidirecional
   passaram nos gates técnicos; Rules e testes Emulator específicos de Asset
+  permanecem para 007-05.
+- 007-04 concluída: parser/converter fechados, repository append-only com
+  idempotência por ID, validação de venda com reducer, archive gate, ordenação
+  determinística e marcador de concorrência em `Portfolio.updatedAt` passaram
+  nos gates técnicos e em revisão independente. O ledger completo ainda é
+  consultado fora do read set de query do SDK Web; Rules, testes Emulator
+  específicos de ownership/append-only/concorrência e o risco de SDK direto
   permanecem para 007-05.
 - Nenhuma operação produtiva, deploy, seed ou mudança de Console faz parte deste
   planejamento.

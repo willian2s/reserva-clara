@@ -45,6 +45,10 @@ export type TradeTransaction = Transaction;
 
 export type TransactionData = Omit<Transaction, "id">;
 
+export type TransactionInput = Readonly<
+  Pick<TransactionData, "kind" | "assetId" | "quantity" | "unitPrice" | "effectiveDate">
+>;
+
 export type TransactionMetadata = Readonly<{
   id: unknown;
 }>;
@@ -81,6 +85,33 @@ export function parseTransactionKind(value: unknown): TransactionKind {
   }
 
   return value;
+}
+
+export function parseTransactionInput(value: unknown): TransactionInput {
+  if (!isRecord(value)) {
+    throw new InvalidDomainInputError("transaction", "must be an object");
+  }
+
+  assertExactKeys(
+    value,
+    ["kind", "assetId", "quantity", "unitPrice", "effectiveDate"],
+    "transaction",
+  );
+
+  let assetId: DocumentId;
+  try {
+    assetId = parseDocumentId(value.assetId);
+  } catch {
+    throw new InvalidReferenceError("assetId", "must be a valid document ID");
+  }
+
+  return {
+    kind: parseTransactionKind(value.kind),
+    assetId,
+    quantity: parseQuantity(value.quantity),
+    unitPrice: parseUnitPrice(value.unitPrice),
+    effectiveDate: parseCivilDate(value.effectiveDate),
+  };
 }
 
 export function parseTransactionData(value: unknown): TransactionData {

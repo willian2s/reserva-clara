@@ -30,6 +30,16 @@ export class PortfolioNotFoundError extends Error {
   }
 }
 
+export class PortfolioArchivedError extends Error {
+  readonly code = "PORTFOLIO_ARCHIVED" as const;
+
+  constructor() {
+    super("Archived portfolios do not accept new transactions");
+    this.name = "PortfolioArchivedError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
 export class AssetNotFoundError extends Error {
   readonly code = "ASSET_NOT_FOUND" as const;
 

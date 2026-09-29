@@ -2,7 +2,7 @@
 
 - **Ticker:** `007`
 - **Número:** `04`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -59,7 +59,45 @@ Testar repository e reducer com fixtures sintéticas; depois `npm run lint`,
 
 ## Registro de execução
 
-- **Arquivos alterados:** preencher ao executar.
-- **Decisões/desvios:** registrar cursor, limites e política de conflito.
-- **Comandos/resultados/evidências:** preencher ao executar.
-- **Riscos residuais:** custo de ler ledger completo em carteiras grandes.
+- **Arquivos alterados:**
+  - `src/domain/transaction.ts`
+  - `src/data/firestore/errors.ts`
+  - `src/data/firestore/paths.ts`
+  - `src/data/firestore/parsers/transaction-parser.ts`
+  - `src/data/firestore/converters/transaction-converter.ts`
+  - `src/data/firestore/transaction-repository.ts`
+- **Decisões/desvios:**
+  - O `transactionId` é gerado com `doc(CollectionReference).id` antes do
+    `runTransaction` e pode ser recebido explicitamente para reconciliação da
+    mesma intenção.
+  - Não foi adicionada paginação: a listagem lê o ledger completo e aplica
+    `sortTransactions`, preservando `effectiveDate`, `createdAt` e ID.
+  - A validação de venda usa um evento sintético posterior aos eventos lidos,
+    preservando a regra de backfill sem usar `number` para decimais.
+  - Como o SDK Web não expõe leitura de query no objeto de
+    `FirestoreTransaction`, o ledger é consultado dentro do callback e cada
+    documento encontrado é relido pela transação. A criação também atualiza
+    `Portfolio.updatedAt` como marcador de concorrência; archive/restore e Rules
+    permanecem fora desta subtarefa.
+  - Converter/parser usam schema fechado, `serverTimestamp()` em `createdAt`,
+    TimestampParts com nanos e rejeição de update/merge.
+- **Comandos/resultados/evidências:**
+  - `npm run test:domain` — 5 testes passaram.
+  - `npm run test:rules` — 7 testes passaram; Transactions continuam negadas
+    enquanto as Rules permanecem fechadas para 007-05.
+  - `npm run lint` — passou sem warnings.
+  - `npm exec next typegen && npx tsc --noEmit` — passou.
+  - `npm run build` — build de produção passou.
+  - `git diff --check` — passou.
+  - Revisão independente — aprovada após corrigir a geração inicial de ID que
+    usava um path de coleção com `doc(db, path)`.
+- **Riscos residuais:**
+  - O ledger completo é lido em cada criação/listagem; carteiras grandes podem
+    exceder limites operacionais e exigirão aggregate/snapshot em fase futura.
+  - `getDocs` não participa diretamente do read set transacional; o marcador
+    `Portfolio.updatedAt` serializa writes deste repository, mas não impede
+    sell schema-válido escrito diretamente pelo SDK. As Rules, ownership,
+    append-only e `getAfter()` serão provados em 007-05.
+  - Ainda não há teste de integração específico do repository para idempotência,
+    conflito de payload e duas vendas concorrentes; essa evidência fica para o
+    Emulator da subtarefa 007-05.
