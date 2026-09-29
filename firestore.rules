@@ -12,10 +12,169 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
+    function isDocumentId(value) {
+      return value is string &&
+        value.size() > 0 &&
+        value != '.' &&
+        value != '..' &&
+        value.matches('[^/]+');
+    }
+
+    function isIso4217(value) {
+      return value is string && value in [
+        'AED', 'AFN', 'ALL', 'AMD', 'ANG', 'AOA', 'ARS', 'AUD', 'AWG',
+        'AZN', 'BAM', 'BBD', 'BDT', 'BGN', 'BHD', 'BIF', 'BMD', 'BND',
+        'BOB', 'BOV', 'BRL', 'BSD', 'BTN', 'BWP', 'BYN', 'BZD', 'CAD',
+        'CDF', 'CHE', 'CHF', 'CHW', 'CLF', 'CLP', 'CNY', 'COP', 'COU',
+        'CRC', 'CUC', 'CUP', 'CVE', 'CZK', 'DJF', 'DKK', 'DOP', 'DZD',
+        'EGP', 'ERN', 'ETB', 'EUR', 'FJD', 'FKP', 'GBP', 'GEL', 'GHS',
+        'GIP', 'GMD', 'GNF', 'GTQ', 'GYD', 'HKD', 'HNL', 'HTG', 'HUF',
+        'IDR', 'ILS', 'INR', 'IQD', 'IRR', 'ISK', 'JMD', 'JOD', 'JPY',
+        'KES', 'KGS', 'KHR', 'KMF', 'KPW', 'KRW', 'KWD', 'KYD', 'KZT',
+        'LAK', 'LBP', 'LKR', 'LRD', 'LSL', 'LYD', 'MAD', 'MDL', 'MGA',
+        'MKD', 'MMK', 'MNT', 'MOP', 'MRU', 'MUR', 'MVR', 'MWK', 'MXN',
+        'MXV', 'MYR', 'MZN', 'NAD', 'NGN', 'NIO', 'NOK', 'NPR', 'NZD',
+        'OMR', 'PAB', 'PEN', 'PGK', 'PHP', 'PKR', 'PLN', 'PYG', 'QAR',
+        'RON', 'RSD', 'RUB', 'RWF', 'SAR', 'SBD', 'SCR', 'SDG', 'SEK',
+        'SGD', 'SHP', 'SLE', 'SOS', 'SRD', 'SSP', 'STN', 'SVC', 'SYP',
+        'SZL', 'THB', 'TJS', 'TMT', 'TND', 'TOP', 'TRY', 'TTD', 'TWD',
+        'TZS', 'UAH', 'UGX', 'USD', 'USN', 'UYI', 'UYU', 'UYW', 'UZS',
+        'VED', 'VES', 'VND', 'VUV', 'WST', 'XAF', 'XAG', 'XAU', 'XBA',
+        'XBB', 'XBC', 'XBD', 'XCD', 'XDR', 'XOF', 'XPD', 'XPF', 'XPT',
+        'XSU', 'XTS', 'XUA', 'XXX', 'YER', 'ZAR', 'ZMW', 'ZWG', 'ZWL'
+      ];
+    }
+
+    function isAssetType(value) {
+      return value is string && value in [
+        'stock', 'etf', 'fii', 'fund', 'bond', 'crypto', 'other'
+      ];
+    }
+
+    function isValidAsset(data) {
+      return data.keys().hasOnly([
+          'symbol',
+          'market',
+          'assetType',
+          'currency',
+          'identityKey',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.keys().hasAll([
+          'symbol',
+          'market',
+          'assetType',
+          'currency',
+          'identityKey',
+          'createdAt',
+          'updatedAt'
+        ]) &&
+        data.symbol is string &&
+        data.symbol.matches('[A-Z0-9._-]+') &&
+        data.market is string &&
+        data.market.matches('[A-Z0-9._-]+') &&
+        isAssetType(data.assetType) &&
+        isIso4217(data.currency) &&
+        data.identityKey is string &&
+        data.identityKey == data.symbol + '~' + data.market + '~' +
+          data.assetType + '~' + data.currency &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    function isValidAssetRegistry(data) {
+      return data.keys().hasOnly(['assetId']) &&
+        data.keys().hasAll(['assetId']) &&
+        isDocumentId(data.assetId);
+    }
+
+    function isCanonicalPositiveDecimal(value) {
+      return value is string &&
+        value != '0' &&
+        value.matches('^(0|[1-9][0-9]{0,29})(\\.[0-9]{0,17}[1-9])?$');
+    }
+
+    function isCanonicalNonNegativeDecimal(value) {
+      return value is string &&
+        value.matches('^(0|[1-9][0-9]{0,29})(\\.[0-9]{0,17}[1-9])?$');
+    }
+
+    function isLeapDay(value) {
+      return value.matches(
+        '^([0-9]{2}(0[48]|[2468][048]|[13579][26])|([02468][048]|[13579][26])00)-02-29$'
+      );
+    }
+
+    function isCivilDate(value) {
+      return value is string &&
+        !value.matches('^0000-.*$') &&
+        (
+          value.matches('^[0-9]{4}-(01|03|05|07|08|10|12)-(0[1-9]|[12][0-9]|3[01])$') ||
+          value.matches('^[0-9]{4}-(04|06|09|11)-(0[1-9]|[12][0-9]|30)$') ||
+          value.matches('^[0-9]{4}-02-(0[1-9]|1[0-9]|2[0-8])$') ||
+          isLeapDay(value)
+        );
+    }
+
+    function isValidUnitPrice(value) {
+      return value is map &&
+        value.keys().hasOnly(['currency', 'decimal']) &&
+        value.keys().hasAll(['currency', 'decimal']) &&
+        isIso4217(value.currency) &&
+        isCanonicalPositiveDecimal(value.decimal);
+    }
+
+    function isValidFee(value) {
+      return value == null || (
+        value is map &&
+        value.keys().hasOnly(['currency', 'decimal']) &&
+        value.keys().hasAll(['currency', 'decimal']) &&
+        isIso4217(value.currency) &&
+        value.decimal != '0' &&
+        isCanonicalNonNegativeDecimal(value.decimal)
+      );
+    }
+
+    function isValidTransaction(data) {
+      return data.keys().hasOnly([
+          'kind',
+          'assetId',
+          'quantity',
+          'unitPrice',
+          'fee',
+          'effectiveDate',
+          'createdAt'
+        ]) && data.keys().hasAll([
+          'kind', 'assetId', 'quantity', 'unitPrice', 'fee', 'effectiveDate', 'createdAt'
+        ]) &&
+        data.kind is string &&
+        data.kind in ['buy', 'sell'] &&
+        isDocumentId(data.assetId) &&
+        isCanonicalPositiveDecimal(data.quantity) &&
+        isValidUnitPrice(data.unitPrice) &&
+        isValidFee(data.fee) &&
+        isCivilDate(data.effectiveDate) &&
+        data.createdAt is timestamp;
+    }
+
+    function isActivePortfolioAfter(userId, portfolioId) {
+      let before = get(
+        /databases/$(database)/documents/users/$(userId)/portfolios/$(portfolioId)
+      );
+      let portfolio = getAfter(
+        /databases/$(database)/documents/users/$(userId)/portfolios/$(portfolioId)
+      );
+      return (!portfolio.data.keys().hasAny(['archivedAt']) ||
+        portfolio.data.archivedAt == null) &&
+        !portfolio.data.diff(before.data).affectedKeys().hasAny(['archivedAt']);
+    }
+
     function isValidPortfolio(data) {
       return data.keys().hasOnly([
           'name',
           'baseCurrency',
+          'archivedAt',
           'createdAt',
           'updatedAt'
         ]) &&
@@ -32,7 +191,41 @@ service cloud.firestore {
         data.baseCurrency is string &&
         data.baseCurrency == 'BRL' &&
         data.createdAt is timestamp &&
-        data.updatedAt is timestamp;
+        data.updatedAt is timestamp &&
+        (!data.keys().hasAny(['archivedAt']) ||
+          data.archivedAt == null ||
+          data.archivedAt is timestamp);
+    }
+
+    function isAllowedArchiveTransition() {
+      return (
+        (
+          !resource.data.keys().hasAny(['archivedAt']) &&
+          (!request.resource.data.keys().hasAny(['archivedAt']) ||
+            request.resource.data.archivedAt == null ||
+            request.resource.data.archivedAt == request.time)
+        ) || (
+          resource.data.keys().hasAny(['archivedAt']) &&
+          request.resource.data.keys().hasAny(['archivedAt']) &&
+          (request.resource.data.archivedAt == resource.data.archivedAt ||
+            request.resource.data.archivedAt == null ||
+            request.resource.data.archivedAt == request.time)
+        )
+      ) && (
+        !isArchiveStateChanged() ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'archivedAt',
+          'updatedAt'
+        ])
+      );
+    }
+
+    function isArchiveStateChanged() {
+      return resource.data.keys().hasAny(['archivedAt']) !=
+          request.resource.data.keys().hasAny(['archivedAt']) ||
+        (resource.data.keys().hasAny(['archivedAt']) &&
+          request.resource.data.keys().hasAny(['archivedAt']) &&
+          resource.data.archivedAt != request.resource.data.archivedAt);
     }
 
     // The namespace is not a profile document in phase 005.
@@ -46,19 +239,49 @@ service cloud.firestore {
       allow create: if isOwner(userId) &&
         isValidPortfolio(request.resource.data) &&
         request.resource.data.createdAt == request.time &&
-        request.resource.data.updatedAt == request.time;
+        request.resource.data.updatedAt == request.time &&
+        (!request.resource.data.keys().hasAny(['archivedAt']) ||
+          request.resource.data.archivedAt == null);
 
       allow update: if isOwner(userId) &&
         isValidPortfolio(request.resource.data) &&
         request.resource.data.createdAt == resource.data.createdAt &&
-        request.resource.data.updatedAt == request.time;
-
-      allow delete: if isOwner(userId);
+        request.resource.data.updatedAt == request.time &&
+        isAllowedArchiveTransition();
     }
 
-    // Future paths stay explicitly denied until their own task defines rules.
     match /users/{userId}/assets/{assetId} {
-      allow read, write: if false;
+      allow get, list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+        !exists(
+          /databases/$(database)/documents/users/$(userId)/assets/$(assetId)
+        ) &&
+        !exists(
+          /databases/$(database)/documents/users/$(userId)/assetIdentities/$(request.resource.data.identityKey)
+        ) &&
+        isValidAsset(request.resource.data) &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time &&
+        getAfter(
+          /databases/$(database)/documents/users/$(userId)/assetIdentities/$(request.resource.data.identityKey)
+        ).data.assetId == assetId;
+    }
+
+    match /users/{userId}/assetIdentities/{identityKey} {
+      allow get, list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+        !exists(
+          /databases/$(database)/documents/users/$(userId)/assetIdentities/$(identityKey)
+        ) &&
+        !exists(
+          /databases/$(database)/documents/users/$(userId)/assets/$(request.resource.data.assetId)
+        ) &&
+        isValidAssetRegistry(request.resource.data) &&
+        getAfter(
+          /databases/$(database)/documents/users/$(userId)/assets/$(request.resource.data.assetId)
+        ).data.identityKey == identityKey;
     }
 
     match /users/{userId}/goals/{goalId} {
@@ -70,7 +293,15 @@ service cloud.firestore {
     }
 
     match /users/{userId}/portfolios/{portfolioId}/transactions/{transactionId} {
-      allow read, write: if false;
+      allow get, list: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+        isValidTransaction(request.resource.data) &&
+        request.resource.data.createdAt == request.time &&
+        exists(
+          /databases/$(database)/documents/users/$(userId)/assets/$(request.resource.data.assetId)
+        ) &&
+        isActivePortfolioAfter(userId, portfolioId);
     }
 
     match /users/{userId}/portfolios/{portfolioId}/allocationTargets/{targetId} {

@@ -7,22 +7,26 @@ import {
 
 import {
   createPortfolio,
+  parsePortfolioArchivedAt,
   type Portfolio,
   type PortfolioMetadata,
 } from "@/domain/portfolio";
 import { InvalidDomainInputError, InvalidDomainValueError } from "@/domain/errors";
 import { InvalidFirestoreDocumentError } from "@/data/firestore/errors";
 
-const PORTFOLIO_FIELDS = [
+const PORTFOLIO_LEGACY_FIELDS = [
   "name",
   "baseCurrency",
   "createdAt",
   "updatedAt",
 ] as const;
 
+const PORTFOLIO_FIELDS = [...PORTFOLIO_LEGACY_FIELDS, "archivedAt"] as const;
+
 export type PortfolioFirestoreData = Readonly<{
   name: string;
   baseCurrency: "BRL";
+  archivedAt: Timestamp | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }>;
@@ -37,7 +41,11 @@ function invalid(field: string): never {
 
 function assertExactFields(value: Record<string, unknown>): void {
   const actualFields = Object.keys(value).sort();
-  const expectedFields = [...PORTFOLIO_FIELDS].sort();
+  const expectedFields = [
+    ...(Object.hasOwn(value, "archivedAt")
+      ? PORTFOLIO_FIELDS
+      : PORTFOLIO_LEGACY_FIELDS),
+  ].sort();
 
   if (
     actualFields.length !== expectedFields.length ||
@@ -47,7 +55,10 @@ function assertExactFields(value: Record<string, unknown>): void {
   }
 }
 
-function parseTimestamp(value: unknown, field: "createdAt" | "updatedAt"): Date {
+function parseTimestamp(
+  value: unknown,
+  field: "createdAt" | "updatedAt" | "archivedAt",
+): Date {
   if (!(value instanceof Timestamp)) {
     invalid(field);
   }
@@ -61,6 +72,14 @@ function parseTimestamp(value: unknown, field: "createdAt" | "updatedAt"): Date 
   return date;
 }
 
+function parseArchivedAt(value: unknown): Date | null {
+  if (value === null) {
+    return null;
+  }
+
+  return parsePortfolioArchivedAt(parseTimestamp(value, "archivedAt"));
+}
+
 function parsePortfolioMetadata(
   id: unknown,
   data: Record<string, unknown>,
@@ -69,6 +88,9 @@ function parsePortfolioMetadata(
     id,
     createdAt: parseTimestamp(data.createdAt, "createdAt"),
     updatedAt: parseTimestamp(data.updatedAt, "updatedAt"),
+    archivedAt: Object.hasOwn(data, "archivedAt")
+      ? parseArchivedAt(data.archivedAt)
+      : null,
   };
 }
 

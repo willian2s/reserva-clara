@@ -40,7 +40,9 @@ export function proxy(request: NextRequest) {
     (pathname === "/dashboard" ||
       pathname.startsWith("/dashboard/") ||
       pathname === "/portfolios" ||
-      pathname.startsWith("/portfolios/"))
+      pathname.startsWith("/portfolios/") ||
+      pathname === "/assets" ||
+      pathname.startsWith("/assets/"))
   ) {
     return redirectToFixedPath(APP_ORIGIN, pathname, 307);
   }
@@ -64,5 +66,6 @@ export const config = {
     "/login/:path*",
     "/dashboard/:path*",
     "/portfolios/:path*",
+    "/assets/:path*",
   ],
 };

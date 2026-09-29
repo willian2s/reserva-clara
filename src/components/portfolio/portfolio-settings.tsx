@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 
 import { PortfolioNotFoundError } from "@/data/firestore/errors";
 import {
-  deletePortfolio,
+  archivePortfolio,
+  restorePortfolio,
   updatePortfolio,
 } from "@/data/firestore/portfolio-repository";
 import { DomainError } from "@/domain/errors";
@@ -27,8 +28,12 @@ const RENAME_ERROR_MESSAGE =
   "Não foi possível renomear a carteira agora. Tente novamente.";
 const RENAME_SUCCESS_MESSAGE = "Carteira renomeada com sucesso.";
 const RENAME_NOOP_MESSAGE = "O nome da carteira já está atualizado.";
-const DELETE_ERROR_MESSAGE =
-  "Não foi possível excluir a carteira agora. Tente novamente.";
+const ARCHIVE_ERROR_MESSAGE =
+  "Não foi possível arquivar a carteira agora. Tente novamente.";
+const ARCHIVE_SUCCESS_MESSAGE = "Carteira arquivada com sucesso.";
+const RESTORE_ERROR_MESSAGE =
+  "Não foi possível restaurar a carteira agora. Tente novamente.";
+const RESTORE_SUCCESS_MESSAGE = "Carteira restaurada com sucesso.";
 
 type PortfolioOperation = {
   portfolioId: string;
@@ -36,7 +41,6 @@ type PortfolioOperation = {
 };
 
 export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
-  const router = useRouter();
   const {
     state: currentState,
     retry,
@@ -51,23 +55,27 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
     useState<PortfolioOperation | null>(null);
   const isMountedRef = useRef(false);
   const routeVersionRef = useRef(0);
-  const [routeVersion, setRouteVersion] = useState(0);
   const renameDraftRef = useRef<{
     portfolioId: string;
     value: string;
   } | null>(null);
   const renameSubmittingRef = useRef(false);
-  const [deleteConfirmationOpen, setDeleteConfirmationOpen] = useState(false);
-  const [deleteConfirmationName, setDeleteConfirmationName] = useState("");
-  const [deleteOperationError, setDeleteOperationError] = useState("");
-  const [deleteFeedback, setDeleteFeedback] = useState("");
-  const [deleteOperation, setDeleteOperation] =
+  const [archiveConfirmationOpen, setArchiveConfirmationOpen] =
+    useState(false);
+  const [archiveConfirmationName, setArchiveConfirmationName] = useState("");
+  const [archiveOperationError, setArchiveOperationError] = useState("");
+  const [archiveFeedback, setArchiveFeedback] = useState("");
+  const [archiveOperation, setArchiveOperation] =
     useState<PortfolioOperation | null>(null);
-  const [deleteNavigating, setDeleteNavigating] = useState(false);
-  const deleteTriggerRef = useRef<HTMLButtonElement>(null);
-  const deleteInputRef = useRef<HTMLInputElement>(null);
-  const restoreDeleteTriggerFocusRef = useRef(false);
-  const deleteSubmittingRef = useRef(false);
+  const [restoreOperationError, setRestoreOperationError] = useState("");
+  const [restoreFeedback, setRestoreFeedback] = useState("");
+  const [restoreOperation, setRestoreOperation] =
+    useState<PortfolioOperation | null>(null);
+  const archiveTriggerRef = useRef<HTMLButtonElement>(null);
+  const archiveInputRef = useRef<HTMLInputElement>(null);
+  const restoreArchiveTriggerFocusRef = useRef(false);
+  const archiveSubmittingRef = useRef(false);
+  const restoreSubmittingRef = useRef(false);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -80,13 +88,26 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
   useEffect(() => {
     const nextRouteVersion = routeVersionRef.current + 1;
     routeVersionRef.current = nextRouteVersion;
-    setRouteVersion(nextRouteVersion);
-    restoreDeleteTriggerFocusRef.current = false;
-    setDeleteConfirmationOpen(false);
-    setDeleteConfirmationName("");
-    setDeleteOperationError("");
-    setDeleteFeedback("");
-    setDeleteNavigating(false);
+    restoreArchiveTriggerFocusRef.current = false;
+
+    queueMicrotask(() => {
+      if (
+        !isMountedRef.current ||
+        routeVersionRef.current !== nextRouteVersion
+      ) {
+        return;
+      }
+
+      setRenameOperation(null);
+      setArchiveConfirmationOpen(false);
+      setArchiveConfirmationName("");
+      setArchiveOperationError("");
+      setArchiveFeedback("");
+      setArchiveOperation(null);
+      setRestoreOperationError("");
+      setRestoreFeedback("");
+      setRestoreOperation(null);
+    });
   }, [portfolioId]);
 
   useEffect(() => {
@@ -109,92 +130,105 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
   }, [currentState, portfolioId]);
 
   useEffect(() => {
-    if (deleteConfirmationOpen) {
-      deleteInputRef.current?.focus();
-    } else if (restoreDeleteTriggerFocusRef.current) {
-      restoreDeleteTriggerFocusRef.current = false;
-      deleteTriggerRef.current?.focus();
+    if (archiveConfirmationOpen) {
+      archiveInputRef.current?.focus();
+    } else if (restoreArchiveTriggerFocusRef.current) {
+      restoreArchiveTriggerFocusRef.current = false;
+      archiveTriggerRef.current?.focus();
     }
-  }, [deleteConfirmationOpen]);
+  }, [archiveConfirmationOpen]);
 
   const isRenaming =
     currentState.status === "ready" &&
     renameOperation !== null &&
     renameOperation.portfolioId === portfolioId;
-  const isDeleteOperationActive =
+  const isArchiveOperationActive =
     currentState.status === "ready" &&
-    deleteOperation !== null &&
-    deleteOperation.portfolioId === portfolioId;
-  const isDeleting = isDeleteOperationActive || deleteNavigating;
-  const isDeletePending = deleteOperation !== null || deleteNavigating;
-  const deleteNameMatches =
+    archiveOperation !== null &&
+    archiveOperation.portfolioId === portfolioId;
+  const isRestoreOperationActive =
     currentState.status === "ready" &&
-    deleteConfirmationName === currentState.portfolio.name;
+    restoreOperation !== null &&
+    restoreOperation.portfolioId === portfolioId;
+  const isArchiving = isArchiveOperationActive;
+  const isRestoring = isRestoreOperationActive;
+  const isLifecyclePending =
+    (archiveOperation !== null && archiveOperation.portfolioId === portfolioId) ||
+    (restoreOperation !== null && restoreOperation.portfolioId === portfolioId);
+  const isArchived =
+    currentState.status === "ready" && currentState.portfolio.archivedAt !== null;
+  const archiveNameMatches =
+    currentState.status === "ready" &&
+    archiveConfirmationName === currentState.portfolio.name;
   const renameDescribedBy = [
     renameNameError ? "portfolio-rename-error" : "",
     renameOperationError ? "portfolio-rename-operation-error" : "",
   ]
     .filter(Boolean)
     .join(" ");
-  const deleteDescribedBy = [
-    "portfolio-delete-instructions",
-    deleteOperationError ? "portfolio-delete-error" : "",
+  const archiveDescribedBy = [
+    "portfolio-archive-instructions",
+    archiveOperationError ? "portfolio-archive-error" : "",
   ]
     .filter(Boolean)
     .join(" ");
+  const isPageBusy =
+    isLifecyclePending || archiveConfirmationOpen || isRenaming;
 
-  const handleOpenDeleteConfirmation = () => {
+  const handleOpenArchiveConfirmation = () => {
     if (
-      deleteSubmittingRef.current ||
-      isDeletePending ||
+      archiveSubmittingRef.current ||
+      isLifecyclePending ||
       isRenaming ||
-      deleteConfirmationOpen ||
-      currentState.status !== "ready"
+      archiveConfirmationOpen ||
+      currentState.status !== "ready" ||
+      currentState.portfolio.archivedAt !== null
     ) {
       return;
     }
 
-    setDeleteConfirmationName("");
-    setDeleteOperationError("");
-    setDeleteFeedback("");
-    setDeleteConfirmationOpen(true);
+    setArchiveConfirmationName("");
+    setArchiveOperationError("");
+    setArchiveFeedback("");
+    setArchiveConfirmationOpen(true);
   };
 
-  const handleCancelDelete = () => {
-    if (isDeleting || deleteSubmittingRef.current) {
+  const handleCancelArchive = () => {
+    if (isArchiving || archiveSubmittingRef.current) {
       return;
     }
 
-    restoreDeleteTriggerFocusRef.current = true;
-    setDeleteConfirmationOpen(false);
-    setDeleteConfirmationName("");
-    setDeleteOperationError("");
-    setDeleteFeedback("");
+    restoreArchiveTriggerFocusRef.current = true;
+    setArchiveConfirmationOpen(false);
+    setArchiveConfirmationName("");
+    setArchiveOperationError("");
+    setArchiveFeedback("");
   };
 
-  const handleDeleteSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleArchiveSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (
-      deleteSubmittingRef.current ||
-      isDeletePending ||
-      !deleteNameMatches ||
-      currentState.status !== "ready"
+      archiveSubmittingRef.current ||
+      isLifecyclePending ||
+      !archiveNameMatches ||
+      currentState.status !== "ready" ||
+      currentState.portfolio.archivedAt !== null
     ) {
       return;
     }
 
-    deleteSubmittingRef.current = true;
+    archiveSubmittingRef.current = true;
     const operationRouteVersion = routeVersionRef.current;
-    setDeleteOperation({
+    setArchiveOperation({
       portfolioId,
       routeVersion: operationRouteVersion,
     });
-    setDeleteOperationError("");
-    setDeleteFeedback("");
+    setArchiveOperationError("");
+    setArchiveFeedback("");
 
     try {
-      await deletePortfolio(portfolioId);
+      const archivedPortfolio = await archivePortfolio(portfolioId);
 
       if (
         !isMountedRef.current ||
@@ -203,8 +237,10 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
         return;
       }
 
-      setDeleteNavigating(true);
-      router.replace("/portfolios");
+      setLoadedPortfolio(archivedPortfolio);
+      setArchiveConfirmationOpen(false);
+      setArchiveConfirmationName("");
+      setArchiveFeedback(ARCHIVE_SUCCESS_MESSAGE);
     } catch {
       if (
         !isMountedRef.current ||
@@ -213,29 +249,81 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
         return;
       }
 
-      setDeleteOperationError(DELETE_ERROR_MESSAGE);
-      setDeleteFeedback("");
+      setArchiveOperationError(ARCHIVE_ERROR_MESSAGE);
+      setArchiveFeedback("");
     } finally {
-      deleteSubmittingRef.current = false;
+      archiveSubmittingRef.current = false;
 
       if (isMountedRef.current) {
-        setDeleteOperation((operation) =>
+        setArchiveOperation((operation) =>
           operation?.routeVersion === operationRouteVersion ? null : operation,
         );
       }
     }
   };
 
-  const handleRenameSubmit = async (
-    event: React.FormEvent<HTMLFormElement>,
-  ) => {
+  const handleRestore = async () => {
+    if (
+      restoreSubmittingRef.current ||
+      isLifecyclePending ||
+      isRenaming ||
+      currentState.status !== "ready" ||
+      currentState.portfolio.archivedAt === null
+    ) {
+      return;
+    }
+
+    restoreSubmittingRef.current = true;
+    const operationRouteVersion = routeVersionRef.current;
+    setRestoreOperation({
+      portfolioId,
+      routeVersion: operationRouteVersion,
+    });
+    setRestoreOperationError("");
+    setRestoreFeedback("");
+
+    try {
+      const restoredPortfolio = await restorePortfolio(portfolioId);
+
+      if (
+        !isMountedRef.current ||
+        routeVersionRef.current !== operationRouteVersion
+      ) {
+        return;
+      }
+
+      setLoadedPortfolio(restoredPortfolio);
+      setRestoreFeedback(RESTORE_SUCCESS_MESSAGE);
+      setArchiveFeedback("");
+    } catch {
+      if (
+        !isMountedRef.current ||
+        routeVersionRef.current !== operationRouteVersion
+      ) {
+        return;
+      }
+
+      setRestoreOperationError(RESTORE_ERROR_MESSAGE);
+      setRestoreFeedback("");
+    } finally {
+      restoreSubmittingRef.current = false;
+
+      if (isMountedRef.current) {
+        setRestoreOperation((operation) =>
+          operation?.routeVersion === operationRouteVersion ? null : operation,
+        );
+      }
+    }
+  };
+
+  const handleRenameSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (
       renameSubmittingRef.current ||
-      deleteSubmittingRef.current ||
-      isDeletePending ||
-      deleteConfirmationOpen ||
+      archiveSubmittingRef.current ||
+      isLifecyclePending ||
+      archiveConfirmationOpen ||
       currentState.status !== "ready"
     ) {
       return;
@@ -273,7 +361,10 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
 
     renameSubmittingRef.current = true;
     const operationRouteVersion = routeVersionRef.current;
-    setRenameOperation({ portfolioId, routeVersion });
+    setRenameOperation({
+      portfolioId,
+      routeVersion: operationRouteVersion,
+    });
 
     try {
       const updatedPortfolio = await updatePortfolio(portfolioId, {
@@ -354,11 +445,7 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
           <CardContent className="space-y-4">
             <p className="text-sm text-destructive">{DETAIL_ERROR_MESSAGE}</p>
             <div className="flex flex-wrap items-center gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={retry}
-              >
+              <Button type="button" variant="outline" onClick={retry}>
                 Tentar novamente
               </Button>
               <Link
@@ -381,7 +468,9 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
       {currentState.status === "ready" && (
         <Card>
           <CardHeader>
-            <p className="text-sm font-medium text-primary">Carteira</p>
+            <p className="text-sm font-medium text-primary">
+              {isArchived ? "Carteira arquivada" : "Carteira ativa"}
+            </p>
             <h2 className="font-heading break-words text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">
               {currentState.portfolio.name}
             </h2>
@@ -410,7 +499,7 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
                       setRenameOperationError("");
                       setRenameFeedback("");
                     }}
-                    disabled={isRenaming || isDeletePending || deleteConfirmationOpen}
+                    disabled={isPageBusy}
                     aria-invalid={Boolean(renameNameError)}
                     aria-describedby={renameDescribedBy || undefined}
                     autoComplete="off"
@@ -425,11 +514,7 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
                     </p>
                   )}
                 </div>
-                <Button
-                  type="submit"
-                  disabled={isRenaming || isDeletePending || deleteConfirmationOpen}
-                  aria-busy={isRenaming || isDeletePending}
-                >
+                <Button type="submit" disabled={isPageBusy} aria-busy={isRenaming}>
                   {isRenaming ? "Salvando nome..." : "Salvar novo nome"}
                 </Button>
                 {renameOperationError && (
@@ -452,139 +537,180 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
                 </p>
               </form>
             </div>
-            <div className="space-y-4 border-t border-border pt-5">
-              <div className="space-y-2">
-                <h3 className="font-heading text-lg font-semibold">
-                  Excluir carteira
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  A exclusão remove permanentemente esta carteira. Ela não pode
-                  ser desfeita.
-                </p>
-              </div>
-              <Button
-                ref={deleteTriggerRef}
-                type="button"
-                variant="destructive"
-                onClick={handleOpenDeleteConfirmation}
-                disabled={isRenaming || isDeletePending || deleteConfirmationOpen}
-                aria-expanded={deleteConfirmationOpen}
-                aria-controls={
-                  deleteConfirmationOpen
-                    ? "portfolio-delete-confirmation"
-                    : undefined
-                }
-              >
-                Excluir carteira
-              </Button>
 
-              {deleteConfirmationOpen && (
-                <div
-                  id="portfolio-delete-confirmation"
-                  className="space-y-4 rounded-card border border-destructive/30 bg-destructive/5 p-4"
-                  role="group"
-                  aria-labelledby="portfolio-delete-confirmation-title"
+            {!isArchived ? (
+              <div className="space-y-4 border-t border-border pt-5">
+                <div className="space-y-2">
+                  <h3 className="font-heading text-lg font-semibold">
+                    Arquivar carteira
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    O archive preserva esta carteira e seus dados filhos para
+                    consulta histórica. A carteira poderá ser restaurada depois.
+                  </p>
+                </div>
+                <Button
+                  ref={archiveTriggerRef}
+                  type="button"
+                  variant="outline"
+                  onClick={handleOpenArchiveConfirmation}
+                  disabled={isPageBusy}
+                  aria-expanded={archiveConfirmationOpen}
+                  aria-controls={
+                    archiveConfirmationOpen
+                      ? "portfolio-archive-confirmation"
+                      : undefined
+                  }
                 >
-                  <div className="space-y-2">
-                    <h4
-                      id="portfolio-delete-confirmation-title"
-                      className="font-heading text-base font-semibold"
-                    >
-                      Confirmar exclusão permanente
-                    </h4>
-                    <p className="text-sm text-foreground">
-                      Você está excluindo a carteira{" "}
-                      <strong className="break-words [overflow-wrap:anywhere]">
-                        {currentState.portfolio.name}
-                      </strong>.
-                    </p>
-                    <p
-                      id="portfolio-delete-instructions"
-                      className="text-sm text-muted-foreground"
-                    >
-                      Digite exatamente o nome exibido para confirmar. Esta
-                      ação é permanente e não pode ser desfeita.
-                    </p>
-                  </div>
+                  Arquivar carteira
+                </Button>
 
-                  <form
-                    className="space-y-4"
-                    onSubmit={handleDeleteSubmit}
-                    noValidate
+                {archiveConfirmationOpen && (
+                  <div
+                    id="portfolio-archive-confirmation"
+                    className="space-y-4 rounded-card border border-border bg-muted/40 p-4"
+                    role="group"
+                    aria-labelledby="portfolio-archive-confirmation-title"
                   >
                     <div className="space-y-2">
-                      <Label htmlFor="portfolio-delete-name">
-                        Nome da carteira para confirmação
-                      </Label>
-                      <Input
-                        ref={deleteInputRef}
-                        id="portfolio-delete-name"
-                        name="delete-name"
-                        value={deleteConfirmationName}
-                        onChange={(event) => {
-                          setDeleteConfirmationName(event.target.value);
-                          setDeleteOperationError("");
-                          setDeleteFeedback("");
-                        }}
-                        disabled={isDeleting}
-                        aria-invalid={Boolean(deleteOperationError)}
-                        aria-describedby={deleteDescribedBy}
-                        autoComplete="off"
-                      />
-                      {deleteOperationError && (
-                        <p
-                          id="portfolio-delete-error"
-                          className="text-sm text-destructive"
-                          role="alert"
-                          aria-live="assertive"
-                        >
-                          {deleteOperationError}
-                        </p>
-                      )}
+                      <h4
+                        id="portfolio-archive-confirmation-title"
+                        className="font-heading text-base font-semibold"
+                      >
+                        Confirmar arquivamento
+                      </h4>
+                      <p className="text-sm text-foreground">
+                        Você está arquivando a carteira{" "}
+                        <strong className="break-words [overflow-wrap:anywhere]">
+                          {currentState.portfolio.name}
+                        </strong>
+                        .
+                      </p>
+                      <p
+                        id="portfolio-archive-instructions"
+                        className="text-sm text-muted-foreground"
+                      >
+                        Digite exatamente o nome exibido para confirmar. O
+                        arquivamento não apaga filhos nem dados históricos.
+                      </p>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3">
-                      <Button
-                        type="submit"
-                        variant="destructive"
-                        disabled={!deleteNameMatches || isDeleting}
-                        aria-busy={isDeleting}
-                      >
-                        {isDeleting
-                          ? "Deletando permanentemente..."
-                          : "Deletar permanentemente"}
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={handleCancelDelete}
-                        disabled={isDeleting}
-                      >
-                        Cancelar
-                      </Button>
-                    </div>
-                    <p
-                      className="min-h-5 text-sm text-muted-foreground"
-                      role="status"
-                      aria-live="polite"
-                      aria-atomic="true"
+                    <form
+                      className="space-y-4"
+                      onSubmit={handleArchiveSubmit}
+                      noValidate
                     >
-                      {isDeleting
-                        ? "Excluindo carteira..."
-                        : deleteFeedback}
-                    </p>
-                  </form>
+                      <div className="space-y-2">
+                        <Label htmlFor="portfolio-archive-name">
+                          Nome da carteira para confirmação
+                        </Label>
+                        <Input
+                          ref={archiveInputRef}
+                          id="portfolio-archive-name"
+                          name="archive-name"
+                          value={archiveConfirmationName}
+                          onChange={(event) => {
+                            setArchiveConfirmationName(event.target.value);
+                            setArchiveOperationError("");
+                            setArchiveFeedback("");
+                          }}
+                          disabled={isArchiving}
+                          aria-invalid={Boolean(archiveOperationError)}
+                          aria-describedby={archiveDescribedBy}
+                          autoComplete="off"
+                        />
+                        {archiveOperationError && (
+                          <p
+                            id="portfolio-archive-error"
+                            className="text-sm text-destructive"
+                            role="alert"
+                            aria-live="assertive"
+                          >
+                            {archiveOperationError}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Button
+                          type="submit"
+                          disabled={!archiveNameMatches || isArchiving}
+                          aria-busy={isArchiving}
+                        >
+                          {isArchiving ? "Arquivando carteira..." : "Confirmar arquivamento"}
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleCancelArchive}
+                          disabled={isArchiving}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                )}
+                <p
+                  className="min-h-5 text-sm text-muted-foreground"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {isArchiving
+                    ? "Arquivando carteira..."
+                    : archiveFeedback || restoreFeedback}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4 border-t border-border pt-5">
+                <div className="space-y-2">
+                  <h3 className="font-heading text-lg font-semibold">
+                    Restaurar carteira
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Restaure a carteira para permitir novas operações quando o
+                    ledger estiver disponível. Dados históricos permanecem
+                    intactos.
+                  </p>
                 </div>
-              )}
-            </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => void handleRestore()}
+                  disabled={isPageBusy}
+                  aria-busy={isRestoring}
+                >
+                  {isRestoring ? "Restaurando carteira..." : "Restaurar carteira"}
+                </Button>
+                {restoreOperationError && (
+                  <p
+                    className="text-sm text-destructive"
+                    role="alert"
+                    aria-live="assertive"
+                  >
+                    {restoreOperationError}
+                  </p>
+                )}
+                <p
+                  className="min-h-5 text-sm text-muted-foreground"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {isRestoring ? "Restaurando carteira..." : restoreFeedback || archiveFeedback}
+                </p>
+              </div>
+            )}
+
             <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
               <Link
                 className={buttonVariants({ variant: "outline" })}
                 href={`/portfolios/${currentState.portfolio.id}`}
-                aria-disabled={isDeletePending}
-                tabIndex={isDeletePending ? -1 : undefined}
+                aria-disabled={isPageBusy}
+                tabIndex={isPageBusy ? -1 : undefined}
                 onClick={(event) => {
-                  if (isDeletePending) {
+                  if (isPageBusy) {
                     event.preventDefault();
                   }
                 }}
@@ -594,10 +720,10 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
               <Link
                 className={buttonVariants({ variant: "ghost" })}
                 href="/portfolios"
-                aria-disabled={isDeletePending}
-                tabIndex={isDeletePending ? -1 : undefined}
+                aria-disabled={isPageBusy}
+                tabIndex={isPageBusy ? -1 : undefined}
                 onClick={(event) => {
-                  if (isDeletePending) {
+                  if (isPageBusy) {
                     event.preventDefault();
                   }
                 }}

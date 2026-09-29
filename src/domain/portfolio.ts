@@ -17,6 +17,7 @@ export type Portfolio = Readonly<{
   id: ReturnType<typeof parseDocumentId>;
   name: string;
   baseCurrency: typeof BASE_CURRENCY;
+  archivedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }>;
@@ -35,6 +36,8 @@ export type PortfolioMetadata = Readonly<{
   id: unknown;
   createdAt: unknown;
   updatedAt: unknown;
+  /** Optional for callers constructing legacy-compatible domain metadata. */
+  archivedAt?: unknown;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -101,6 +104,14 @@ export function parseUpdatePortfolioInput(value: unknown): UpdatePortfolioInput 
   return { name: parsePortfolioName(value.name) };
 }
 
+export function parsePortfolioArchivedAt(value: unknown): Date | null {
+  if (value === null) {
+    return null;
+  }
+
+  return parseInstant(value, "archivedAt");
+}
+
 export function createPortfolio(
   input: unknown,
   metadata: PortfolioMetadata,
@@ -115,6 +126,7 @@ export function createPortfolio(
     id: parseDocumentId(metadata.id),
     name: parsedInput.name,
     baseCurrency: parsedInput.baseCurrency,
+    archivedAt: parsePortfolioArchivedAt(metadata.archivedAt ?? null),
     createdAt: parseInstant(metadata.createdAt, "createdAt"),
     updatedAt: parseInstant(metadata.updatedAt, "updatedAt"),
   };

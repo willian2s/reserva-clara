@@ -2,7 +2,6 @@
 
 import {
   collection,
-  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -23,7 +22,9 @@ import { parseDocumentId } from "@/domain/value-objects";
 import { auth, db } from "@/lib/firebase/client";
 import {
   createPortfolioFirestoreData,
+  archivePortfolioFirestoreData,
   portfolioConverter,
+  restorePortfolioFirestoreData,
   updatePortfolioFirestoreData,
 } from "@/data/firestore/converters/portfolio-converter";
 import type { PortfolioFirestoreData } from "@/data/firestore/parsers/portfolio-parser";
@@ -101,6 +102,49 @@ async function requireExistingPortfolio(
   return portfolio;
 }
 
+async function listPortfoliosByArchivedState(
+  archived: boolean,
+): Promise<readonly Portfolio[]> {
+  const uid = requireAuthenticatedUid();
+  const reference = portfolioCollection(uid);
+
+  return executeFirestore("list", async () => {
+    const snapshot = await getDocs(reference);
+
+    return snapshot.docs
+      .map((portfolioSnapshot) => portfolioSnapshot.data())
+      .filter((portfolio) => (portfolio.archivedAt !== null) === archived);
+  });
+}
+
+async function updatePortfolioArchiveState(
+  portfolioId: string,
+  firestoreData: ReturnType<
+    typeof archivePortfolioFirestoreData | typeof restorePortfolioFirestoreData
+  >,
+): Promise<Portfolio> {
+  const uid = requireAuthenticatedUid();
+  const reference = portfolioDocument(uid, portfolioId);
+
+  await executeFirestore("update", async () => {
+    await requireExistingPortfolio(reference);
+
+    const convertedData = portfolioConverter.toFirestore(firestoreData, {
+      merge: true,
+    });
+
+    await updateDoc(reference, convertedData);
+  });
+
+  const portfolio = await executeFirestore("update", () => readPortfolio(reference));
+
+  if (!portfolio) {
+    throw new PortfolioNotFoundError();
+  }
+
+  return portfolio;
+}
+
 export async function createPortfolio(
   input: CreatePortfolioInput,
 ): Promise<Portfolio> {
@@ -131,13 +175,11 @@ export async function getPortfolio(
 }
 
 export async function listPortfolios(): Promise<readonly Portfolio[]> {
-  const uid = requireAuthenticatedUid();
-  const reference = portfolioCollection(uid);
+  return listPortfoliosByArchivedState(false);
+}
 
-  return executeFirestore("list", async () => {
-    const snapshot = await getDocs(reference);
-    return snapshot.docs.map((portfolioSnapshot) => portfolioSnapshot.data());
-  });
+export async function listArchivedPortfolios(): Promise<readonly Portfolio[]> {
+  return listPortfoliosByArchivedState(true);
 }
 
 export async function updatePortfolio(
@@ -168,10 +210,16 @@ export async function updatePortfolio(
   return portfolio;
 }
 
-/** Deletes only parent document; future Portfolio subcollections do not cascade. */
-export async function deletePortfolio(portfolioId: string): Promise<void> {
-  const uid = requireAuthenticatedUid();
-  const reference = portfolioDocument(uid, portfolioId);
+export async function archivePortfolio(portfolioId: string): Promise<Portfolio> {
+  return updatePortfolioArchiveState(
+    portfolioId,
+    archivePortfolioFirestoreData(),
+  );
+}
 
-  await executeFirestore("delete", () => deleteDoc(reference));
+export async function restorePortfolio(portfolioId: string): Promise<Portfolio> {
+  return updatePortfolioArchiveState(
+    portfolioId,
+    restorePortfolioFirestoreData(),
+  );
 }

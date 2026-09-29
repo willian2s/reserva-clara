@@ -107,6 +107,20 @@ export function PortfolioDetail({ portfolioId }: { portfolioId: string }) {
                 Configurações da carteira
               </Link>
             </div>
+            <div className="space-y-3 border-t border-border pt-5">
+              <h3 className="font-heading text-lg font-semibold">
+                Histórico de operações
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Consulte e registre compras e vendas sem cálculos patrimoniais.
+              </p>
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                href={`/portfolios/${currentState.portfolio.id}/transactions`}
+              >
+                Abrir histórico de operações
+              </Link>
+            </div>
             <Link
               className={buttonVariants({ variant: "outline" })}
               href="/portfolios"
