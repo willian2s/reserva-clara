@@ -2,7 +2,7 @@
 
 - **Ticker:** `007`
 - **Número:** `05`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo
 
@@ -66,7 +66,61 @@ Reexecutar lint/typegen/TypeScript/build após a mudança de Rules.
 
 ## Registro de execução
 
-- **Arquivos alterados:** preencher ao executar.
-- **Decisões/desvios:** registrar limites Rules e uso de `getAfter`.
-- **Comandos/resultados/evidências:** preencher ao executar.
-- **Riscos residuais:** Rules não executam reducer decimal; manter prova de domínio.
+### Arquivos alterados
+
+- `firestore.rules` — helpers de ownership, schemas fechados, identidade Asset,
+  registry atômico, decimais/data e gate de Portfolio via `getAfter()`.
+- `tests/firestore.rules.test.mjs` — fixtures sintéticas e casos positivos e
+  negativos de Asset, registry, Transaction, ownership, archive e append-only.
+
+### Decisões e desvios
+
+- Assets e registry permitem leitura/listagem somente no namespace do owner;
+  Asset é create-only e o registry é create-only, com `getAfter()` validando o
+  par completo e `exists()` impedindo referências órfãs.
+- `identityKey` é comparada com a concatenação dos campos normalizados e o
+  registry só pode nascer na mesma operação que o Asset auto-ID.
+- Transaction create exige Asset do mesmo owner, schema V1 fechado, decimal
+  canônico positivo, moeda ISO 4217, data civil real e `createdAt` server-side.
+- O gate de archive usa `getAfter()` e compara o diff do Portfolio com o estado
+  anterior; assim, Portfolio legada sem `archivedAt` permanece ativa, mas batch
+  `archive + Transaction` é rejeitado.
+- Sell schema-válido enviado diretamente pelo SDK continua permitido de forma
+  deliberada: Rules não agregam o ledger; reducer/repository mantém essa prova.
+- Nenhum índice foi adicionado: as queries testadas são owner-scoped simples.
+
+### Comandos, resultados e evidências
+
+```bash
+npm run test:rules
+npm run test:domain
+npm run lint
+npm exec next typegen && npx tsc --noEmit
+npm run build
+git diff --check
+```
+
+- `npm run test:rules`: 13 testes aprovados, 0 falhas.
+- Emulator comprovou isolamento A/B/anônimo, query owner-scoped, schema fechado,
+  identity divergente, Asset sem registry, registry órfão/rebind, referências
+  cross-user, registry/Asset atômicos, buy/sell válidos, decimais fora da
+  gramática, datas inválidas incluindo ano zero e ano não bissexto, Portfolio
+  arquivada, archive+Transaction atômico, update/delete append-only e paths
+  futuros negados.
+- `npm run test:domain`: 5 testes aprovados, 0 falhas; `lint`, typegen,
+  TypeScript, build e `git diff --check` passaram.
+- Build preservou somente as rotas existentes; nenhuma UI ou rota 007 foi aberta.
+
+### Riscos residuais
+
+- Rules não executam o reducer decimal nem impedem um `sell` schema-válido
+  escrito diretamente pelo SDK; a garantia de quantidade não negativa permanece
+  no repository/reducer e exige boundary futura para proteção forte.
+- O ledger completo continua sujeito ao limite operacional documentado para
+  crescimento; aggregate/snapshot permanece handoff de fase posterior.
+- Não houve deploy produtivo, seed, índice ou alteração de Console.
+
+### Revisão independente
+
+- Aprovada sem bloqueadores; foi confirmada a consistência SDD, a cobertura de
+  ownership/anônimo/cross-user, o gate `getAfter()` e a rejeição de ano zero.

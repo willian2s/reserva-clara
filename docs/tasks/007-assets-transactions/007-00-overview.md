@@ -3,7 +3,7 @@
 - **Status geral:** `in_progress`
 - **Ticker:** `007`
 - **Spec:** [007-assets-transactions.md](../../specs/007-assets-transactions.md)
-- **Progresso:** 4/8 subtarefas concluídas
+- **Progresso:** 5/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -17,7 +17,7 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - [x] [007-02-fechar-contratos-e-reducer-decimal.md](007-02-fechar-contratos-e-reducer-decimal.md)
 - [x] [007-03-implementar-persistencia-de-assets.md](007-03-implementar-persistencia-de-assets.md)
 - [x] [007-04-implementar-persistencia-de-transactions.md](007-04-implementar-persistencia-de-transactions.md)
-- [ ] [007-05-abrir-rules-e-testes-do-emulator.md](007-05-abrir-rules-e-testes-do-emulator.md)
+- [x] [007-05-abrir-rules-e-testes-do-emulator.md](007-05-abrir-rules-e-testes-do-emulator.md)
 - [ ] [007-06-implementar-catalogo-de-assets.md](007-06-implementar-catalogo-de-assets.md)
 - [ ] [007-07-implementar-ledger-e-ux-de-transactions.md](007-07-implementar-ledger-e-ux-de-transactions.md)
 - [ ] [007-08-executar-gates-e-handoff.md](007-08-executar-gates-e-handoff.md)
@@ -51,5 +51,9 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
   consultado fora do read set de query do SDK Web; Rules, testes Emulator
   específicos de ownership/append-only/concorrência e o risco de SDK direto
   permanecem para 007-05.
+- 007-05 concluída: Rules de Asset, registry e Transaction abertas com schema
+  fechado, ownership, vínculo atômico, `exists`, `getAfter`, archive gate e
+  append-only; Emulator passou em 13 testes. Sell schema-válido direto continua
+  sendo limite deliberado das Rules, coberto pelo reducer/repository.
 - Nenhuma operação produtiva, deploy, seed ou mudança de Console faz parte deste
   planejamento.
