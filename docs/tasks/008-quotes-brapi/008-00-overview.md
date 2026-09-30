@@ -1,8 +1,8 @@
 # 008 — Quotes & BRAPI
 
-- **Status geral:** pending
+- **Status geral:** in_progress
 - **Spec:** [008-quotes-brapi.md](../../specs/008-quotes-brapi.md)
-- **Progresso:** 0/6 subtarefas concluídas
+- **Progresso:** 1/6 subtarefas concluídas
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ quando provider estiver indisponível.
 
 ## Checklist
 
-- [ ] [008-01-fechar-contratos-e-politica.md](008-01-fechar-contratos-e-politica.md)
+- [x] [008-01-fechar-contratos-e-politica.md](008-01-fechar-contratos-e-politica.md)
 - [ ] [008-02-criar-boundary-server-e-auth.md](008-02-criar-boundary-server-e-auth.md)
 - [ ] [008-03-implementar-adapter-brapi.md](008-03-implementar-adapter-brapi.md)
 - [ ] [008-04-implementar-quoteservice-cache.md](008-04-implementar-quoteservice-cache.md)
@@ -27,5 +27,6 @@ quando provider estiver indisponível.
   completa da autenticação para SSR.
 - Cache é efêmero por processo, com stale-if-error; histórico pertence a fase
   posterior.
-- 008-01 é única subtarefa elegível inicialmente. As demais dependem de
-  contrato e/ou módulos anteriores.
+- 008-01 foi concluída com contrato puro, matriz B3/BRL, política de cache e
+  environment server-only documentados. As demais dependem deste contrato
+  e/ou módulos anteriores; não há bloqueios registrados.

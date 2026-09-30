@@ -2,7 +2,7 @@
 
 - **Ticker:** `008`
 - **Número:** `01`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -96,3 +96,28 @@ npx tsc --noEmit
   mudança.
 - Não adicionar suporte especulativo a fundos, cripto, FX ou múltiplos providers.
 - Não colocar `BRAPI_API_KEY` em `NEXT_PUBLIC_*`.
+
+## Execução
+
+- **Arquivos alterados:** `src/domain/quote.ts`, `src/domain/index.ts`,
+  `scripts/run-domain-tests.mjs`, `tests/domain.test.mjs` e `.env.example`.
+- **Decisões e desvios:** o mapping concreto foi mantido no domínio como função
+  `mapAssetToBrapi`, retornando `null` para combinações não suportadas; a chave
+  de cache é versionada por provider, endpoint e símbolo, sem UID. O parser de
+  preço aceita a forma numérica somente como ingress do provider e sempre
+  devolve `PositiveDecimalString`; `Quote` não contém preço numérico. O parser
+  de resultado também exige que `Quote.assetId` coincida com o `assetId` do
+  resultado.
+- **Comandos executados:** `npm run test:domain`, `npm run lint`,
+  `npm exec next typegen`, `npx tsc --noEmit`, `npm run build` e
+  `git diff --check`.
+- **Resultados e evidências:** domínio com 6 testes aprovados; lint, geração de
+  tipos, TypeScript, build e diff check concluídos sem erros. A matriz cobre `B3`/`BRL`
+  para `stock`, `etf` e `fii`, além de casos não suportados, preço canônico,
+  ISO-8601 UTC, moeda, `symbolChanged`, resultado indisponível e política de
+  cache. Nenhum módulo de domínio importa Firebase/Admin.
+- **Riscos residuais:** a validação de moeda divergente contra o `Asset` e a
+  classificação de respostas BRAPI pertencem ao adapter da 008-03; retry,
+  stale operacional, deduplicação e a conversão de mapping `null` para
+  `UNSUPPORTED_ASSET` pertencem ao serviço da 008-04. Não houve chamada externa
+  nem persistência nesta subtarefa.
