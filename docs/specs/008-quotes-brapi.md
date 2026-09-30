@@ -2,7 +2,8 @@
 
 ## Status
 
-`pending` — planejamento criado; nenhuma implementação da fase iniciada.
+`in_progress` — subtarefas 008-01, 008-02 e 008-03 concluídas; composição do
+serviço, UI e gates finais permanecem pendentes.
 
 ## Ticker
 

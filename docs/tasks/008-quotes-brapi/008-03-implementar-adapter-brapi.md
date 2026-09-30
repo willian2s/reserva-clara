@@ -2,7 +2,7 @@
 
 - **Ticker:** `008`
 - **Número:** `03`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -94,3 +94,35 @@ npx tsc --noEmit
 - Não interpretar `changed` como autorização para renomear Asset.
 - Não tratar `regularMarketTime` como garantia de mercado aberto.
 - Não fazer retry nesta camada se isso duplicar a política central do serviço.
+
+## Execução
+
+- **Status:** `completed`.
+- **Arquivos alterados:** `src/server/quotes/brapi-mapping.ts`,
+  `src/server/quotes/brapi-adapter.ts`, `src/server/quotes/errors.ts`,
+  `tests/fixtures/brapi-responses.mjs`, `tests/quotes-adapter.test.mjs`,
+  `scripts/run-quotes-adapter-tests.mjs` e `package.json`.
+- **Decisões e desvios:** o mapping server-side reutiliza a matriz pura de
+  008-01 e adiciona uma guarda de símbolo normalizado antes de montar a query.
+  O adapter aceita somente a URL fixa, envia a chave exclusivamente no header
+  Bearer e injeta `fetch`, relógio e timeout apenas para testes. Erros internos
+  preservam `code` e `retryable` sem body, URL, token ou mensagem do provider.
+  HTTP 404 é `NOT_FOUND`; envelope vazio ou sem correspondência ao ticker é
+  `INVALID_PROVIDER_RESPONSE`. O timeout permanece ativo durante a leitura do
+  body para classificar também esse caso como transitório.
+- **Comandos executados:** `npm run test:quotes-adapter`,
+  `npm run test:domain`, `npm run test:quotes-route`, `npm run lint`,
+  `npm exec next typegen && npx tsc --noEmit`, `npm run build` e
+  `git diff --check`.
+- **Resultados e evidências:** 7 testes do adapter, 6 testes de domínio e 8
+  testes de boundary aprovados. Os testes cobrem mapping suportado/não
+  suportado, ausência de chamada para Asset incompatível, URL/query sem token,
+  Authorization server-side, preço `41.18` como decimal, ticker alterado,
+  moeda divergente, schema inválido, not-found, 4xx, 429, 5xx, erro de rede e
+  timeout durante fetch e leitura do body. Lint, typegen, TypeScript, build e
+  diff check concluíram sem erros; o build manteve `/api/quotes` em runtime
+  Node dinâmico.
+- **Riscos residuais:** retry, cache, stale, deduplicação e composição com o
+  QuoteService permanecem na 008-04. Não houve chamada real à BRAPI nem smoke
+  com credencial produtiva; a chave continua exigida somente em runtime
+  server-side.
