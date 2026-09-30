@@ -12,6 +12,7 @@
     "lint": "eslint",
     "test:domain": "node scripts/run-domain-tests.mjs",
     "test:quotes-adapter": "node scripts/run-quotes-adapter-tests.mjs",
+    "test:quotes-service": "node scripts/run-quotes-service-tests.mjs",
     "test:quotes-route": "node scripts/run-quotes-route-tests.mjs",
     "test:rules": "firebase emulators:exec --project demo-reserva-clara --only firestore \"node --test tests/firestore.rules.test.mjs\""
   },

@@ -3,7 +3,7 @@ import {
   FirebaseAdminNotConfiguredError,
   verifyIdToken,
 } from "@/server/firebase-admin";
-import { createNotConfiguredQuoteService } from "@/server/quotes/quote-service";
+import { createQuoteService } from "@/server/quotes/quote-service";
 import { createQuotesPostHandler } from "@/server/quotes/route-handler";
 
 export const runtime = "nodejs";
@@ -21,7 +21,7 @@ const postQuotes = createQuotesPostHandler({
     }
   },
   listOwnedAssets,
-  quoteService: createNotConfiguredQuoteService(),
+  quoteService: createQuoteService(),
 });
 
 export const POST = postQuotes;

@@ -2,7 +2,7 @@
 
 - **Ticker:** `008`
 - **Número:** `04`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -98,3 +98,38 @@ npx tsc --noEmit
   atual.
 - Não armazenar exception ou body externo no cache.
 - Não adicionar retry em camadas múltiplas sem respeitar orçamento de latência.
+
+## Execução
+
+- **Status:** `completed`.
+- **Arquivos alterados:** `src/server/quotes/quote-service.ts`,
+  `src/server/quotes/quote-cache.ts`, `src/app/api/quotes/route.ts`,
+  `tests/quotes-service.test.mjs`, `scripts/run-quotes-service-tests.mjs` e
+  `package.json`.
+- **Decisões e desvios:** o cache mantém somente os dados da cotação sem
+  `assetId`, UID, Asset, Transaction ou credenciais; a identidade do Asset é
+  recolocada somente na materialização do resultado. O cache e as promises
+  in-flight padrão são compartilhados no processo, com eviction FIFO em 500
+  entradas. Uma fila de processo limita chamadas upstream concorrentes a uma,
+  enquanto retry é permitido somente para `TIMEOUT`, `RATE_LIMITED` e
+  `PROVIDER_UNAVAILABLE`, com um backoff determinístico de 100ms. O fallback
+  stale recalcula o clock depois de toda a espera de refresh/retry. A route foi
+  ligada ao serviço real; sem `BRAPI_API_KEY`, o adapter retorna
+  `NOT_CONFIGURED` sem bloquear o ledger.
+- **Comandos executados:** `npm run test:domain`,
+  `npm run test:quotes-adapter`, `npm run test:quotes-service`,
+  `npm run test:quotes-route`, `npm run lint`,
+  `npm exec next typegen && npx tsc --noEmit`, `npm run build` e
+  `git diff --check`.
+- **Resultados e evidências:** 6 testes de domínio, 7 do adapter, 8 do
+  serviço e 8 do boundary passaram. Os testes do serviço cobrem fresh TTL,
+  refresh expirado, deduplicação de símbolo e promise entre instâncias,
+  concorrência upstream, retry/backoff, falha permanente e parcial,
+  `UNSUPPORTED_ASSET`, stale dentro e fora da janela, stale expirado durante
+  espera, limite de lote e eviction em 500 entradas. Lint, typegen,
+  TypeScript, build e diff check concluíram sem erros; o build manteve
+  `/api/quotes` em runtime Node dinâmico.
+- **Riscos residuais:** o cache permanece efêmero por processo e não substitui
+  rate limit ou cache distribuído; cold start perde as entradas. Não houve
+  chamada real à BRAPI nem smoke com credencial produtiva, e o comportamento
+  de provider real continua coberto por fakes do adapter.
