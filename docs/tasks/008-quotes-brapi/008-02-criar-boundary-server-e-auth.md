@@ -2,7 +2,7 @@
 
 - **Ticker:** `008`
 - **Número:** `02`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -99,3 +99,44 @@ npm run build
   response.
 - Não confundir proteção deste endpoint com autorização geral de `/assets` ou
   `/portfolios`.
+
+## Execução
+
+- **Status:** `completed`.
+- **Arquivos alterados:** `package.json`, `package-lock.json`, `src/server/firebase-admin.ts`,
+  `src/server/data/asset-reader.ts`, `src/server/quotes/quote-service.ts`,
+  `src/server/quotes/route-handler.ts`, `src/app/api/quotes/route.ts`, `src/proxy.ts`,
+  `src/data/firestore/paths.ts`, `scripts/run-quotes-route-tests.mjs` e
+  `tests/quotes-route.test.mjs`.
+- **Decisões e desvios:** o Admin SDK usa singleton lazy com as variáveis
+  `FIREBASE_ADMIN_*`, private key com `\\n` convertido somente em memória e erros
+  sanitizados. O reader aceita apenas UID verificado e IDs validados, consulta
+  paths `users/{uid}/assets/{assetId}` e converte `Timestamp` do Admin para o
+  parser puro de Asset, sem importar repositories Web ou Firebase Client. A
+  rota rejeita campos extras, deduplica IDs mantendo ordem e retorna `NOT_FOUND`
+  para Assets ausentes/cross-user sem encaminhá-los ao serviço. A composição
+  atual usa um seam `NOT_CONFIGURED`; a implementação real do QuoteService fica
+  explicitamente para `008-04`. A política de proxy bloqueia `/api/quotes` no
+  host público, enquanto app, local e preview chegam ao boundary autenticado.
+  `firebase-admin` ficou na linha 13 (`^13.10.0`) para manter compatibilidade
+  com o requisito de Node do Next; `package.json` documenta Node `>=20.9.0`.
+- **Comandos executados:** `npm install firebase-admin`; `npm install
+  firebase-admin@^13.6.0`; `npm run test:quotes-route`; `npm run test:domain`;
+  `npm run lint`; `npm exec next typegen && npx tsc --noEmit`; `npm run build`;
+  `git diff --check`.
+- **Resultados e evidências:** 8 testes de boundary/reader/proxy aprovados;
+  6 testes de domínio aprovados; lint, typegen, TypeScript e build concluídos
+  sem erros; build reconheceu `ƒ /api/quotes` em runtime dinâmico Node; teste
+  automatizado confirmou host público `404` e cobertura de app/preview; testes
+  confirmaram `401` para auth ausente/inválida, `503 NOT_CONFIGURED`, `400`
+  para body inválido, `BATCH_LIMIT`, deduplicação, ownership e ausência de
+  chamada downstream para cross-user. Busca nos chunks client gerados não
+  encontrou `firebase-admin`, `FIREBASE_ADMIN_*`, `BRAPI_API_KEY` ou
+  `brapi.dev`.
+- **Riscos residuais:** a rota ainda retorna `NOT_CONFIGURED` para Assets
+  owner-scoped até `008-04` conectar o QuoteService real; não houve smoke com
+  credenciais Admin produtivas nem chamada BRAPI real. Falhas de leitura do
+  Firestore são sanitizadas como `PROVIDER_UNAVAILABLE` para não expor detalhes;
+  a semântica operacional específica poderá ser refinada sem alterar o
+  boundary. Vulnerabilidades reportadas pelo `npm install` permanecem para
+  triagem separada e não foram corrigidas com upgrade oportunista.

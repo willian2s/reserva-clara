@@ -1,4 +1,4 @@
-import { InvalidDomainInputError } from "@/domain/errors";
+import { InvalidDomainInputError } from "../../domain/errors";
 
 function assertPathSegment(value: unknown, field: string): asserts value is string {
   if (
