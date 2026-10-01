@@ -1,8 +1,8 @@
 # 009 — Positions & Allocation
 
-- **Status geral:** pending
+- **Status geral:** in_progress
 - **Spec:** [009-positions-allocation.md](../../specs/009-positions-allocation.md)
-- **Progresso:** 0/6 subtarefas concluídas
+- **Progresso:** 1/6 subtarefas concluídas
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ antecipar o dashboard da fase 010.
 
 ## Checklist
 
-- [ ] [009-01-fechar-contratos-e-politica.md](009-01-fechar-contratos-e-politica.md)
+- [x] [009-01-fechar-contratos-e-politica.md](009-01-fechar-contratos-e-politica.md)
 - [ ] [009-02-estender-aritmetica-decimal.md](009-02-estender-aritmetica-decimal.md)
 - [ ] [009-03-implementar-position-engine.md](009-03-implementar-position-engine.md)
 - [ ] [009-04-implementar-market-position-e-allocation.md](009-04-implementar-market-position-e-allocation.md)
@@ -28,3 +28,7 @@ antecipar o dashboard da fase 010.
   denominador.
 - O dashboard visual, targets de alocação, histórico e read models persistidos
   permanecem fora desta fase.
+- 009-01 concluída: contratos e decisões de Position, Market Position,
+  Allocation e read-side foram fechados na spec, sem implementação de reducer,
+  aritmética, persistência ou UI. A próxima subtarefa pode implementar a
+  aritmética decimal sem decisão matemática bloqueante.

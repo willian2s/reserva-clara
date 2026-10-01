@@ -265,6 +265,186 @@ Erros novos devem estender `DomainError`, possuir código estável e não expor
 payload financeiro. O contrato deve distinguir erro de ledger inválido de
 indisponibilidade normal de provider.
 
+### Decisões fechadas em 009-01
+
+009-01 fecha os contratos abaixo sem criar ainda os reducers, operações
+aritméticas ou módulos de runtime. As assinaturas são a autoridade para as
+subtarefas de implementação.
+
+#### Position e redução do ledger
+
+`Position.quantity` é um `DecimalString` canônico semanticamente não negativo;
+não reutiliza `Quantity`, porque `Quantity` representa apenas entradas de
+transação estritamente positivas. `investedAmount` também é não negativo e
+`averageCost` é `null` somente quando a quantidade final é zero.
+
+O reducer recebe o contexto do Portfolio e o Asset explicitamente:
+
+```ts
+type PositionReductionInput = Readonly<{
+  portfolioId: DocumentId;
+  asset: Pick<Asset, "id" | "currency">;
+  transactions: readonly Transaction[];
+}>;
+
+function reducePosition(input: PositionReductionInput): Position;
+
+type PositionsReductionInput = Readonly<{
+  portfolioId: DocumentId;
+  assets: readonly Asset[];
+  transactions: readonly Transaction[];
+}>;
+
+function reducePositions(input: PositionsReductionInput): readonly Position[];
+```
+
+`reducePosition` rejeita transações de outro `assetId`; a redução multi-Asset
+associa cada transação ao `Asset.id` e falha quando a referência não existe.
+Assets sem transações não criam posições. A entrada nunca é mutada: cada
+redução ordena uma cópia por `effectiveDate ASC`, `createdAt ASC` e `id ASC`.
+O resultado é ordenado por `assetId` e inclui a posição fechada quando houve
+movimento e a quantidade final é zero.
+
+O estado interno do reducer mantém o custo como racional exato
+(numerador/denominador em `bigint`), sem materializar `averageCost` entre
+eventos. Em `buy`, soma `quantity × unitPrice + fee`; em `sell`, subtrai
+`quantity × averageCost` vigente. A taxa de compra nula equivale a custo zero.
+A taxa de venda deve ter moeda compatível, mas não altera o custo remanescente.
+Preço e taxa incompatíveis falham explicitamente; nenhuma taxa é ignorada por
+fallback e nenhuma conversão cambial é aplicada.
+
+O arredondamento half-up ocorre apenas ao materializar um valor público, com no
+máximo 30 dígitos inteiros e 18 fracionários. O mesmo critério vale para
+valores negativos: arredonda pela magnitude e reaplica o sinal. Produtos,
+divisões, média ponderada e diferença nominal não sofrem arredondamento por
+evento. Overflow é erro de domínio. `INSUFFICIENT_QUANTITY` continua sendo o
+código para venda acima da quantidade disponível.
+
+Os códigos novos reservados para erros de domínio desta fase são:
+
+| Código | Uso | Natureza |
+| --- | --- | --- |
+| `POSITION_ASSET_NOT_FOUND` | transação referencia Asset ausente | erro de ledger |
+| `POSITION_ASSET_MISMATCH` | `reducePosition` recebe transação de outro Asset | erro de ledger |
+| `POSITION_CURRENCY_MISMATCH` | preço/taxa diverge da moeda do Asset | erro de contrato |
+| `POSITION_ARITHMETIC_OVERFLOW` | resultado excede os limites canônicos | erro de aritmética |
+| `POSITION_INVALID_LEDGER` | sequência ou referência não pode ser reduzida | erro de ledger |
+| `POSITION_COMPOSITION_FAILED` | falha estrutural ao compor o read-side | erro de composição |
+
+Esses códigos serão adicionados ao catálogo de `DomainError` quando o módulo
+correspondente for implementado; 009-01 não altera o código executável.
+
+#### Market Position e disponibilidade de Quote
+
+Uma Market Position aberta tem o formato mínimo abaixo e só existe quando a
+Quote está disponível e possui a mesma moeda da Position:
+
+```ts
+type MarketPosition = Readonly<{
+  portfolioId: DocumentId;
+  assetId: DocumentId;
+  currency: CurrencyCode;
+  quantity: DecimalString;
+  investedAmount: DecimalString;
+  averageCost: DecimalString;
+  marketValue: DecimalString;
+  nominalDifference: DecimalString;
+  freshness: "fresh" | "stale";
+}>;
+
+type MarketPositionResult =
+  | Readonly<{ status: "available"; marketPosition: MarketPosition }>
+  | Readonly<{
+      status: "unavailable";
+      assetId: DocumentId;
+      reason: "quote-unavailable" | "quote-currency-mismatch";
+      quoteCode?: QuoteErrorCode;
+    }>;
+```
+
+`marketValue` é `quantity × quote.price`; `nominalDifference` é
+`marketValue - investedAmount` e pode ser negativo. Quote `stale` é utilizável
+e mantém `freshness: "stale"`. Quote `unavailable` e moeda incompatível não
+produzem zero nem erro de ledger: produzem o resultado discriminado
+`unavailable`, preservando o código sanitizado do provider quando existir.
+Posições fechadas não solicitam Quote e não produzem Market Position aberta.
+
+#### Allocation corrente
+
+Allocation usa `Portfolio.baseCurrency` como moeda-base (BRL no contrato V1),
+sem assumir `BASE_CURRENCY` quando um Portfolio for fornecido ao leitor. Uma
+posição em moeda diferente permanece em `Position` e pode permanecer em
+`MarketPosition`, mas fica indisponível para Allocation sem FX.
+
+```ts
+type AllocationEntry = Readonly<{
+  assetId: DocumentId;
+  marketValue: DecimalString;
+  allocation: DecimalString | null;
+}>;
+
+type AllocationUnavailable = Readonly<{
+  assetId: DocumentId;
+  reason:
+    | "quote-unavailable"
+    | "quote-currency-mismatch"
+    | "base-currency-mismatch"
+    | "composition-error";
+}>;
+
+type AllocationResult = Readonly<{
+  portfolioId: DocumentId;
+  currency: CurrencyCode;
+  status: "empty" | "complete" | "partial";
+  totalMarketValue: DecimalString;
+  entries: readonly AllocationEntry[];
+  unavailable: readonly AllocationUnavailable[];
+}>;
+```
+
+Entries e diagnósticos são ordenados por `assetId`. O denominador é a soma dos
+`marketValue` conhecidos na moeda-base. `allocation` usa a divisão exata e é
+`null` quando o denominador é zero; nunca há `NaN`, infinito ou distribuição
+artificial. `empty` significa ausência de posições abertas; `complete` indica
+que toda posição aberta tem valor compatível; `partial` indica pelo menos uma
+posição aberta sem valor por Quote, moeda ou composição. IDs indisponíveis não
+entram no denominador. Target allocation, recomendação, performance, caixa,
+imposto e FX continuam fora do contrato.
+
+#### Read-side e seams de teste
+
+O leitor será client-side e receberá suas dependências por parâmetro, sem
+Firebase, React ou provider no domínio:
+
+```ts
+type PortfolioPositionReadDependencies = Readonly<{
+  getPortfolio: (portfolioId: DocumentId) => Promise<Portfolio | null>;
+  listTransactions: (portfolioId: DocumentId) => Promise<readonly Transaction[]>;
+  listAssets: () => Promise<readonly Asset[]>;
+  fetchQuotes: (
+    assetIds: readonly DocumentId[],
+  ) => Promise<readonly QuoteResult[]>;
+}>;
+
+type PortfolioPositionRead = Readonly<{
+  portfolio: Portfolio;
+  positions: readonly Position[];
+  marketPositions: readonly MarketPosition[];
+  allocation: AllocationResult;
+}>;
+
+function readPortfolioPositions(
+  portfolioId: DocumentId,
+  dependencies: PortfolioPositionReadDependencies,
+): Promise<PortfolioPositionRead>;
+```
+
+O leitor solicita Quotes somente para posições abertas, em lotes de no máximo
+20 IDs, e transforma falha sanitizada da consulta em resultados indisponíveis
+sem perder as Positions já derivadas. Falha de ledger, ausência do Portfolio ou
+erro estrutural de composição continua sendo propagada como erro de domínio;
+indisponibilidade normal do provider permanece dado parcial.
+
 ## Alternativas descartadas
 
 | Alternativa | Motivo |

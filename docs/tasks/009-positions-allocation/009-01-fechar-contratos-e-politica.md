@@ -2,7 +2,7 @@
 
 - **Ticker:** `009`
 - **Número:** `01`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -76,3 +76,32 @@ zeragem, frescor e estados parciais antes de abrir os reducers.
 - Não ignorar fee incompatível nem transformar Quote unavailable em zero.
 - Não aceitar `number` como representação financeira.
 - Não resolver decisões de caixa, FX, histórico ou trusted boundary nesta fase.
+
+## Execução
+
+- **Arquivos alterados:** `docs/specs/009-positions-allocation.md`,
+  `docs/tasks/009-positions-allocation/009-01-fechar-contratos-e-politica.md` e
+  `docs/tasks/009-positions-allocation/009-00-overview.md`.
+- **Decisões e desvios:** contratos de Position, Market Position, Allocation e
+  read-side foram fechados na spec. O reducer recebe Asset explicitamente,
+  agrupa por `assetId`, mantém custo racional exato e arredonda somente na
+  materialização. Fee de compra entra no custo; fee de venda é validada na
+  moeda, mas não altera o custo. Stale permanece utilizável e marcada;
+  unavailable e incompatibilidade de moeda são estados parciais, não zero.
+  `Position.quantity` usa decimal não negativo em vez de `Quantity`. Nenhum
+  módulo TypeScript, reducer, erro executável ou harness foi criado, conforme o
+  escopo da subtarefa.
+- **Comandos executados:** `git diff --check`.
+- **Resultados e evidências:** revisão estática confirmou que a spec explicita
+  assinaturas, unions, fórmulas, política de half-up/overflow, códigos de erro,
+  ordenação, moeda-base, denominador zero, chunking e seams de teste. O diff
+  documental passou sem erros de whitespace. Revisão independente foi
+  solicitada e retornou **APROVADO**, sem bloqueadores; confirmou o ticker,
+  checklist `1/6`, escopo documental e coerência com os contratos atuais.
+- **Riscos residuais:** os códigos ainda não existem em `src/domain/errors.ts` e
+  as assinaturas ainda não têm implementação; isso pertence às subtarefas
+  seguintes. O harness `test:positions` será criado quando houver reducer e
+  contratos executáveis. O diagnóstico de Allocation mantém razão genérica e o
+  tratamento de `QuoteResult.assetId` divergente deverá ser confirmado durante
+  a implementação, sem bloquear 009-01. A spec permanece `planned` até o
+  fechamento de toda a fase 009.
