@@ -2,7 +2,7 @@
 
 - **Ticker:** `009`
 - **Número:** `05`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -79,3 +79,35 @@ provider falhar.
 - Não aceitar UID, path ou símbolo como argumento de autoridade.
 - Não incluir Assets sem Transaction como posições zero artificiais.
 - Não esconder erro de ledger atrás de unavailable de Quote.
+
+## Execução
+
+- **Arquivos alterados:** `src/data/positions/portfolio-read.ts`,
+  `scripts/run-positions-read-tests.mjs`, `tests/positions-read.test.mjs`,
+  `package.json` e este arquivo, além de
+  `docs/tasks/009-positions-allocation/009-00-overview.md`.
+- **Decisões e desvios:** o leitor recebe os quatro boundaries por parâmetro,
+  preservando seams fakes e deixando o chamador conectar os repositories
+  client-only e `fetchQuotes` existentes. Portfolio ausente ou incompatível
+  falha com `POSITION_COMPOSITION_FAILED`; ledger inválido continua propagando
+  seu erro. Positions são reduzidas antes das cotações, apenas posições abertas
+  são agrupadas em lotes de até 20, e cada falha de lote vira resultados
+  `unavailable` com código sanitizado. Respostas incompletas ou duplicadas do
+  boundary também degradam para `INVALID_PROVIDER_RESPONSE`. Nenhuma rota, UI,
+  persistência, Rules, Admin SDK, QuoteService, BRAPI ou segredo foi
+  introduzido.
+- **Comandos executados:** `npm run test:positions-read`,
+  `npm run test:domain`, `npm run test:quotes-adapter`,
+  `npm run test:quotes-service`, `npm run test:quotes-route`, `npm run lint`,
+  `npm exec next typegen && npx tsc --noEmit`, `npm run build` e
+  `git diff --check`.
+- **Resultados e evidências:** 6 testes de read-side passaram, cobrindo
+  composição, posição fechada sem request, chunking 20+1, falha sanitizada,
+  stale/moeda incompatível, ausência de Portfolio e venda insuficiente. Os
+  testes de domínio (13), adapter (7), service (8) e route (8) também passaram;
+  lint, typegen, TypeScript, build e diff check terminaram sem erros. A
+  inspeção estática do módulo não encontrou imports de `QuoteService`, Admin
+  SDK, BRAPI ou variáveis server-only.
+- **Riscos residuais:** a leitura continua efêmera e depende do chamador para
+  fornecer os boundaries autenticados; não há cache, persistência ou fallback
+  numérico para Quote indisponível, conforme o contrato da fase 009.

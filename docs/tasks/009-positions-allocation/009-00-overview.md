@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [009-positions-allocation.md](../../specs/009-positions-allocation.md)
-- **Progresso:** 4/6 subtarefas concluídas
+- **Progresso:** 5/6 subtarefas concluídas
 
 ## Objetivo
 
@@ -16,7 +16,7 @@ antecipar o dashboard da fase 010.
 - [x] [009-02-estender-aritmetica-decimal.md](009-02-estender-aritmetica-decimal.md)
 - [x] [009-03-implementar-position-engine.md](009-03-implementar-position-engine.md)
 - [x] [009-04-implementar-market-position-e-allocation.md](009-04-implementar-market-position-e-allocation.md)
-- [ ] [009-05-compor-read-side-de-carteira.md](009-05-compor-read-side-de-carteira.md)
+- [x] [009-05-compor-read-side-de-carteira.md](009-05-compor-read-side-de-carteira.md)
 - [ ] [009-06-validar-gates-e-handoff.md](009-06-validar-gates-e-handoff.md)
 
 ## Observações
@@ -44,3 +44,8 @@ antecipar o dashboard da fase 010.
   com fresh/stale/unavailable, diferença nominal assinada, moeda-base,
   diagnósticos parciais, ordenação determinística e denominador zero seguro.
   A próxima subtarefa pode compor o read-side da carteira.
+- 009-05 concluída: read-side efêmero compõe Portfolio, Transactions, Assets e
+  Quotes por dependências injetáveis, deriva Positions antes do provider,
+  respeita lotes de 20, preserva posições em falhas sanitizadas e não solicita
+  cotação para posições fechadas. Testes, lint, typegen, TypeScript e build
+  passaram; a próxima subtarefa pode executar os gates finais e o handoff.
