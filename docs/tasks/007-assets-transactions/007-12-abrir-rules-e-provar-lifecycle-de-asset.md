@@ -2,7 +2,7 @@
 
 - **Ticker:** `007`
 - **Número:** `12`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -54,6 +54,35 @@ git diff --check
 
 ## Execução
 
-- **Status:** `pending`; nenhuma Rule foi aberta nesta etapa de planejamento.
-- **Riscos residuais:** a decisão final depende de evidência do Emulator e da
-  compatibilidade do guard com os writes existentes.
+- **Status:** `completed`; Rules de update/delete atômicos de Asset, registry e
+  `assetUsages` foram abertas com `getAfter()`, e Transaction nova agora exige
+  guard existente ou criado no mesmo commit. O guard permanece create-only e a
+  reconciliação legada existente em 007-11 pode criá-lo para um Asset existente;
+  update/delete do guard continuam negados.
+- **Arquivos alterados:** `firestore.rules`,
+  `tests/firestore.rules.test.mjs`, este arquivo e
+  `docs/tasks/007-assets-transactions/007-00-overview.md`.
+- **Decisões e desvios:** a edição sem troca de identidade mantém o registry
+  coerente; a edição com troca exige remoção do registry antigo, criação do novo
+  e update do Asset no mesmo commit. Delete exige Asset e registry coerentes,
+  ambos removidos no commit, e ausência do guard antes e depois. A criação do
+  guard é permitida tanto no primeiro write de Transaction quanto em uma
+  reconciliação legada owner-scoped, pois Rules não enumeram Transactions de
+  outras subcoleções para provar retrospectivamente um vínculo. Não foi feito
+  deploy, auditoria de dados produtivos ou alteração de UI.
+- **Comandos executados:** `npm run test:rules`, `npm run test:domain`,
+  `npm run lint`, `npm exec next typegen`, `npx tsc --noEmit`,
+  `npm run build` e `git diff --check`.
+- **Resultados e evidências:** 19 testes do Emulator passaram, incluindo os 13
+  casos anteriores, update com preservação de ID/criação, colisão, registry
+  inconsistente, delete de um lado, delete com uso em guard, guard
+  create-only, Transaction sem guard, uso em Portfolio arquivada, corrida
+  atômica e concorrência real entre delete e primeira Transaction, ownership
+  cross-user e acesso anônimo. Os 7 testes de domínio, lint, typegen,
+  TypeScript, build e diff check também passaram.
+- **Riscos residuais:** nenhuma auditoria produtiva foi executada nesta sessão;
+  o rollout continua dependente da reconciliação owner-scoped antes de expor a
+  UI de delete. Um cliente autenticado pode criar um guard válido para um Asset
+  existente fora de uma Transaction, comportamento mantido para suportar a
+  reconciliação legada e que pode bloquear delete, nunca liberá-lo. O limite
+  deliberado de Rules para não agregar o ledger permanece vigente.
