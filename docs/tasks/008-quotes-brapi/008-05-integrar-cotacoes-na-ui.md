@@ -2,7 +2,7 @@
 
 - **Ticker:** `008`
 - **Número:** `05`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -96,3 +96,32 @@ npm run build
 - Não fazer retry recursivo em render/effect; usar ação explícita e guards
   existentes.
 - Não usar cor de marca como indicação automática de lucro/performance.
+
+## Execução
+
+- **Status:** `completed`.
+- **Arquivos alterados:** `src/data/quotes/quote-client.ts`,
+  `src/components/asset/asset-catalog.tsx` e
+  `src/components/asset/asset-quote.tsx`.
+- **Decisões e desvios:** o client obtém `auth.currentUser.getIdToken()` e envia
+  somente `{ assetIds }` para `/api/quotes`, convertendo ausência/falha de sessão,
+  HTTP e payload em códigos sanitizados. O catálogo mantém request ID e guard de
+  montagem independentes para Quotes, consulta lotes de até 20 Assets, preserva
+  os cards de identidade em falhas e oferece atualização explícita sem retry
+  automático. A apresentação exibe preço decimal, moeda, `quotedAt`, frescor
+  stale/fresh e `providerSymbol` somente quando `symbolChanged`; não foi alterado
+  `Asset`, `Transaction`, `unitPrice` ou o ledger.
+- **Comandos executados:** `npm run test:domain`,
+  `npm run test:quotes-adapter`, `npm run test:quotes-service`,
+  `npm run test:quotes-route`, `npm run lint`, `npm exec next typegen`,
+  `npx tsc --noEmit`, `npm run build` e `git diff --check`.
+- **Resultados e evidências:** 6 testes de domínio, 7 do adapter, 8 do serviço e
+  8 do boundary passaram. Lint, geração de tipos, TypeScript, build e diff check
+  concluíram sem erros; o build manteve `/api/quotes` em runtime Node. Inspeção
+  estrutural não encontrou `firebase-admin`, adapter, URL BRAPI, `BRAPI_API_KEY`
+  ou env server-only nos componentes client de Asset/Transaction; o ledger não
+  importa Quotes nem chama `/api/quotes`.
+- **Riscos residuais:** não há runner de UI nem credenciais autorizadas neste
+  ambiente, portanto o smoke visual autenticado de sucesso, stale, retry,
+  indisponibilidade, token ausente, teclado/mobile e ledger com provider fora do
+  ar permanece para a 008-06. Não houve chamada real à BRAPI.

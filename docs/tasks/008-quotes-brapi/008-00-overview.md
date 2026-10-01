@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [008-quotes-brapi.md](../../specs/008-quotes-brapi.md)
-- **Progresso:** 4/6 subtarefas concluídas
+- **Progresso:** 5/6 subtarefas concluídas
 
 ## Objetivo
 
@@ -16,7 +16,7 @@ quando provider estiver indisponível.
 - [x] [008-02-criar-boundary-server-e-auth.md](008-02-criar-boundary-server-e-auth.md)
 - [x] [008-03-implementar-adapter-brapi.md](008-03-implementar-adapter-brapi.md)
 - [x] [008-04-implementar-quoteservice-cache.md](008-04-implementar-quoteservice-cache.md)
-- [ ] [008-05-integrar-cotacoes-na-ui.md](008-05-integrar-cotacoes-na-ui.md)
+- [x] [008-05-integrar-cotacoes-na-ui.md](008-05-integrar-cotacoes-na-ui.md)
 - [ ] [008-06-validar-gates-e-handoff.md](008-06-validar-gates-e-handoff.md)
 
 ## Observações
@@ -42,3 +42,7 @@ quando provider estiver indisponível.
   usuário, TTL/stale-if-error, retry único sanitizado, deduplicação, fila de
   upstream, limites e testes determinísticos. Não há bloqueios registrados;
   provider real e smoke produtivo permanecem fora desta subtarefa.
+- 008-05 foi concluída com client autenticado same-origin, estados independentes
+  de Quote no catálogo, lotes limitados, frescor explícito e retry/refresh manual.
+  Os gates automatizados passaram; smoke visual autenticado e validação com
+  provider real permanecem para 008-06, sem bloqueio de implementação registrado.
