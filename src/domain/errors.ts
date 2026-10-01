@@ -6,7 +6,11 @@ export type DomainErrorCode =
   | "INVALID_REFERENCE"
   | "INSUFFICIENT_QUANTITY"
   | "TRANSACTION_CONFLICT"
-  | "POSITION_ARITHMETIC_OVERFLOW";
+  | "POSITION_ARITHMETIC_OVERFLOW"
+  | "POSITION_ASSET_NOT_FOUND"
+  | "POSITION_ASSET_MISMATCH"
+  | "POSITION_CURRENCY_MISMATCH"
+  | "POSITION_INVALID_LEDGER";
 
 export class DomainError extends Error {
   constructor(
@@ -82,5 +86,39 @@ export class DecimalArithmeticOverflowError extends DomainError {
       "POSITION_ARITHMETIC_OVERFLOW",
     );
     this.name = "DecimalArithmeticOverflowError";
+  }
+}
+
+export class PositionAssetNotFoundError extends DomainError {
+  constructor() {
+    super("position: transaction references an unknown Asset", "POSITION_ASSET_NOT_FOUND");
+    this.name = "PositionAssetNotFoundError";
+  }
+}
+
+export class PositionAssetMismatchError extends DomainError {
+  constructor() {
+    super(
+      "position: transaction does not belong to the requested Asset",
+      "POSITION_ASSET_MISMATCH",
+    );
+    this.name = "PositionAssetMismatchError";
+  }
+}
+
+export class PositionCurrencyMismatchError extends DomainError {
+  constructor() {
+    super(
+      "position: transaction price or fee uses an incompatible currency",
+      "POSITION_CURRENCY_MISMATCH",
+    );
+    this.name = "PositionCurrencyMismatchError";
+  }
+}
+
+export class PositionInvalidLedgerError extends DomainError {
+  constructor() {
+    super("position: ledger references are inconsistent", "POSITION_INVALID_LEDGER");
+    this.name = "PositionInvalidLedgerError";
   }
 }

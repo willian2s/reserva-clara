@@ -395,3 +395,183 @@ test("reducer sorts backfill, same-day ties and rejects mixed assets or negative
     errorCode("INVALID_REFERENCE"),
   );
 });
+
+test("position engine calculates weighted cost, fees, proportional sales and explicit closure", () => {
+  const asset = { id: "asset-a", currency: "BRL" };
+  const trade = ({
+    id,
+    kind = "buy",
+    quantity,
+    price,
+    fee = null,
+    effectiveDate = "2026-01-01",
+    seconds = 1,
+    nanoseconds = 0,
+  }) => domain.parseTransaction({
+    id,
+    assetId: asset.id,
+    kind,
+    quantity,
+    unitPrice: { currency: "BRL", decimal: price },
+    fee,
+    effectiveDate,
+    createdAt: { seconds, nanoseconds },
+  });
+
+  const position = domain.reducePosition({
+    portfolioId: "portfolio-a",
+    asset,
+    transactions: [
+      trade({ id: "sell", kind: "sell", quantity: "1", price: "999", fee: { currency: "BRL", decimal: "2" }, effectiveDate: "2026-01-03" }),
+      trade({ id: "buy-late", quantity: "1", price: "20", effectiveDate: "2026-01-02" }),
+      trade({ id: "buy-early", quantity: "2", price: "10", fee: { currency: "BRL", decimal: "1" } }),
+    ],
+  });
+
+  assert.deepEqual(position, {
+    portfolioId: "portfolio-a",
+    assetId: "asset-a",
+    currency: "BRL",
+    quantity: "2",
+    investedAmount: "27.333333333333333333",
+    averageCost: "13.666666666666666667",
+    closed: false,
+  });
+
+  const closed = domain.reducePosition({
+    portfolioId: "portfolio-a",
+    asset,
+    transactions: [
+      trade({ id: "buy", quantity: "3", price: "10" }),
+      trade({ id: "sell-all", kind: "sell", quantity: "3", price: "12", effectiveDate: "2026-01-02" }),
+    ],
+  });
+  assert.deepEqual(closed, {
+    portfolioId: "portfolio-a",
+    assetId: "asset-a",
+    currency: "BRL",
+    quantity: "0",
+    investedAmount: "0",
+    averageCost: null,
+    closed: true,
+  });
+
+  const fractionTrades = [
+    trade({ id: "fraction-a", quantity: "0.1", price: "3.3" }),
+    trade({ id: "fraction-b", quantity: "0.2", price: "6.6", effectiveDate: "2026-01-02" }),
+  ];
+  const originalFractionTrades = [...fractionTrades];
+  assert.deepEqual(
+    domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset,
+      transactions: [fractionTrades[1], fractionTrades[0]],
+    }),
+    {
+      portfolioId: "portfolio-a",
+      assetId: "asset-a",
+      currency: "BRL",
+      quantity: "0.3",
+      investedAmount: "1.65",
+      averageCost: "5.5",
+      closed: false,
+    },
+  );
+  assert.deepEqual(fractionTrades, originalFractionTrades);
+});
+
+test("position engine groups by Asset identity, orders deterministically and validates ledger references", () => {
+  const assets = [
+    { id: "asset-z", currency: "USD" },
+    { id: "asset-a", currency: "BRL" },
+    { id: "asset-empty", currency: "BRL" },
+  ];
+  const makeTransaction = ({ id, assetId, currency, kind = "buy", quantity = "1", price = "10", effectiveDate = "2026-01-01", seconds = 1, nanoseconds = 0, fee = null }) =>
+    domain.parseTransaction({
+      id,
+      assetId,
+      kind,
+      quantity,
+      unitPrice: { currency, decimal: price },
+      fee,
+      effectiveDate,
+      createdAt: { seconds, nanoseconds },
+    });
+
+  const transactions = [
+    makeTransaction({ id: "z-buy", assetId: "asset-z", currency: "USD", price: "3" }),
+    makeTransaction({ id: "a-buy", assetId: "asset-a", currency: "BRL", price: "2" }),
+  ];
+  assert.deepEqual(
+    domain.reducePositions({ portfolioId: "portfolio-a", assets, transactions }).map(({ assetId }) => assetId),
+    ["asset-a", "asset-z"],
+  );
+
+  const tiedTransactions = [
+    makeTransaction({ id: "b-sell", assetId: "asset-a", currency: "BRL", kind: "sell", quantity: "1", price: "50", nanoseconds: 2 }),
+    makeTransaction({ id: "a-buy", assetId: "asset-a", currency: "BRL", quantity: "1", price: "2", nanoseconds: 2 }),
+  ];
+  assert.equal(
+    domain.reducePosition({ portfolioId: "portfolio-a", asset: assets[1], transactions: tiedTransactions }).closed,
+    true,
+  );
+  assert.equal(
+    domain.reducePosition({ portfolioId: "portfolio-a", asset: assets[1], transactions: [...tiedTransactions].reverse() }).closed,
+    true,
+  );
+
+  assert.throws(
+    () => domain.reducePositions({
+      portfolioId: "portfolio-a",
+      assets,
+      transactions: [makeTransaction({ id: "missing", assetId: "asset-missing", currency: "BRL" })],
+    }),
+    errorCode("POSITION_ASSET_NOT_FOUND"),
+  );
+  assert.throws(
+    () => domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset: assets[0],
+      transactions: [makeTransaction({ id: "wrong", assetId: "asset-a", currency: "BRL" })],
+    }),
+    errorCode("POSITION_ASSET_MISMATCH"),
+  );
+  assert.throws(
+    () => domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset: assets[0],
+      transactions: [makeTransaction({ id: "currency", assetId: "asset-z", currency: "BRL" })],
+    }),
+    errorCode("POSITION_CURRENCY_MISMATCH"),
+  );
+  assert.throws(
+    () => domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset: assets[0],
+      transactions: [makeTransaction({ id: "fee-currency", assetId: "asset-z", currency: "USD", fee: { currency: "BRL", decimal: "1" } })],
+    }),
+    errorCode("POSITION_CURRENCY_MISMATCH"),
+  );
+  assert.throws(
+    () => domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset: assets[0],
+      transactions: [makeTransaction({ id: "sell", assetId: "asset-z", currency: "USD", kind: "sell" })],
+    }),
+    errorCode("INSUFFICIENT_QUANTITY"),
+  );
+  assert.throws(
+    () => domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset: assets[1],
+      transactions: [makeTransaction({
+        id: "overflow",
+        assetId: "asset-a",
+        currency: "BRL",
+        quantity: "999999999999999999999999999999",
+        price: "10",
+      })],
+    }),
+    errorCode("POSITION_ARITHMETIC_OVERFLOW"),
+  );
+});

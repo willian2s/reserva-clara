@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [009-positions-allocation.md](../../specs/009-positions-allocation.md)
-- **Progresso:** 2/6 subtarefas concluídas
+- **Progresso:** 3/6 subtarefas concluídas
 
 ## Objetivo
 
@@ -14,7 +14,7 @@ antecipar o dashboard da fase 010.
 
 - [x] [009-01-fechar-contratos-e-politica.md](009-01-fechar-contratos-e-politica.md)
 - [x] [009-02-estender-aritmetica-decimal.md](009-02-estender-aritmetica-decimal.md)
-- [ ] [009-03-implementar-position-engine.md](009-03-implementar-position-engine.md)
+- [x] [009-03-implementar-position-engine.md](009-03-implementar-position-engine.md)
 - [ ] [009-04-implementar-market-position-e-allocation.md](009-04-implementar-market-position-e-allocation.md)
 - [ ] [009-05-compor-read-side-de-carteira.md](009-05-compor-read-side-de-carteira.md)
 - [ ] [009-06-validar-gates-e-handoff.md](009-06-validar-gates-e-handoff.md)
@@ -36,3 +36,7 @@ antecipar o dashboard da fase 010.
   subtração assinada, half-up e overflow foram implementados e cobertos pelo
   harness de domínio, preservando o reducer de quantidade. A próxima
   subtarefa pode implementar o Position Engine.
+- 009-03 concluída: Position Engine puro exportado pelo domínio, com média
+  ponderada, fees, backfill determinístico, agrupamento por `assetId`, erros
+  explícitos, zeragem e materialização racional sem persistência. A próxima
+  subtarefa pode implementar Market Position e Allocation.

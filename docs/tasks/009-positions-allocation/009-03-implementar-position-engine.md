@@ -2,7 +2,7 @@
 
 - **Ticker:** `009`
 - **Número:** `03`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -78,3 +78,32 @@ retroativa e posição zerada explícita, sem persistir resultado.
 - Não agrupar por ticker ou provider.
 - Não arredondar custo a cada Transaction.
 - Manter a limitação de Rules/SDK direto documentada para a fase 020.
+
+## Execução
+
+- **Arquivos alterados:** `src/domain/position-engine.ts`,
+  `src/domain/errors.ts`, `src/domain/index.ts`,
+  `scripts/run-domain-tests.mjs`, `tests/domain.test.mjs` e este arquivo,
+  além de `docs/tasks/009-positions-allocation/009-00-overview.md`.
+- **Decisões e desvios:** o engine mantém quantidade e custo como racionais
+  `bigint` durante toda a redução, ordena cópias do ledger e materializa apenas
+  na saída. BUY inclui fee no custo; SELL remove custo proporcional e apenas
+  valida a moeda da fee. `reducePositions` agrupa exclusivamente por `assetId`,
+  rejeita Assets duplicados ou ausentes e ordena o resultado. Foram adicionados
+  erros estáveis para referência de Asset, incompatibilidade de Asset/moeda e
+  ledger inconsistente. Nenhuma persistência, mutação de Transaction, UI,
+  chamada HTTP ou Rule foi introduzida.
+- **Comandos executados:** `npm run test:domain`, `npm run lint`,
+  `npm exec next typegen && npx tsc --noEmit`, `npm run build` e
+  `git diff --check`.
+- **Resultados e evidências:** 11 testes de domínio passaram, incluindo custo
+  médio ponderado, fee de compra e venda, venda parcial e zeragem explícita,
+  backfill, empate de ordenação com nanos e ID, frações, múltiplos Assets,
+  Asset sem transações, referências/moedas inválidas, venda insuficiente,
+  overflow e não mutação da entrada. Lint, typegen, TypeScript, build e diff
+  check passaram sem erros. Revisão independente retornou **APROVADO**, sem
+  bloqueadores.
+- **Riscos residuais:** o tamanho do racional intermediário continua limitado
+  apenas pela capacidade de `bigint`; não há limite artificial de eventos nesta
+  fase. O engine permanece deliberadamente sem persistência e sem autorização,
+  conforme o handoff para as fases posteriores.

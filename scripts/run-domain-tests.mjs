@@ -31,6 +31,7 @@ try {
         "errors.ts",
         "index.ts",
         "portfolio.ts",
+        "position-engine.ts",
         "quote.ts",
         "transaction.ts",
         "value-objects.ts",
