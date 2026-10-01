@@ -1,18 +1,26 @@
 import {
+  DecimalArithmeticOverflowError,
   InsufficientQuantityError,
   InvalidDecimalError,
+  InvalidDomainValueError,
   InvalidReferenceError,
 } from "./errors";
 import type { Transaction } from "./transaction";
 import type { DecimalString, DocumentId } from "./value-objects";
 import {
   parseDecimalString,
+  DECIMAL_MAX_FRACTION_DIGITS,
   parseDocumentId,
 } from "./value-objects";
 
 type ParsedDecimal = Readonly<{
   coefficient: bigint;
   scale: number;
+}>;
+
+export type DecimalRational = Readonly<{
+  numerator: bigint;
+  denominator: bigint;
 }>;
 
 function parseForCalculation(value: string): ParsedDecimal {
@@ -27,6 +35,38 @@ function parseForCalculation(value: string): ParsedDecimal {
 
 function powerOfTen(exponent: number): bigint {
   return BigInt(10) ** BigInt(exponent);
+}
+
+function absolute(value: bigint): bigint {
+  return value < BigInt(0) ? -value : value;
+}
+
+function greatestCommonDivisor(left: bigint, right: bigint): bigint {
+  let a = absolute(left);
+  let b = absolute(right);
+
+  while (b !== BigInt(0)) {
+    const remainder = a % b;
+    a = b;
+    b = remainder;
+  }
+
+  return a === BigInt(0) ? BigInt(1) : a;
+}
+
+function normalizeRational(numerator: bigint, denominator: bigint): DecimalRational {
+  if (denominator === BigInt(0)) {
+    throw new InvalidDomainValueError("denominator", "must not be zero");
+  }
+
+  const signedNumerator = denominator < BigInt(0) ? -numerator : numerator;
+  const positiveDenominator = denominator < BigInt(0) ? -denominator : denominator;
+  const divisor = greatestCommonDivisor(signedNumerator, positiveDenominator);
+
+  return {
+    numerator: signedNumerator / divisor,
+    denominator: positiveDenominator / divisor,
+  };
 }
 
 function align(left: ParsedDecimal, right: ParsedDecimal): [bigint, bigint, number] {
@@ -56,10 +96,7 @@ function formatCalculationResult(coefficient: bigint, scale: number): DecimalStr
   try {
     return parseDecimalString(result);
   } catch {
-    throw new InvalidDecimalError(
-      "decimal",
-      "calculation result exceeds 30 integer or 18 fractional digits",
-    );
+    throw new DecimalArithmeticOverflowError();
   }
 }
 
@@ -101,6 +138,100 @@ export function subtractDecimalStrings(left: string, right: string): DecimalStri
   }
 
   return formatCalculationResult(leftAligned - rightAligned, scale);
+}
+
+/** Subtracts canonical decimals while allowing a signed derived result. */
+export function subtractSignedDecimalStrings(
+  left: string,
+  right: string,
+): DecimalString {
+  const parsedLeft = parseForCalculation(left);
+  const parsedRight = parseForCalculation(right);
+  const [leftAligned, rightAligned, scale] = align(parsedLeft, parsedRight);
+  return formatCalculationResult(leftAligned - rightAligned, scale);
+}
+
+/** Converts a canonical decimal to an exact reduced rational. */
+export function decimalToRational(value: string): DecimalRational {
+  const parsed = parseForCalculation(value);
+  return normalizeRational(parsed.coefficient, powerOfTen(parsed.scale));
+}
+
+export function addDecimalRationals(
+  left: DecimalRational,
+  right: DecimalRational,
+): DecimalRational {
+  return normalizeRational(
+    left.numerator * right.denominator + right.numerator * left.denominator,
+    left.denominator * right.denominator,
+  );
+}
+
+export function subtractDecimalRationals(
+  left: DecimalRational,
+  right: DecimalRational,
+): DecimalRational {
+  return normalizeRational(
+    left.numerator * right.denominator - right.numerator * left.denominator,
+    left.denominator * right.denominator,
+  );
+}
+
+export function multiplyDecimalRationals(
+  left: DecimalRational,
+  right: DecimalRational,
+): DecimalRational {
+  return normalizeRational(
+    left.numerator * right.numerator,
+    left.denominator * right.denominator,
+  );
+}
+
+export function divideDecimalRationals(
+  left: DecimalRational,
+  right: DecimalRational,
+): DecimalRational {
+  if (right.numerator === BigInt(0)) {
+    throw new InvalidDomainValueError("divisor", "must not be zero");
+  }
+
+  return normalizeRational(
+    left.numerator * right.denominator,
+    left.denominator * right.numerator,
+  );
+}
+
+/** Materializes an exact rational at the domain's canonical 18-place scale. */
+export function materializeDecimalRational(value: DecimalRational): DecimalString {
+  const rational = normalizeRational(value.numerator, value.denominator);
+  const scale = DECIMAL_MAX_FRACTION_DIGITS;
+  const scaledNumerator = absolute(rational.numerator) * powerOfTen(scale);
+  let quotient = scaledNumerator / rational.denominator;
+  const remainder = scaledNumerator % rational.denominator;
+
+  if (remainder * BigInt(2) >= rational.denominator) {
+    quotient += BigInt(1);
+  }
+
+  if (rational.numerator < BigInt(0)) {
+    quotient = -quotient;
+  }
+
+  return formatCalculationResult(quotient, scale);
+}
+
+/** Multiplies decimals exactly, then materializes the public decimal result. */
+export function multiplyDecimalStrings(left: string, right: string): DecimalString {
+  return materializeDecimalRational(
+    multiplyDecimalRationals(decimalToRational(left), decimalToRational(right)),
+  );
+}
+
+/** Divides decimals exactly, then materializes the public decimal result. */
+export function divideDecimalStrings(left: string, right: string): DecimalString {
+  return materializeDecimalRational(
+    divideDecimalRationals(decimalToRational(left), decimalToRational(right)),
+  );
 }
 
 export function compareTransactions(left: Transaction, right: Transaction): number {

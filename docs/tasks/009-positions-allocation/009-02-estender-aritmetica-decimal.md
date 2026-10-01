@@ -2,7 +2,7 @@
 
 - **Ticker:** `009`
 - **Número:** `02`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -39,8 +39,8 @@ quantidade existente e o limite canônico do domínio.
 ## Arquivos e símbolos prováveis
 
 - `src/domain/decimal-reducer.ts`.
-- Possível helper interno de cálculo no próprio módulo, sem exportar abstração
-  genérica desnecessária.
+- `DecimalRational` e helpers exatos exportados pelo próprio módulo, sem criar
+  uma abstração decimal genérica ou dependência externa.
 - `src/domain/errors.ts` para overflow/resultado inválido, se necessário.
 - `tests/domain.test.mjs` ou `tests/positions.test.mjs` e script de compilação.
 
@@ -77,3 +77,32 @@ quantidade existente e o limite canônico do domínio.
 - Não ampliar silenciosamente a gramática persistida.
 - Não permitir resultado negativo em quantidade/custo remanescente.
 - Evitar exportar um utilitário genérico que antecipe um framework financeiro.
+
+## Execução
+
+- **Arquivos alterados:** `src/domain/decimal-reducer.ts`,
+  `src/domain/errors.ts`, `tests/domain.test.mjs`, este arquivo e
+  `docs/tasks/009-positions-allocation/009-00-overview.md`.
+- **Decisões e desvios:** foi exportado o racional mínimo
+  `DecimalRational` com numerador/denominador `bigint` reduzidos por MDC, para
+  que o Position Engine preserve intermediários sem arredondar por evento.
+  Produto e divisão expõem helpers racionais e wrappers materializados; a
+  materialização usa half-up por magnitude em 18 casas. A subtração assinada
+  foi separada da subtração não negativa existente. Overflow agora usa
+  `POSITION_ARITHMETIC_OVERFLOW`; divisão por zero permanece erro de domínio
+  `INVALID_DOMAIN_VALUE`. Nenhuma gramática persistida, Transaction, Rule,
+  dependência ou API do reducer de quantidade foi alterada semanticamente.
+- **Comandos executados:** `npm run test:domain`, `npm run lint`,
+  `npm exec next typegen`, `npx tsc --noEmit`, `npm run build` e
+  `git diff --check`.
+- **Resultados e evidências:** 9 testes de domínio passaram, incluindo produto,
+  divisão exata e não exata, racional intermediário, half-up assinado,
+  diferença negativa, limites 30/18, divisão por zero, overflow em produto,
+  divisão e subtração assinada, além da regressão do reducer.
+  Lint, geração de tipos, TypeScript, build e diff check passaram sem erros.
+  Revisão independente final retornou **APROVADO**, sem bloqueadores; confirmou
+  o status `in_progress` da spec, progresso `2/6` e o checklist SDD consistente.
+- **Riscos residuais:** o limite de crescimento do racional é mitigado por
+  redução por MDC, mas não há limite artificial de tamanho do ledger nesta
+  fase. O Position Engine ainda precisa consumir os helpers sem materializar
+  custo entre eventos.

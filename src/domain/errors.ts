@@ -5,7 +5,8 @@ export type DomainErrorCode =
   | "INVALID_DATE"
   | "INVALID_REFERENCE"
   | "INSUFFICIENT_QUANTITY"
-  | "TRANSACTION_CONFLICT";
+  | "TRANSACTION_CONFLICT"
+  | "POSITION_ARITHMETIC_OVERFLOW";
 
 export class DomainError extends Error {
   constructor(
@@ -71,5 +72,15 @@ export class TransactionConflictError extends DomainError {
   constructor() {
     super("transaction: immutable payload conflicts with the existing event", "TRANSACTION_CONFLICT");
     this.name = "TransactionConflictError";
+  }
+}
+
+export class DecimalArithmeticOverflowError extends DomainError {
+  constructor() {
+    super(
+      "decimal: calculation result exceeds the canonical precision limits",
+      "POSITION_ARITHMETIC_OVERFLOW",
+    );
+    this.name = "DecimalArithmeticOverflowError";
   }
 }

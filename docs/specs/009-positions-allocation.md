@@ -2,8 +2,9 @@
 
 ## Status
 
-`planned` — planejamento documental; nenhuma implementação desta fase foi
-iniciada.
+`in_progress` — 009-01 fechou os contratos e 009-02 implementou a aritmética
+decimal; Position Engine, valuation, read-side e gates finais permanecem
+pendentes.
 
 ## Ticker
 

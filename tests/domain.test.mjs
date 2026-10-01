@@ -194,6 +194,70 @@ test("decimal operations use exact carry, borrow and comparison", () => {
   assert.equal(domain.compareDecimalStrings("0.999", "1"), -1);
 });
 
+test("decimal rational operations preserve exact intermediates and materialize half-up", () => {
+  assert.deepEqual(domain.decimalToRational("1.2500"), {
+    numerator: 5n,
+    denominator: 4n,
+  });
+  assert.equal(domain.multiplyDecimalStrings("0.99", "0.01"), "0.0099");
+  assert.equal(domain.divideDecimalStrings("1", "4"), "0.25");
+  assert.equal(domain.divideDecimalStrings("1", "3"), "0.333333333333333333");
+  assert.equal(domain.divideDecimalStrings("2", "3"), "0.666666666666666667");
+  assert.equal(
+    domain.materializeDecimalRational({
+      numerator: -2000000000000000001n,
+      denominator: 2000000000000000000n,
+    }),
+    "-1.000000000000000001",
+  );
+
+  const exactSum = domain.addDecimalRationals(
+    domain.divideDecimalRationals(domain.decimalToRational("1"), domain.decimalToRational("3")),
+    domain.divideDecimalRationals(domain.decimalToRational("1"), domain.decimalToRational("3")),
+  );
+  assert.equal(domain.materializeDecimalRational(exactSum), "0.666666666666666667");
+  assert.equal(
+    domain.materializeDecimalRational(
+      domain.decimalToRational("123456789012345678901234567890.123456789012345678"),
+    ),
+    "123456789012345678901234567890.123456789012345678",
+  );
+  assert.equal(
+    domain.materializeDecimalRational(
+      domain.subtractDecimalRationals(
+        domain.decimalToRational("1"),
+        domain.decimalToRational("1.25"),
+      ),
+    ),
+    "-0.25",
+  );
+});
+
+test("signed decimal difference and rational failures remain explicit", () => {
+  assert.equal(domain.subtractSignedDecimalStrings("0", "2"), "-2");
+  assert.equal(domain.subtractSignedDecimalStrings("1.10", "1.1"), "0");
+  assert.throws(
+    () => domain.subtractDecimalStrings("0", "1"),
+    errorCode("INVALID_DECIMAL"),
+  );
+  assert.throws(
+    () => domain.divideDecimalStrings("1", "0"),
+    errorCode("INVALID_DOMAIN_VALUE"),
+  );
+  assert.throws(
+    () => domain.multiplyDecimalStrings("999999999999999999999999999999", "10"),
+    errorCode("POSITION_ARITHMETIC_OVERFLOW"),
+  );
+  assert.throws(
+    () => domain.divideDecimalStrings("999999999999999999999999999999", "0.1"),
+    errorCode("POSITION_ARITHMETIC_OVERFLOW"),
+  );
+  assert.throws(
+    () => domain.subtractSignedDecimalStrings("999999999999999999999999999999", "-1"),
+    errorCode("POSITION_ARITHMETIC_OVERFLOW"),
+  );
+});
+
 test("Transaction is a closed buy/sell contract and preserves Timestamp precision", () => {
   const parsed = transaction({ id: "tx-a", quantity: "1.2300", seconds: 42, nanoseconds: 123 });
   assert.equal(parsed.quantity, "1.23");
