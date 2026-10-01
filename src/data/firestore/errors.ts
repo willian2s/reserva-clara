@@ -8,7 +8,7 @@ export class InvalidFirestoreDocumentError extends Error {
   }
 }
 
-export type FirestoreOperation = "create" | "get" | "list" | "update";
+export type FirestoreOperation = "create" | "get" | "list" | "update" | "delete";
 
 export class UnauthenticatedError extends Error {
   readonly code = "UNAUTHENTICATED" as const;
@@ -76,6 +76,36 @@ export class AssetWithoutRegistryError extends Error {
   constructor() {
     super("Asset identity registry is missing");
     this.name = "AssetWithoutRegistryError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export class AssetHasTransactionsError extends Error {
+  readonly code = "ASSET_HAS_TRANSACTIONS" as const;
+
+  constructor() {
+    super("Não é possível excluir este ativo porque existem operações vinculadas.");
+    this.name = "AssetHasTransactionsError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export class AssetUsageReconciliationIncompleteError extends Error {
+  readonly code = "ASSET_USAGE_RECONCILIATION_INCOMPLETE" as const;
+
+  constructor() {
+    super("Não foi possível verificar todas as operações vinculadas ao ativo.");
+    this.name = "AssetUsageReconciliationIncompleteError";
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
+}
+
+export class AssetUsageConflictError extends Error {
+  readonly code = "ASSET_USAGE_CONFLICT" as const;
+
+  constructor() {
+    super("Asset usage guard is inconsistent");
+    this.name = "AssetUsageConflictError";
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }

@@ -3,7 +3,7 @@
 - **Status geral:** `in_progress`
 - **Ticker:** `007`
 - **Spec:** [007-assets-transactions.md](../../specs/007-assets-transactions.md)
-- **Progresso:** 10/14 subtarefas concluídas
+- **Progresso:** 11/14 subtarefas concluídas
 
 ## Objetivo
 
@@ -23,7 +23,7 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - [x] [007-09-persistir-taxas-em-transactions.md](007-09-persistir-taxas-em-transactions.md)
 - [x] [007-08-executar-gates-e-handoff.md](007-08-executar-gates-e-handoff.md)
 - [x] [007-10-normalizar-crud-e-guarda-de-referencias.md](007-10-normalizar-crud-e-guarda-de-referencias.md)
-- [ ] [007-11-implementar-edicao-e-exclusao-atomicas.md](007-11-implementar-edicao-e-exclusao-atomicas.md)
+- [x] [007-11-implementar-edicao-e-exclusao-atomicas.md](007-11-implementar-edicao-e-exclusao-atomicas.md)
 - [ ] [007-12-abrir-rules-e-provar-lifecycle-de-asset.md](007-12-abrir-rules-e-provar-lifecycle-de-asset.md)
 - [ ] [007-13-implementar-crud-na-ui-de-assets.md](007-13-implementar-crud-na-ui-de-assets.md)
 - [ ] [007-14-executar-gates-rollout-e-handoff.md](007-14-executar-gates-rollout-e-handoff.md)
@@ -87,5 +87,10 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - Nenhuma operação produtiva, deploy, seed ou mudança de Console faz parte deste
   planejamento.
 - A emenda de lifecycle foi aberta após feedback de produto: 007-10 normalizou
-  contrato, guard e rollout; 007-11 a 007-14 permanecem pendentes e sequenciais.
-  O núcleo histórico 007-01 a 007-09 continua preservado.
+  contrato, guard e rollout; 007-11 concluiu o repository, a reconciliação e o
+  vínculo atômico de uso, enquanto 007-12 a 007-14 permanecem pendentes e
+  sequenciais. O núcleo histórico 007-01 a 007-09 continua preservado.
+- Bloqueio de rollout: as Rules atuais ainda não permitem `assetUsages` nem
+  update/delete atômicos de Asset. 007-12 deve abrir essas transições, auditar
+  Transactions legadas e provar os cenários no Emulator antes de qualquer
+  exposição na UI; o código de 007-11 permanece sem ações públicas na UI.

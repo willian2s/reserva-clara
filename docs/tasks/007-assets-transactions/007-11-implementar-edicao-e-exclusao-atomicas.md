@@ -2,7 +2,7 @@
 
 - **Ticker:** `007`
 - **Número:** `11`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -62,6 +62,37 @@ git diff --check
 
 ## Execução
 
-- **Status:** `pending`; implementação depende da conclusão de 007-10.
-- **Riscos residuais:** sem repository não há ainda garantia operacional de
-  exclusão segura.
+- **Status:** `completed`; update/delete owner-scoped, reconciliação e guard de
+  uso foram implementados sem alterar Rules ou UI.
+- **Arquivos alterados:** `src/domain/asset.ts`,
+  `src/data/firestore/asset-repository.ts`,
+  `src/data/firestore/transaction-repository.ts`,
+  `src/data/firestore/errors.ts`, `src/data/firestore/paths.ts`,
+  `src/data/firestore/converters/asset-converter.ts`,
+  `src/data/firestore/converters/asset-usage-converter.ts`,
+  `src/data/firestore/parsers/asset-usage-parser.ts` e
+  `tests/domain.test.mjs`.
+- **Decisões e desvios:** `AssetUpdateInput` aceita somente os quatro campos de
+  identidade; `id`, `identityKey` e `createdAt` continuam sob autoridade do
+  documento existente. A troca de registry, update e delete usam um único
+  `runTransaction`. A reconciliação percorre as Portfolios owner-scoped,
+  incluindo arquivadas, e usa a contagem real de Transactions encontradas para
+  tornar a evidência explícita. O converter de Asset continua rejeitando
+  updates genéricos; o repository usa o payload fechado de update diretamente
+  no write transacional. Nenhuma Rule ou ação de UI foi aberta antecipadamente.
+- **Comandos executados:** `npm run test:domain`, `npm run lint`,
+  `npm exec next typegen`, `npx tsc --noEmit`, `npm run build`,
+  `npm run test:rules` e `git diff --check`.
+- **Resultados e evidências:** 7 testes de domínio passaram; 13 testes do
+  Emulator de Rules passaram sem alterações nas Rules; lint, typegen,
+  TypeScript, build e diff check passaram. A revisão independente confirmou a
+  correção do write de update e a atomicidade do lifecycle. O Emulator ainda
+  cobre somente o contrato anterior, pois os cenários de `assetUsages`, update
+  e delete pertencem à 007-12.
+- **Riscos residuais:** `007-12` precisa publicar as Rules de guard,
+  update/delete atômicos e executar a auditoria legada antes de qualquer
+  rollout ou exposição na UI. Até lá, novas Transactions pelo repository serão
+  bloqueadas pelas Rules atuais; isso é um gate intencional, não um fallback
+  permissivo. A reconciliação consulta todos os matches para preservar
+  `transactionCount` real, em vez da otimização `limit(1)` descrita na
+  estratégia da spec; esse custo deve ser reavaliado no gate 007-12.

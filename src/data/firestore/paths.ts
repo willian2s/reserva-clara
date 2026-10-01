@@ -48,6 +48,16 @@ export function assetIdentityDocumentPath(uid: string, identityKey: string): str
   return `${assetIdentityCollectionPath(uid)}/${identityKey}`;
 }
 
+export function assetUsageCollectionPath(uid: string): string {
+  assertPathSegment(uid, "uid");
+  return `users/${uid}/assetUsages`;
+}
+
+export function assetUsageDocumentPath(uid: string, assetId: string): string {
+  assertPathSegment(assetId, "assetId");
+  return `${assetUsageCollectionPath(uid)}/${assetId}`;
+}
+
 export function transactionCollectionPath(uid: string, portfolioId: string): string {
   assertPathSegment(uid, "uid");
   assertPathSegment(portfolioId, "portfolioId");

@@ -57,6 +57,28 @@ test("Asset normalizes identity fields and derives a closed identity key", () =>
   );
 });
 
+test("Asset update input is closed and cannot provide persisted identity metadata", () => {
+  const input = domain.parseAssetUpdateInput({
+    symbol: " bova11 ",
+    market: " b3 ",
+    assetType: "etf",
+    currency: "BRL",
+  });
+
+  assert.deepEqual(input, {
+    symbol: "BOVA11",
+    market: "B3",
+    assetType: "etf",
+    currency: "BRL",
+  });
+  for (const field of ["id", "identityKey", "createdAt"]) {
+    assert.throws(
+      () => domain.parseAssetUpdateInput({ ...input, [field]: "external" }),
+      errorCode("INVALID_DOMAIN_INPUT"),
+    );
+  }
+});
+
 test("Quote contract validates price, UTC timestamps, mapping and changed symbols", () => {
   const supportedAsset = {
     symbol: "PETR4",

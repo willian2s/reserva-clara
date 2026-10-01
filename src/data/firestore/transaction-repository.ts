@@ -28,24 +28,28 @@ import {
   createTransactionFirestoreData,
   transactionConverter,
 } from "@/data/firestore/converters/transaction-converter";
+import { createAssetUsageFirestoreData } from "@/data/firestore/converters/asset-usage-converter";
 import { assetConverter } from "@/data/firestore/converters/asset-converter";
 import type { AssetFirestoreData } from "@/data/firestore/parsers/asset-parser";
 import type { PortfolioFirestoreData } from "@/data/firestore/parsers/portfolio-parser";
 import type { TransactionFirestoreData } from "@/data/firestore/parsers/transaction-parser";
 import {
   assetDocumentPath,
+  assetUsageDocumentPath,
   portfolioDocumentPath,
   transactionCollectionPath,
   transactionDocumentPath,
 } from "@/data/firestore/paths";
 import {
   AssetNotFoundError,
+  AssetUsageConflictError,
   FirestoreOperationError,
   InvalidFirestoreDocumentError,
   PortfolioArchivedError,
   PortfolioNotFoundError,
   UnauthenticatedError,
 } from "@/data/firestore/errors";
+import { parseAssetUsageDocument } from "@/data/firestore/parsers/asset-usage-parser";
 import { auth, db } from "@/lib/firebase/client";
 
 type PortfolioDocumentReference = DocumentReference<
@@ -78,6 +82,10 @@ function portfolioWriteDocument(uid: string, portfolioId: string) {
 
 function assetDocument(uid: string, assetId: string): AssetDocumentReference {
   return doc(db, assetDocumentPath(uid, assetId)).withConverter(assetConverter);
+}
+
+function assetUsageDocument(uid: string, assetId: string) {
+  return doc(db, assetUsageDocumentPath(uid, assetId));
 }
 
 function transactionCollection(
@@ -119,6 +127,7 @@ async function executeFirestore<T>(
       error instanceof PortfolioNotFoundError ||
       error instanceof PortfolioArchivedError ||
       error instanceof AssetNotFoundError ||
+      error instanceof AssetUsageConflictError ||
       error instanceof FirestoreOperationError ||
       error instanceof InvalidFirestoreDocumentError ||
       error instanceof DomainError
@@ -173,10 +182,12 @@ export async function createTransaction(
         parsedTransactionId,
       );
       const ledgerReference = transactionCollection(uid, parsedPortfolioId);
+      const assetUsageReference = assetUsageDocument(uid, parsedInput.assetId);
 
       const portfolioSnapshot = await firestoreTransaction.get(portfolioReference);
       const assetSnapshot = await firestoreTransaction.get(assetReference);
       const existingSnapshot = await firestoreTransaction.get(existingReference);
+      const assetUsageSnapshot = await firestoreTransaction.get(assetUsageReference);
 
       if (!portfolioSnapshot.exists()) {
         throw new PortfolioNotFoundError();
@@ -184,6 +195,17 @@ export async function createTransaction(
 
       if (!assetSnapshot.exists()) {
         throw new AssetNotFoundError();
+      }
+
+      const createAssetUsage = !assetUsageSnapshot.exists();
+      if (!createAssetUsage) {
+        const assetUsage = parseAssetUsageDocument(
+          assetUsageSnapshot.id,
+          assetUsageSnapshot.data(),
+        );
+        if (assetUsage.assetId !== parsedInput.assetId) {
+          throw new AssetUsageConflictError();
+        }
       }
 
       if (existingSnapshot.exists()) {
@@ -223,6 +245,13 @@ export async function createTransaction(
         createTransactionFirestoreData(parsedInput),
         { merge: false },
       );
+      if (createAssetUsage) {
+        firestoreTransaction.set(
+          assetUsageReference,
+          createAssetUsageFirestoreData(parsedInput.assetId),
+          { merge: false },
+        );
+      }
       firestoreTransaction.update(portfolioWriteDocument(uid, parsedPortfolioId), {
         updatedAt: serverTimestamp(),
       });

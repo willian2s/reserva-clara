@@ -11,6 +11,7 @@ import {
 import {
   parseAsset,
   parseAssetInput,
+  parseAssetUpdateInput,
   parseAssetIdentityKey,
   createAssetIdentityKey,
   type Asset,
@@ -143,6 +144,24 @@ export function createAssetFirestoreData(input: unknown): PartialWithFieldValue<
       asset.currency,
     ),
     createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
+}
+
+export function updateAssetFirestoreData(input: unknown): PartialWithFieldValue<Asset> {
+  const asset = parseAssetUpdateInput(input);
+
+  return {
+    symbol: asset.symbol,
+    market: asset.market,
+    assetType: asset.assetType,
+    currency: asset.currency,
+    identityKey: createAssetIdentityKey(
+      asset.symbol,
+      asset.market,
+      asset.assetType,
+      asset.currency,
+    ),
     updatedAt: serverTimestamp(),
   };
 }

@@ -43,6 +43,9 @@ export type AssetInput = Readonly<{
   currency: CurrencyCode;
 }>;
 
+/** Fields that may change without granting authority over Asset metadata. */
+export type AssetUpdateInput = AssetInput;
+
 export type AssetMetadata = Readonly<{
   id: unknown;
   createdAt: unknown;
@@ -147,6 +150,21 @@ export function parseAssetIdentityKey(value: unknown): AssetIdentityKey {
 }
 
 export function parseAssetInput(value: unknown): AssetInput {
+  if (!isRecord(value)) {
+    throw new InvalidDomainInputError("asset", "must be an object");
+  }
+
+  assertExactKeys(value, ["symbol", "market", "assetType", "currency"], "asset");
+
+  return {
+    symbol: parseAssetSymbol(value.symbol),
+    market: parseAssetMarket(value.market),
+    assetType: parseAssetType(value.assetType),
+    currency: parseCurrencyCode(value.currency),
+  };
+}
+
+export function parseAssetUpdateInput(value: unknown): AssetUpdateInput {
   if (!isRecord(value)) {
     throw new InvalidDomainInputError("asset", "must be an object");
   }
