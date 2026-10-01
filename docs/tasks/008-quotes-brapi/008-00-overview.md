@@ -50,3 +50,18 @@ quando provider estiver indisponível.
 - 008-07 foi concluída ao revisar a linguagem visível da UI e transformar o
   catálogo de ativos em lista, sem alterar contratos ou lógica;
   a 008-06 deve validar o resultado final, sem bloqueio registrado.
+- 008-06 executou os testes puros, Rules Emulator, lint, typegen, TypeScript,
+  build, diff check e inspeções de boundary/bundle sem falhas; Rules passou com
+  13 testes e os testes de Quote passaram com 6 de domínio, 7 de adapter, 8 de
+  serviço e 8 de route. O comando documentado de Java emitiu aviso porque
+  `/usr/libexec/java_home` não existe neste Linux, mas usou o OpenJDK 21
+  disponível. O smoke manual autenticado e o checkpoint de acessibilidade ainda
+  não foram confirmados em ambiente autorizado; por isso a subtarefa permanece
+  `blocked`, o item continua `[ ]` e o progresso permanece `6/7`.
+- Rollout futuro de 008 permanece restrito a local/preview com secrets
+  server-only e sem deploy nesta fase. Rollback remove route/UI/serviço e
+  desabilita secrets sem tocar Assets, Transactions ou Rules; suspeita de
+  vazamento exige rotação das chaves. O handoff para 009 deriva Position de
+  `Transaction + Asset + Quote`, para 010 reutiliza o contrato distinguindo
+  stale de valor atual, e para 012 materializa histórico sem tratar o cache 008
+  como histórico.

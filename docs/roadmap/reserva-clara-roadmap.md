@@ -305,11 +305,18 @@ A fase estabeleceu que um Portfolio com ledger não pode depender de hard delete
 
 # 4. Ledger patrimonial
 
-## 007 — Assets & Transactions ✅
+## 007 — Assets & Transactions ✅ (emenda de lifecycle em andamento)
 
 ### Objetivo
 
 Adicionar catálogo privado de Assets e ledger owner-scoped de operações patrimoniais iniciais.
+
+O núcleo da fase foi concluído. A política de produto abriu uma emenda no
+mesmo ticker, planejada em `docs/tasks/007-assets-transactions/007-10` a
+`007-14`, para editar Asset mantendo o `assetId` e excluir somente quando não
+houver Transaction vinculada. A emenda troca Asset e registry atomicamente,
+não faz cascade e não altera o escopo de Quotes; 008 continua seu próprio
+trabalho e não é o lugar para implementar esse CRUD.
 
 ### Portfolio lifecycle
 

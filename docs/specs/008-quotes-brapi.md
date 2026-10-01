@@ -34,6 +34,12 @@ sendo fato patrimonial. A BRAPI não pode virar identidade principal do domínio
 nem uma cotação pode introduzir Position, patrimônio ou performance antes da
 fase 009.
 
+Depois do fechamento do núcleo 007, foi aberta uma emenda no próprio ticker
+007 para lifecycle de Asset (`assetId` estável, edição e exclusão condicionada).
+Essa emenda é dona do CRUD e não deve ser implementada por nenhuma subtarefa
+008; a 008-06 permanece bloqueada pelo smoke manual ainda pendente e não
+confirmado nesta sessão.
+
 ## Objetivo
 
 Entregar cotações de mercado para Assets suportados, com integração BRAPI
@@ -99,8 +105,9 @@ BRAPI falhar.
 
 ### Fora de escopo
 
-- alteração de `Asset`, `identityKey`, `Transaction`, `unitPrice`, reducer ou
-  ledger;
+- implementação de CRUD de `Asset`, `identityKey` ou registry; a emenda de
+  lifecycle pertence ao ticker 007. A 008 não deve assumir alteração de
+  `Transaction`, `unitPrice`, reducer ou ledger;
 - `Asset.id = brapiId`, provider dentro do documento Asset ou alteração de
   símbolo quando BRAPI indicar `changed`;
 - persistência de Quote, ProviderMapping, histórico de preços ou nova coleção
@@ -122,8 +129,11 @@ BRAPI falhar.
 
 ### Identidade, ownership e boundary
 
-1. `Asset`, `identityKey`, `Transaction`, Rules e paths persistidos da 007
-   permanecem inalterados.
+1. `Asset`, `identityKey`, `Transaction`, Rules e paths persistidos continuam
+   sob os contratos da 007; esta fase não implementa o CRUD da emenda 007-10 a
+   007-14 nem usa Quotes para decidir edição/exclusão. O `assetId` permanece a
+   chave estável e qualquer integração deve reler/invalidar a Quote quando a
+   identidade visível for editada.
 2. O browser envia somente `assetIds` no body de `POST /api/quotes`; não envia
    UID, símbolo arbitrário, URL, provider ou token BRAPI.
 3. O servidor exige `Authorization: Bearer <Firebase ID token>`, verifica o

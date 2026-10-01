@@ -1,9 +1,9 @@
 # 007 — Assets & Transactions
 
-- **Status geral:** `completed`
+- **Status geral:** `in_progress`
 - **Ticker:** `007`
 - **Spec:** [007-assets-transactions.md](../../specs/007-assets-transactions.md)
-- **Progresso:** 9/9 subtarefas concluídas
+- **Progresso:** 10/14 subtarefas concluídas
 
 ## Objetivo
 
@@ -22,6 +22,11 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - [x] [007-07-implementar-ledger-e-ux-de-transactions.md](007-07-implementar-ledger-e-ux-de-transactions.md)
 - [x] [007-09-persistir-taxas-em-transactions.md](007-09-persistir-taxas-em-transactions.md)
 - [x] [007-08-executar-gates-e-handoff.md](007-08-executar-gates-e-handoff.md)
+- [x] [007-10-normalizar-crud-e-guarda-de-referencias.md](007-10-normalizar-crud-e-guarda-de-referencias.md)
+- [ ] [007-11-implementar-edicao-e-exclusao-atomicas.md](007-11-implementar-edicao-e-exclusao-atomicas.md)
+- [ ] [007-12-abrir-rules-e-provar-lifecycle-de-asset.md](007-12-abrir-rules-e-provar-lifecycle-de-asset.md)
+- [ ] [007-13-implementar-crud-na-ui-de-assets.md](007-13-implementar-crud-na-ui-de-assets.md)
+- [ ] [007-14-executar-gates-rollout-e-handoff.md](007-14-executar-gates-rollout-e-handoff.md)
 
 ## Observações
 
@@ -81,3 +86,6 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
   sem registrar dados pessoais, e o handoff para 008/009 foi encerrado.
 - Nenhuma operação produtiva, deploy, seed ou mudança de Console faz parte deste
   planejamento.
+- A emenda de lifecycle foi aberta após feedback de produto: 007-10 normalizou
+  contrato, guard e rollout; 007-11 a 007-14 permanecem pendentes e sequenciais.
+  O núcleo histórico 007-01 a 007-09 continua preservado.
