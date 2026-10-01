@@ -89,6 +89,66 @@ service cloud.firestore {
         isDocumentId(data.assetId);
     }
 
+    function isValidAssetUsage(data) {
+      return data.keys().hasOnly(['assetId', 'createdAt']) &&
+        data.keys().hasAll(['assetId', 'createdAt']) &&
+        isDocumentId(data.assetId) &&
+        data.createdAt is timestamp;
+    }
+
+    function hasCoherentAssetRegistryBefore(userId, assetId, identityKey) {
+      let registryReference = /databases/$(database)/documents/users/$(userId)/assetIdentities/$(identityKey);
+      return exists(registryReference) &&
+        isValidAssetRegistry(get(registryReference).data) &&
+        get(registryReference).data.assetId == assetId;
+    }
+
+    function hasCoherentAssetRegistryAfter(userId, assetId, identityKey) {
+      let registryReference = /databases/$(database)/documents/users/$(userId)/assetIdentities/$(identityKey);
+      return existsAfter(registryReference) &&
+        isValidAssetRegistry(getAfter(registryReference).data) &&
+        getAfter(registryReference).data.assetId == assetId;
+    }
+
+    function hasCoherentAssetAfter(userId, assetId, identityKey) {
+      let assetReference = /databases/$(database)/documents/users/$(userId)/assets/$(assetId);
+      return existsAfter(assetReference) &&
+        isValidAsset(getAfter(assetReference).data) &&
+        getAfter(assetReference).data.identityKey == identityKey;
+    }
+
+    function isAssetIdentitySwap(userId, assetId, identityKey) {
+      let assetReference = /databases/$(database)/documents/users/$(userId)/assets/$(assetId);
+      return exists(assetReference) &&
+        isValidAsset(get(assetReference).data) &&
+        get(assetReference).data.identityKey != identityKey &&
+        existsAfter(assetReference) &&
+        isValidAsset(getAfter(assetReference).data) &&
+        getAfter(assetReference).data.identityKey == identityKey;
+    }
+
+    function isAssetIdentitySwapDelete(userId, assetId, identityKey) {
+      let assetReference = /databases/$(database)/documents/users/$(userId)/assets/$(assetId);
+      return exists(assetReference) &&
+        isValidAsset(get(assetReference).data) &&
+        get(assetReference).data.identityKey == identityKey &&
+        existsAfter(assetReference) &&
+        isValidAsset(getAfter(assetReference).data) &&
+        getAfter(assetReference).data.identityKey != identityKey;
+    }
+
+    function isAssetDeleteTransition(userId, assetId, assetData) {
+      let assetReference = /databases/$(database)/documents/users/$(userId)/assets/$(assetId);
+      let registryReference = /databases/$(database)/documents/users/$(userId)/assetIdentities/$(assetData.identityKey);
+      let usageReference = /databases/$(database)/documents/users/$(userId)/assetUsages/$(assetId);
+      return isValidAsset(assetData) &&
+        hasCoherentAssetRegistryBefore(userId, assetId, assetData.identityKey) &&
+        !exists(usageReference) &&
+        !existsAfter(usageReference) &&
+        !existsAfter(assetReference) &&
+        !existsAfter(registryReference);
+    }
+
     function isCanonicalPositiveDecimal(value) {
       return value is string &&
         value != '0' &&
@@ -263,9 +323,33 @@ service cloud.firestore {
         isValidAsset(request.resource.data) &&
         request.resource.data.createdAt == request.time &&
         request.resource.data.updatedAt == request.time &&
-        getAfter(
-          /databases/$(database)/documents/users/$(userId)/assetIdentities/$(request.resource.data.identityKey)
-        ).data.assetId == assetId;
+        hasCoherentAssetRegistryAfter(
+          userId,
+          assetId,
+          request.resource.data.identityKey
+        );
+
+      allow update: if isOwner(userId) &&
+        isValidAsset(resource.data) &&
+        isValidAsset(request.resource.data) &&
+        resource.data.createdAt == request.resource.data.createdAt &&
+        request.resource.data.updatedAt == request.time &&
+        hasCoherentAssetRegistryBefore(userId, assetId, resource.data.identityKey) &&
+        (
+          (
+            resource.data.identityKey == request.resource.data.identityKey &&
+            hasCoherentAssetRegistryAfter(userId, assetId, request.resource.data.identityKey)
+          ) || (
+            resource.data.identityKey != request.resource.data.identityKey &&
+            !existsAfter(
+              /databases/$(database)/documents/users/$(userId)/assetIdentities/$(resource.data.identityKey)
+            ) &&
+            hasCoherentAssetRegistryAfter(userId, assetId, request.resource.data.identityKey)
+          )
+        );
+
+      allow delete: if isOwner(userId) &&
+        isAssetDeleteTransition(userId, assetId, resource.data);
     }
 
     match /users/{userId}/assetIdentities/{identityKey} {
@@ -275,13 +359,54 @@ service cloud.firestore {
         !exists(
           /databases/$(database)/documents/users/$(userId)/assetIdentities/$(identityKey)
         ) &&
-        !exists(
-          /databases/$(database)/documents/users/$(userId)/assets/$(request.resource.data.assetId)
-        ) &&
         isValidAssetRegistry(request.resource.data) &&
-        getAfter(
-          /databases/$(database)/documents/users/$(userId)/assets/$(request.resource.data.assetId)
-        ).data.identityKey == identityKey;
+        (
+          (
+            !exists(
+              /databases/$(database)/documents/users/$(userId)/assets/$(request.resource.data.assetId)
+            ) &&
+            hasCoherentAssetAfter(
+              userId,
+              request.resource.data.assetId,
+              identityKey
+            )
+          ) ||
+          isAssetIdentitySwap(userId, request.resource.data.assetId, identityKey)
+        );
+
+      allow delete: if isOwner(userId) &&
+        isValidAssetRegistry(resource.data) &&
+        hasCoherentAssetRegistryBefore(
+          userId,
+          resource.data.assetId,
+          identityKey
+        ) &&
+        (
+          isAssetIdentitySwapDelete(userId, resource.data.assetId, identityKey) ||
+          (
+            !existsAfter(
+              /databases/$(database)/documents/users/$(userId)/assets/$(resource.data.assetId)
+            ) &&
+            !existsAfter(
+              /databases/$(database)/documents/users/$(userId)/assetUsages/$(resource.data.assetId)
+            )
+          )
+        );
+    }
+
+    match /users/{userId}/assetUsages/{assetId} {
+      allow get: if isOwner(userId);
+
+      allow create: if isOwner(userId) &&
+        !exists(
+          /databases/$(database)/documents/users/$(userId)/assetUsages/$(assetId)
+        ) &&
+        isValidAssetUsage(request.resource.data) &&
+        request.resource.data.assetId == assetId &&
+        request.resource.data.createdAt == request.time &&
+        existsAfter(
+          /databases/$(database)/documents/users/$(userId)/assets/$(assetId)
+        );
     }
 
     match /users/{userId}/goals/{goalId} {
@@ -301,6 +426,12 @@ service cloud.firestore {
         exists(
           /databases/$(database)/documents/users/$(userId)/assets/$(request.resource.data.assetId)
         ) &&
+        existsAfter(
+          /databases/$(database)/documents/users/$(userId)/assetUsages/$(request.resource.data.assetId)
+        ) &&
+        getAfter(
+          /databases/$(database)/documents/users/$(userId)/assetUsages/$(request.resource.data.assetId)
+        ).data.assetId == request.resource.data.assetId &&
         isActivePortfolioAfter(userId, portfolioId);
     }
 

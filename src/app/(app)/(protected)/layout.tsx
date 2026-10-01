@@ -31,7 +31,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
                     className="inline-flex min-h-11 items-center rounded-control px-3 py-2 text-foreground underline-offset-4 hover:bg-muted hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                     href="/dashboard"
                   >
-                    Dashboard
+                    Início
                   </Link>
                 </li>
                 <li>
@@ -47,7 +47,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
                     className="inline-flex min-h-11 items-center rounded-control px-3 py-2 text-foreground underline-offset-4 hover:bg-muted hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                     href="/assets"
                   >
-                    Assets
+                    Ativos
                   </Link>
                 </li>
               </ul>

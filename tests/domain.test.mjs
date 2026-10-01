@@ -57,6 +57,119 @@ test("Asset normalizes identity fields and derives a closed identity key", () =>
   );
 });
 
+test("Asset update input is closed and cannot provide persisted identity metadata", () => {
+  const input = domain.parseAssetUpdateInput({
+    symbol: " bova11 ",
+    market: " b3 ",
+    assetType: "etf",
+    currency: "BRL",
+  });
+
+  assert.deepEqual(input, {
+    symbol: "BOVA11",
+    market: "B3",
+    assetType: "etf",
+    currency: "BRL",
+  });
+  for (const field of ["id", "identityKey", "createdAt"]) {
+    assert.throws(
+      () => domain.parseAssetUpdateInput({ ...input, [field]: "external" }),
+      errorCode("INVALID_DOMAIN_INPUT"),
+    );
+  }
+});
+
+test("Quote contract validates price, UTC timestamps, mapping and changed symbols", () => {
+  const supportedAsset = {
+    symbol: "PETR4",
+    market: "B3",
+    assetType: "stock",
+    currency: "BRL",
+  };
+  const mapping = domain.mapAssetToBrapi(supportedAsset);
+
+  assert.deepEqual(mapping, {
+    provider: "brapi",
+    endpoint: "https://brapi.dev/api/v2/stocks/quote",
+    symbol: "PETR4",
+  });
+  assert.equal(
+    domain.createQuoteCacheKey(mapping),
+    "v1:brapi:https://brapi.dev/api/v2/stocks/quote:PETR4",
+  );
+  for (const assetType of ["etf", "fii"]) {
+    assert.equal(domain.mapAssetToBrapi({ ...supportedAsset, assetType }).symbol, "PETR4");
+  }
+  assert.equal(domain.mapAssetToBrapi({ ...supportedAsset, assetType: "fund" }), null);
+  assert.equal(domain.mapAssetToBrapi({ ...supportedAsset, market: "NYSE" }), null);
+  assert.equal(domain.mapAssetToBrapi({ ...supportedAsset, currency: "USD" }), null);
+  assert.deepEqual(domain.QUOTE_CACHE_POLICY, {
+    freshTtlMs: 60_000,
+    staleIfErrorMs: 300_000,
+    upstreamTimeoutMs: 3_000,
+    maxRetries: 1,
+    retryBackoffMinMs: 100,
+    retryBackoffMaxMs: 250,
+    maxBatchSize: 20,
+    maxConcurrentUpstreamRequests: 1,
+    maxCacheEntries: 500,
+  });
+
+  const parsed = domain.parseQuote({
+    assetId: "asset-petr4",
+    provider: "brapi",
+    requestedSymbol: "PETR4",
+    providerSymbol: "PETR4F",
+    symbolChanged: true,
+    price: { currency: "BRL", decimal: "41.1800" },
+    quotedAt: "2026-09-30T12:00:00.000Z",
+    fetchedAt: "2026-09-30T12:00:01.000Z",
+    freshness: "fresh",
+  });
+
+  assert.equal(parsed.price.decimal, "41.18");
+  assert.equal(parsed.providerSymbol, "PETR4F");
+  assert.equal(domain.parseQuotePrice(41.18), "41.18");
+  assert.throws(() => domain.parseQuotePrice(0), errorCode("INVALID_DECIMAL"));
+  assert.throws(() => domain.parseQuotePrice(-1), errorCode("INVALID_DECIMAL"));
+  assert.throws(() => domain.parseQuotePrice(Number.NaN), errorCode("INVALID_DECIMAL"));
+  assert.throws(
+    () => domain.parseQuotePrice("1e2"),
+    errorCode("INVALID_DECIMAL"),
+  );
+  assert.throws(
+    () => domain.parseQuote({
+      ...parsed,
+      price: { currency: "ZZZ", decimal: "41.18" },
+    }),
+    errorCode("INVALID_DOMAIN_VALUE"),
+  );
+  assert.throws(
+    () => domain.parseQuote({ ...parsed, quotedAt: "2026-02-29T12:00:00Z" }),
+    errorCode("INVALID_DATE"),
+  );
+  assert.deepEqual(
+    domain.parseQuoteResult({
+      assetId: "asset-other",
+      status: "unavailable",
+      code: "UNSUPPORTED_ASSET",
+    }),
+    {
+      assetId: "asset-other",
+      status: "unavailable",
+      code: "UNSUPPORTED_ASSET",
+    },
+  );
+  assert.throws(
+    () => domain.parseQuoteResult({
+      assetId: "asset-other",
+      status: "available",
+      quote: parsed,
+    }),
+    errorCode("INVALID_DOMAIN_VALUE"),
+  );
+});
+
 test("decimal input normalizes while persisted grammar stays canonical and bounded", () => {
   assert.equal(domain.parseDecimalString("1.2300"), "1.23");
   assert.equal(domain.parseDecimalString("0.000"), "0");

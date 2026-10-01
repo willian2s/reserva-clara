@@ -1,4 +1,4 @@
-import { InvalidDomainInputError } from "@/domain/errors";
+import { InvalidDomainInputError } from "../../domain/errors";
 
 function assertPathSegment(value: unknown, field: string): asserts value is string {
   if (
@@ -46,6 +46,16 @@ export function assetIdentityDocumentPath(uid: string, identityKey: string): str
   assertPathSegment(uid, "uid");
   assertPathSegment(identityKey, "identityKey");
   return `${assetIdentityCollectionPath(uid)}/${identityKey}`;
+}
+
+export function assetUsageCollectionPath(uid: string): string {
+  assertPathSegment(uid, "uid");
+  return `users/${uid}/assetUsages`;
+}
+
+export function assetUsageDocumentPath(uid: string, assetId: string): string {
+  assertPathSegment(assetId, "assetId");
+  return `${assetUsageCollectionPath(uid)}/${assetId}`;
 }
 
 export function transactionCollectionPath(uid: string, portfolioId: string): string {

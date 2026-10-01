@@ -2,8 +2,11 @@
 
 ## Status
 
-`completed` — gates técnicos concluídos e smoke manual autenticado confirmado
-pelo checkpoint humano do handoff.
+`amended/completed` — o núcleo original e a emenda de lifecycle de Asset
+(007-10 a 007-14) foram concluídos em ambiente de desenvolvimento sem usuários,
+com gates técnicos e smoke manual confirmados por checkpoint humano. Rollout
+produtivo, publicação de Rules e auditoria de dados produtivos permanecem fora
+desta execução e exigem novo checkpoint.
 
 ## Ticker
 
@@ -17,18 +20,24 @@ baseline operacional é a `main`, com working tree limpo no commit
 `38a5082` (`docs(sdd): concluir gates de Portfolio`); documentação histórica de
 fases anteriores pode conter hashes antigos e não substitui o checkout atual.
 
-O contrato existente mantém `Asset` e `Transaction` como tipos futuros, mas não
-há parser, converter, repository, UI ou Rules abertas para essas entidades. A
-Portfolio ainda pode sofrer hard delete em
-`src/data/firestore/portfolio-repository.ts` e em `firestore.rules`. Esse é um
-gate bloqueante: nenhum path de Transaction pode ser aberto enquanto o
-lifecycle não for migrado para archive.
+O núcleo original da fase já entregou parser, converter, repository, UI e Rules
+para Asset/Transaction. O histórico desta spec registra que a Portfolio teve
+de migrar de hard delete para archive antes da abertura do ledger. O baseline
+atual é o contrato V2 owner-scoped descrito abaixo; a única lacuna reaberta é o
+lifecycle de Asset definido na emenda 007-10 a 007-14.
 
 O checkout usa Next.js `16.3.5`, React `19.2.8`, TypeScript strict, Tailwind 4,
 shadcn `base-nova`, Base UI, Firebase Web `12.19.0` e npm. Não há runner de UI,
 formatter ou CI configurado. A implementação futura deve ler a documentação
 local de Next.js em `node_modules/next/dist/docs/` após `npm ci`, antes de
 alterar rotas, layouts ou parâmetros dinâmicos.
+
+O núcleo 007 permanece histórico e compatível: Asset continua owner-scoped,
+reutilizável entre Portfolios e referenciado por `assetId` nas Transactions.
+Uma decisão posterior do produto exige agora edição preservando o mesmo ID e
+exclusão somente quando não houver Transaction vinculada. Essa emenda não será
+implementada na fase 008 de Quotes; 008-06 continua bloqueada apenas pelo
+smoke manual ainda pendente e não confirmado nesta sessão.
 
 ## Objetivo
 
@@ -73,8 +82,15 @@ alocação e fluxo de caixa continuam fora desta fase.
 - reducer decimal sem `number` para quantidade, sem documento Position;
 - UI de catálogo, criação de operação, ledger, estados de erro/loading e
   acessibilidade reaproveitando padrões de Portfolio;
+- edição de Asset preservando o mesmo `assetId`, com troca atômica de Asset e
+  registry;
+- exclusão de Asset somente sem Transaction vinculada, removendo Asset e
+  registry no mesmo commit e sem cascade;
+- guard técnico owner-scoped para registrar que um Asset já foi referenciado por
+  Transaction, além de auditoria das Transactions legadas antes de abrir o
+  delete;
 - testes do Emulator para ownership, archive, registry, referências,
-  schema fechado, append-only e concorrência reproduzível;
+  schema fechado, append-only, lifecycle de Asset e concorrência reproduzível;
 - índices somente quando query real exigir, registrados com evidência;
 - gates técnicos e handoff documentado para Quotes/Positions.
 
@@ -88,14 +104,16 @@ alocação e fluxo de caixa continuam fora desta fase.
   alocação e qualquer agregado autoritativo;
 - edição ou exclusão física de Transaction; correção futura será evento
   compensatório em fase própria;
+- arquivamento de Asset; permanece decisão futura e não substitui a exclusão
+  condicionada desta emenda;
 - catálogo global, integração BRAPI, QuoteService, provider mapping ou preço
   de mercado;
 - conversão cambial, FX, multi-currency calculation ou arredondamento de
   total monetário;
 - Firebase Admin, Cloud Functions, jobs, filas, backend server-side, sessão
   server-side ou operação administrativa de purge;
-- cascade client-side, batch de exclusão, enumeração de subcoleções ou purge
-  de Portfolio arquivada;
+- cascade client-side, batch de exclusão para filhos, enumeração de
+  subcoleções como mecanismo de cascade ou purge de Portfolio arquivada;
 - framework de repository, state manager, React Query/SWR, realtime listener,
   UI/E2E framework ou dependência decimal sem caso aprovado;
 - dados produtivos, seed, deploy Console ou alteração de região nesta
@@ -140,9 +158,38 @@ alocação e fluxo de caixa continuam fora desta fase.
     `assetId`; Asset e registry são criados atomicamente. Esse registry é a
     única exceção técnica ao catálogo e existe para garantir unicidade
     concorrente sem usar ticker como ID.
-12. Asset não pode ser alterado ou deletado no V1. Operação inválida deve falhar
-    antes do SDK; identidade corrigida exige novo Asset e política futura para
-    referências antigas.
+12. Asset pode ser editado mantendo o mesmo `assetId`: a operação recalcula a
+    identidade canônica e, quando ela mudar, remove o registry antigo, grava o
+    novo registry e atualiza o documento Asset no mesmo commit. `id` e
+    `createdAt` permanecem invariantes; `updatedAt` é server-side. Colisão com
+    outro registry, Asset/registry inconsistente ou mutação parcial falha sem
+    alterar nenhum dos três documentos.
+
+    12a. Asset pode ser excluído somente quando não houver Transaction que o
+    referencie em nenhuma Portfolio do owner, ativa ou arquivada. O commit
+    remove apenas o Asset e seu registry correspondente; nunca remove
+    Portfolio, Transaction ou qualquer outro filho.
+
+    12b. O repository não pode decidir o delete apenas por uma leitura de
+    catálogo ou por uma checagem fora do commit. Um guard técnico
+    `assetUsages/{assetId}` create-only será criado atomicamente na primeira
+    Transaction, mantido para as demais e lido no commit de exclusão. A
+    operação `reconcileAssetUsage(assetId)` enumera todas as Portfolios do
+    owner, consulta cada subcoleção e retorna `complete`, `transactionCount` e
+    `portfolioCount`; falha ou cobertura inconclusiva mantém o delete fechado.
+    Antes de habilitar a UI de delete, as Rules passam a exigir o guard em toda
+    nova Transaction e a auditoria de dados legados é executada com sucesso,
+    criando os guards faltantes. `deleteAsset` repete a reconciliação do alvo
+    e só então entra no commit.
+
+    12c. Corridas entre primeira Transaction e exclusão são serializadas pela
+    leitura do guard no Firestore transaction e pelo vínculo obrigatório
+    Transaction↔guard nas Rules. Um SDK direto sem o guard deve falhar. O guard
+    não é posição, contador patrimonial, índice exibido ou cascade.
+
+    12d. Erro de exclusão por vínculo deve ser explícito e estável, por exemplo
+    `ASSET_HAS_TRANSACTIONS`: “Não é possível excluir este ativo porque existem
+    operações vinculadas.” Não há undo, purge ou arquivamento implícito.
 
 ### Transaction e ledger
 
@@ -200,11 +247,14 @@ alocação e fluxo de caixa continuam fora desta fase.
 23. `auth.currentUser.uid` é obtido internamente; UID, owner e path não são
     argumentos de formulário.
 24. Rules usam default deny, campos fechados, ownership explícito e tipos
-    compatíveis com parser. `getAfter()` é usado para garantir vínculo atômico
-    Asset↔registry e para verificar Portfolio ativa após o commit;
-    `exists()` valida Asset em create de Transaction. Registry permite somente
-    create atômico: update/delete, rebind e mismatch de `identityKey` são
-    negados.
+     compatíveis com parser. `getAfter()` garante vínculo atômico
+     Asset↔registry, a troca de registry durante edição, a remoção conjunta no
+     delete e o vínculo Transaction↔assetUsage; também verifica Portfolio ativa
+     após o commit. `exists()` valida Asset em create de Transaction. Registry
+     permite somente create/delete dentro dessas transições atômicas; update,
+     rebind, delete isolado e mismatch de `identityKey` são negados. O guard de
+     uso é owner-scoped, create-only e não pode ser removido para viabilizar
+     delete.
 25. Assets são user-scoped e podem ser cadastrados pelo usuário mesmo sem
     Portfolio ativa; somente Transaction exige Portfolio ativa. Archive não
     apaga catálogo compartilhado.
@@ -252,6 +302,10 @@ users/{uid}
   assetIdentities/{identityKey}
     assetId: string
 
+  assetUsages/{assetId}                 # guard técnico, não exibido
+    assetId: string
+    createdAt: Timestamp
+
   portfolios/{portfolioId}
     name: string
     baseCurrency: "BRL"
@@ -271,7 +325,40 @@ users/{uid}
 `identityKey` deve ser composta somente de segmentos já normalizados, por
 exemplo `BOVA11~B3~etf~BRL`; `~` é reservado como separador e não é aceito em
 campos de identidade. O registry não é exibido na UI nem usado como coleção de
-listagem.
+listagem. `assetUsages` também não é fonte de posição nem substitui o ledger;
+sua única função é tornar monotônica e verificável a informação de que já houve
+uma Transaction para o Asset.
+
+## Estratégia de consulta e guarda de Transactions
+
+Transactions continuam em
+`users/{uid}/portfolios/{portfolioId}/transactions`, portanto não existe uma
+consulta reversa direta por `assetId` no repository atual. A estratégia da
+emenda é deliberadamente em duas camadas:
+
+1. **Reconciliação legada/auditoria:** `reconcileAssetUsage(assetId)` lista
+   Portfolios owner-scoped, incluindo arquivadas, e consulta cada subcoleção
+   `transactions` com `where("assetId", "==", assetId).limit(1)`. A consulta é
+   feita por caminho conhecido, não por `collectionGroup`, para manter o owner
+   boundary das Rules e evitar tratar Rules como filtro. A operação retorna
+   `complete`, `transactionCount` e `portfolioCount`, cria ou confirma o guard
+   quando encontra uso e registra somente contagens/códigos sanitizados, nunca
+   payload financeiro. Qualquer falha retorna `complete: false` e mantém delete
+   fechado.
+2. **Decisão concorrente de runtime:** toda nova criação de Transaction grava ou
+   confirma `assetUsages/{assetId}` no mesmo write atômico. O delete lê esse
+   documento dentro do `runTransaction`; `deleteAsset` só inicia esse commit
+   após uma reconciliação completa do alvo, guard existente falha com
+   `ASSET_HAS_TRANSACTIONS`, e guard ausente permite continuar. A publicação
+   das Rules que exigem guard em novas Transactions vem antes da auditoria de
+   rollout e da UI de delete. Não se tenta enumerar subcoleções dentro do
+   callback como mecanismo de atomicidade.
+
+O guard é necessário porque o SDK Web atual não oferece uma query reversa
+owner-scoped que possa ser usada como read set completo do `runTransaction`.
+Sem ele, uma checagem prévia teria uma janela de corrida entre a última leitura
+e o delete. Se a reconciliação não puder provar cobertura dos dados legados, o
+delete permanece fechado; não há fallback permissivo.
 
 ## Fonte da verdade e invariantes
 
@@ -300,6 +387,8 @@ listagem.
 - `src/data/firestore/parsers/*` e `converters/*`: schemas fechados.
 - `src/data/firestore/asset-repository.ts`, `transaction-repository.ts` e
   errors específicos.
+- `src/data/firestore/parsers/asset-usage-parser.ts` e converter/paths do guard,
+  se o contrato técnico exigir módulos separados.
 - `firestore.rules`: archive, Assets, registry e Transactions.
 - `tests/firestore.rules.test.mjs` e testes puros mínimos do reducer/domain,
   somente se runner existente continuar suficiente.
@@ -338,6 +427,20 @@ camada abstrata para entidades futuras.
 9. [007-08-executar-gates-e-handoff.md](../tasks/007-assets-transactions/007-08-executar-gates-e-handoff.md)
    — gates, evidências, revisão, rollout e handoff 008/009.
 
+O núcleo acima é o histórico da entrega original. A emenda é sequencial e
+preserva esses arquivos concluídos:
+
+10. `007-10-normalizar-crud-e-guarda-de-referencias.md` — atualizar contrato,
+    erros, estratégia de consulta, guard e critérios de rollout.
+11. `007-11-implementar-edicao-e-exclusao-atomicas.md` — repository, converter,
+    paths e vínculo de uso em novas Transactions.
+12. `007-12-abrir-rules-e-provar-lifecycle-de-asset.md` — Rules, reconciliação
+    legada e Emulator para colisão, corrida, vínculo e exclusão.
+13. `007-13-implementar-crud-na-ui-de-assets.md` — edição, exclusão condicionada,
+    mensagens claras e preservação dos estados de Quotes.
+14. `007-14-executar-gates-rollout-e-handoff.md` — gates finais, rollout,
+    rollback e handoff sem iniciar outra fase.
+
 ## Estratégia de testes e validação
 
 ### Domínio e persistência
@@ -349,7 +452,8 @@ camada abstrata para entidades futuras.
   overflow de escala, venda maior que saldo e concorrência.
 - Repository: UID interno, archive gate, Asset registry atômico, referência
   owner-scoped, taxa normalizada, ID repetido com payload igual/diferente, erro
-  ambíguo sem overwrite.
+  ambíguo sem overwrite; edição com mesmo ID, colisão de identidade, delete
+  bloqueado por guard e delete atômico sem filhos.
 
 ### Emulator Rules
 
@@ -359,7 +463,11 @@ Provar com projeto demo e fixtures sintéticas:
 - leitura/listagem owner e isolamento A/B/anônimo;
 - Asset válido, campo extra, enum/moeda/identity inválidos, registry órfão e
   tentativa cross-user;
-- Asset e registry permitidos somente no vínculo atômico;
+- Asset e registry permitidos somente no vínculo atômico; edição exige troca
+  coerente dos registries e delete exige guard ausente;
+- guard de uso create-only, Transaction sem guard negada, Asset com Transaction
+  vinculada não pode ser deletado, Asset sem Transaction pode ser deletado e
+  Asset/registry desaparecem juntos;
 - Transaction buy/sell válida, schema inválido, update/delete negados,
   referência inexistente/cross-user, Portfolio arquivada negada e leitura
   histórica permitida;
@@ -388,18 +496,23 @@ buy/sell, refresh, backfill, erro de venda, cross-user, teclado e viewport.
 
 ## Rollout e checkpoints
 
-1. Revisar diff de archive/parser/converter/repository/Rules e confirmar que
-   nenhum delete físico permanece.
-2. Rodar Emulator verde com Paths 007 ainda fechados para Transaction durante o
-   primeiro checkpoint.
-3. Publicar archive e Rules de Asset/registry/Transaction em mudança atômica;
-   não expor UI antes de Rules publicadas e smoke local verde.
-4. Criar fixtures sintéticas somente em ambiente autorizado, sem patrimônio
-   pessoal; validar owner, cross-user e archive.
-5. Se query composta for necessária, registrar erro/documentação do Firestore,
-   adicionar índice mínimo e repetir Emulator/build.
-6. Rollback de código usa deployment anterior; Rules usam arquivo anterior.
-   Rollback não remove nem restaura dados e não equivale a purge.
+1. Revisar o contrato, o guard e a matriz de transições antes de abrir qualquer
+   `update`/`delete` de Asset. O delete de Transaction continua negado.
+2. Rodar auditoria owner-scoped de Transactions em todas as Portfolios e criar
+   guards faltantes antes de publicar a permissão de delete; falha ou cobertura
+   inconclusiva mantém delete fechado.
+3. Publicar repository/Rules que exigem guard em novas Transactions; somente
+   depois publicar a permissão de update e delete atômicos e então a UI.
+4. Usar fixtures sintéticas para Asset sem uso, com uso em Portfolio ativa e
+   arquivada, colisão, corrida, cross-user e tentativa de remover somente um
+   lado do par.
+5. Não adicionar índice sem evidência: as consultas planejadas usam igualdade
+   simples por subcoleção; se a auditoria revelar limite operacional, parar e
+   registrar bloqueio em vez de abrir delete permissivo.
+6. Rollback de código remove as ações da UI e volta Rules para negar update/delete;
+   não desfaz edições já confirmadas, não remove guards, não restaura Asset e não
+   equivale a purge. Suspeita de inconsistência exige reabrir a auditoria antes
+   de qualquer nova habilitação.
 
 ## Riscos e mitigação
 
@@ -414,6 +527,11 @@ buy/sell, refresh, backfill, erro de venda, cross-user, teclado e viewport.
 | Retry duplicar evento | ID auto-gerado por intenção, payload imutável, conflito explícito e reconciliação sem retry cego. |
  | Decimal virar floating point | Strings persistidas em gramática canônica, parser normaliza input antes do write, Rules rejeitam bruto não canônico, `bigint`/escala em memória, limites e casos de carry/borrow. |
 | Asset duplicar provider/ticker | Provider fora do schema; identidade exige quatro dimensões e registry determinístico. |
+| Edição deixar registry antigo, novo ou Asset divergente | Um único `runTransaction`, `getAfter()` nas Rules, ID/createdAt imutáveis e testes de falha sem commit. |
+| Delete correr com nova Transaction | Guard create-only no mesmo write da Transaction, guard lido no delete e Rules negando Transaction sem guard; auditoria legada antes do rollout. |
+| Scan não encontrar uma Transaction legada | Enumerar Portfolios ativas e arquivadas por owner, bloquear delete quando a cobertura for inconclusiva e registrar contagem sanitizada. |
+| Guard ser removido para liberar delete | Rules negam update/delete do guard; Asset delete exige guard ausente no estado pós-commit e o par Asset/registry coerente. |
+| Identidade mudar enquanto Quotes carregam | `assetId` permanece estável; UI invalida resultados de Quote do Asset editado e refaz leitura, sem persistir provider ou preço. |
 | Taxa ser confundida com percentual ou total | V2 persiste somente valor monetário fixo opcional `{currency, decimal}`; não calcula total, conversão, base ou arredondamento. |
 | Rules serem tratadas como filtro | Query owner-scoped, testes cross-user e parser/repository sem confiar em filtro de cliente. |
 | UI sugerir patrimônio fictício | Sem total, posição, cotação ou performance; revisão visual contra escopo. |
@@ -422,8 +540,10 @@ buy/sell, refresh, backfill, erro de venda, cross-user, teclado e viewport.
 ## Handoffs
 
 - **008 — Quotes/BRAPI:** pode mapear provider fora de Asset e sem alterar
-  identidade; não converter preço para float nem usar `number` como representação
-  monetária.
+  identidade; a emenda 007 é a dona do CRUD. A UI da emenda limpa a cotação
+  local do Asset editado e aciona o loader já integrado em 008; `008-06` valida
+  o refetch no smoke. A integração continua usando o mesmo `assetId` e não
+  converte preço para float nem usa `number` como representação monetária.
 - **009 — Positions/Allocation:** deve derivar posição exclusivamente de
   Transaction + Asset + Quotes; nenhum Position mutável deve virar fonte de
   verdade nem substituir o ledger.
@@ -432,16 +552,18 @@ buy/sell, refresh, backfill, erro de venda, cross-user, teclado e viewport.
 
 ## Premissas e decisões pendentes
 
-- `007` foi fornecido pelo contexto da solicitação e permanece ticker fixo.
+- `007` foi fornecido pelo contexto da solicitação e permanece ticker fixo; a
+  emenda acrescenta 007-10 a 007-14 sem reescrever o histórico 007-01 a 007-09.
 - Asset user-scoped e Transaction portfolio-scoped preservam contratos 005.
 - BRL continua base de Portfolio, mas V1 não calcula FX; `unitPrice.currency`
   e `fee.currency` são armazenadas e exibidas.
 - Taxa significa valor monetário fixo absoluto, opcional na entrada e
   normalizado como `null` quando ausente ou zero; percentual, base de cálculo,
   total e conversão cambial continuam fora de escopo.
-- Não há decisão pendente bloqueante para criar o plano. A escolha de registry
-  é deliberada porque unicidade Asset é invariável útil e auto IDs continuam
-  necessários no documento principal.
+- O guard `assetUsages/{assetId}` é uma decisão técnica desta emenda: ele é
+  monotônico, create-only e não contém posição, contador ou payload de
+  Transaction. Sem a reconciliação legada, a permissão de delete permanece
+  bloqueada.
 - Escala máxima decimal é 30/18 nesta spec. Input pode conter zeros finais e é
   normalizado antes de persistir; Firestore recebe somente gramática canônica
   sem zeros finais. Isso deve ser provado com os mesmos fixtures no parser,

@@ -3,7 +3,7 @@
 - **Status geral:** `completed`
 - **Ticker:** `007`
 - **Spec:** [007-assets-transactions.md](../../specs/007-assets-transactions.md)
-- **Progresso:** 9/9 subtarefas concluídas
+- **Progresso:** 14/14 subtarefas concluídas
 
 ## Objetivo
 
@@ -22,6 +22,11 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
 - [x] [007-07-implementar-ledger-e-ux-de-transactions.md](007-07-implementar-ledger-e-ux-de-transactions.md)
 - [x] [007-09-persistir-taxas-em-transactions.md](007-09-persistir-taxas-em-transactions.md)
 - [x] [007-08-executar-gates-e-handoff.md](007-08-executar-gates-e-handoff.md)
+- [x] [007-10-normalizar-crud-e-guarda-de-referencias.md](007-10-normalizar-crud-e-guarda-de-referencias.md)
+- [x] [007-11-implementar-edicao-e-exclusao-atomicas.md](007-11-implementar-edicao-e-exclusao-atomicas.md)
+- [x] [007-12-abrir-rules-e-provar-lifecycle-de-asset.md](007-12-abrir-rules-e-provar-lifecycle-de-asset.md)
+- [x] [007-13-implementar-crud-na-ui-de-assets.md](007-13-implementar-crud-na-ui-de-assets.md)
+- [x] [007-14-executar-gates-rollout-e-handoff.md](007-14-executar-gates-rollout-e-handoff.md)
 
 ## Observações
 
@@ -81,3 +86,33 @@ Não calcular posições, saldo, patrimônio, cotação, FX ou performance.
   sem registrar dados pessoais, e o handoff para 008/009 foi encerrado.
 - Nenhuma operação produtiva, deploy, seed ou mudança de Console faz parte deste
   planejamento.
+- A emenda de lifecycle foi aberta após feedback de produto: 007-10 normalizou
+  contrato, guard e rollout; 007-11 concluiu o repository, a reconciliação e o
+  vínculo atômico de uso; 007-12 abriu as Rules e provou o lifecycle no Emulator.
+  007-14 foi concluída em ambiente de desenvolvimento. O núcleo histórico
+  007-01 a 007-09 continua preservado.
+- A UI de 007-13 foi validada em desenvolvimento contra o contrato coberto pelo
+  Emulator. Não houve rollout produtivo; se o ambiente passar a ter usuários ou
+  dados legados, a reconciliação owner-scoped deverá ser executada antes de
+  habilitar delete produtivo.
+- 007-12 concluída: Rules exigem guard em novas Transactions, permitem somente
+  update/delete atômicos de Asset e registry, e mantêm `assetUsages` create-only.
+  O Emulator passou em 19 testes, cobrindo os 13 anteriores, ciclo de vida,
+  colisão, uso em guard, Portfolio arquivada, corrida concorrente, ownership e
+  anonimato.
+  A reconciliação legada permanece pré-requisito operacional antes de qualquer
+  rollout produtivo; não houve auditoria produtiva ou publicação de Rules nesta
+  execução de desenvolvimento.
+- 007-13 concluída: o catálogo recebeu edição pelo mesmo `assetId`, exclusão
+  condicionada com confirmação explícita, mensagens distintas para conflito,
+  falha, reconciliação e Transactions vinculadas, além de estados acessíveis e
+  proteção contra cargas concorrentes. A edição invalida a cotação local e
+  aciona novamente o loader existente por `assetId`; nenhuma camada de Quotes
+  foi alterada. Smoke autenticado executado pelo usuário confirmou que editar
+  e excluir funcionam; não há runner automatizado de UI.
+- 007-14 concluída: os gates técnicos passaram, o usuário confirmou os testes
+  autenticados de editar/excluir e autorizou o fechamento em desenvolvimento
+  sem usuários. Não houve deploy, alteração de dados ou mudança de Rules; riscos
+  de rollout produtivo permanecem documentados para eventual reabertura. A
+  confirmação manual foi agregada e não detalhou individualmente os cenários
+  sem uso, com uso e conflito.

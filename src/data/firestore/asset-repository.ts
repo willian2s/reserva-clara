@@ -5,23 +5,29 @@ import {
   doc,
   getDoc,
   getDocs,
+  query,
   runTransaction,
+  where,
   type CollectionReference,
   type DocumentReference,
 } from "firebase/firestore";
 
 import {
   parseAssetInput,
+  parseAssetUpdateInput,
   parseAssetIdentityKey,
   type Asset,
   type AssetInput,
+  type AssetUpdateInput,
 } from "@/domain/asset";
 import { DomainError } from "@/domain/errors";
 import { auth, db } from "@/lib/firebase/client";
 import {
   createAssetFirestoreData,
   assetConverter,
+  updateAssetFirestoreData,
 } from "@/data/firestore/converters/asset-converter";
+import { createAssetUsageFirestoreData } from "@/data/firestore/converters/asset-usage-converter";
 import {
   parseAssetIdentityDocument,
   type AssetFirestoreData,
@@ -31,17 +37,25 @@ import {
   assetDocumentPath,
   assetIdentityCollectionPath,
   assetIdentityDocumentPath,
+  assetUsageDocumentPath,
+  portfolioCollectionPath,
+  transactionCollectionPath,
 } from "@/data/firestore/paths";
 import {
+  AssetHasTransactionsError,
   AssetIdentityConflictError,
   AssetIdentityRegistryOrphanError,
   AssetNotFoundError,
   AssetWithoutRegistryError,
+  AssetUsageConflictError,
+  AssetUsageReconciliationIncompleteError,
   FirestoreOperationError,
   InvalidFirestoreDocumentError,
   UnauthenticatedError,
 } from "@/data/firestore/errors";
 import { parseDocumentId } from "@/domain/value-objects";
+import { portfolioConverter } from "@/data/firestore/converters/portfolio-converter";
+import { parseAssetUsageDocument } from "@/data/firestore/parsers/asset-usage-parser";
 
 type AssetDocumentReference = DocumentReference<Asset, AssetFirestoreData>;
 
@@ -65,9 +79,21 @@ function assetDocument(uid: string, assetId: unknown): AssetDocumentReference {
   return doc(db, assetDocumentPath(uid, id)).withConverter(assetConverter);
 }
 
+function assetWriteDocument(uid: string, assetId: unknown) {
+  const id = parseDocumentId(assetId);
+
+  return doc(db, assetDocumentPath(uid, id));
+}
+
 function assetIdentityDocument(uid: string, identityKey: unknown) {
   const key = parseAssetIdentityKey(identityKey);
   return doc(db, assetIdentityDocumentPath(uid, key));
+}
+
+function assetUsageDocument(uid: string, assetId: unknown) {
+  const id = parseDocumentId(assetId);
+
+  return doc(db, assetUsageDocumentPath(uid, id));
 }
 
 async function executeFirestore<T>(
@@ -83,6 +109,9 @@ async function executeFirestore<T>(
       error instanceof AssetIdentityConflictError ||
       error instanceof AssetIdentityRegistryOrphanError ||
       error instanceof AssetWithoutRegistryError ||
+      error instanceof AssetHasTransactionsError ||
+      error instanceof AssetUsageReconciliationIncompleteError ||
+      error instanceof AssetUsageConflictError ||
       error instanceof FirestoreOperationError ||
       error instanceof InvalidFirestoreDocumentError ||
       error instanceof DomainError
@@ -91,6 +120,20 @@ async function executeFirestore<T>(
     }
 
     throw new FirestoreOperationError(operation, "Asset");
+  }
+}
+
+function assertUsageData(
+  snapshot: { exists(): boolean; id: string; data(): unknown },
+  assetId: Asset["id"],
+): void {
+  if (!snapshot.exists()) {
+    return;
+  }
+
+  const usage = parseAssetUsageDocument(snapshot.id, snapshot.data());
+  if (usage.assetId !== assetId) {
+    throw new AssetUsageConflictError();
   }
 }
 
@@ -279,4 +322,219 @@ export async function listAssets(): Promise<readonly Asset[]> {
 
     throw new AssetIdentityConflictError();
   });
+}
+
+export async function updateAsset(
+  assetId: string,
+  input: AssetUpdateInput,
+): Promise<Asset> {
+  const uid = requireAuthenticatedUid();
+  const parsedAssetId = parseDocumentId(assetId);
+  const parsedInput = parseAssetUpdateInput(input);
+  const nextIdentityKey = parseAssetIdentityKey(
+    `${parsedInput.symbol}~${parsedInput.market}~${parsedInput.assetType}~${parsedInput.currency}`,
+  );
+
+  await executeFirestore("update", async () => {
+    const orphanAssetId = await findAssetIdForIdentity(uid, nextIdentityKey);
+
+    return runTransaction(db, async (firestoreTransaction) => {
+      const assetReference = assetDocument(uid, parsedAssetId);
+      const assetSnapshot = await firestoreTransaction.get(assetReference);
+
+      if (!assetSnapshot.exists()) {
+        throw new AssetNotFoundError();
+      }
+
+      const asset = assetSnapshot.data();
+      const oldRegistryReference = assetIdentityDocument(uid, asset.identityKey);
+      const oldRegistrySnapshot = await firestoreTransaction.get(oldRegistryReference);
+
+      if (!oldRegistrySnapshot.exists()) {
+        throw new AssetWithoutRegistryError();
+      }
+
+      const oldRegistry = parseAssetIdentityDocument(
+        oldRegistrySnapshot.id,
+        oldRegistrySnapshot.data(),
+      );
+      assertRegistryMatchesAsset(asset, oldRegistry);
+
+      if (nextIdentityKey !== asset.identityKey) {
+        const nextRegistryReference = assetIdentityDocument(uid, nextIdentityKey);
+        const nextRegistrySnapshot = await firestoreTransaction.get(nextRegistryReference);
+
+        if (nextRegistrySnapshot.exists()) {
+          const nextRegistry = parseAssetIdentityDocument(
+            nextRegistrySnapshot.id,
+            nextRegistrySnapshot.data(),
+          );
+          const registeredAssetSnapshot = await firestoreTransaction.get(
+            assetDocument(uid, nextRegistry.assetId),
+          );
+
+          if (!registeredAssetSnapshot.exists()) {
+            throw new AssetIdentityRegistryOrphanError();
+          }
+
+          throw new AssetIdentityConflictError();
+        }
+
+        if (orphanAssetId !== null && orphanAssetId !== asset.id) {
+          const candidateSnapshot = await firestoreTransaction.get(
+            assetDocument(uid, orphanAssetId),
+          );
+
+          if (candidateSnapshot.exists()) {
+            const candidate = candidateSnapshot.data();
+            const candidateRegistrySnapshot = await firestoreTransaction.get(
+              assetIdentityDocument(uid, candidate.identityKey),
+            );
+
+            if (!candidateRegistrySnapshot.exists()) {
+              throw new AssetWithoutRegistryError();
+            }
+
+            assertRegistryMatchesAsset(
+              candidate,
+              parseAssetIdentityDocument(
+                candidateRegistrySnapshot.id,
+                candidateRegistrySnapshot.data(),
+              ),
+            );
+            throw new AssetIdentityConflictError();
+          }
+        }
+
+        firestoreTransaction.delete(oldRegistryReference);
+        firestoreTransaction.set(
+          nextRegistryReference,
+          { assetId: asset.id },
+          { merge: false },
+        );
+      }
+
+      firestoreTransaction.update(
+        assetWriteDocument(uid, asset.id),
+        updateAssetFirestoreData(parsedInput),
+      );
+    });
+  });
+
+  const reference = assetDocument(uid, parsedAssetId);
+  const snapshot = await executeFirestore("update", () => getDoc(reference));
+
+  if (!snapshot.exists()) {
+    throw new AssetNotFoundError();
+  }
+
+  return snapshot.data();
+}
+
+export type AssetUsageReconciliation = Readonly<{
+  complete: boolean;
+  transactionCount: number;
+  portfolioCount: number;
+}>;
+
+async function createOrConfirmAssetUsage(
+  uid: string,
+  assetId: Asset["id"],
+): Promise<void> {
+  await runTransaction(db, async (firestoreTransaction) => {
+    const reference = assetUsageDocument(uid, assetId);
+    const snapshot = await firestoreTransaction.get(reference);
+
+    if (snapshot.exists()) {
+      assertUsageData(snapshot, assetId);
+      return;
+    }
+
+    firestoreTransaction.set(
+      reference,
+      createAssetUsageFirestoreData(assetId),
+      { merge: false },
+    );
+  });
+}
+
+export async function reconcileAssetUsage(
+  assetId: string,
+): Promise<AssetUsageReconciliation> {
+  let transactionCount = 0;
+  let portfolioCount = 0;
+
+  try {
+    const uid = requireAuthenticatedUid();
+    const parsedAssetId = parseDocumentId(assetId);
+    const portfolios = await getDocs(
+      collection(db, portfolioCollectionPath(uid)).withConverter(portfolioConverter),
+    );
+    portfolioCount = portfolios.size;
+    let hasUsage = false;
+
+    for (const portfolio of portfolios.docs) {
+      const transactions = await getDocs(
+        query(
+          collection(db, transactionCollectionPath(uid, portfolio.id)),
+          where("assetId", "==", parsedAssetId),
+        ),
+      );
+      transactionCount += transactions.size;
+      hasUsage ||= transactions.size > 0;
+    }
+
+    if (hasUsage) {
+      await createOrConfirmAssetUsage(uid, parsedAssetId);
+    }
+
+    return { complete: true, transactionCount, portfolioCount };
+  } catch {
+    return { complete: false, transactionCount, portfolioCount };
+  }
+}
+
+export async function deleteAsset(assetId: string): Promise<void> {
+  const uid = requireAuthenticatedUid();
+  const parsedAssetId = parseDocumentId(assetId);
+  const reconciliation = await reconcileAssetUsage(parsedAssetId);
+
+  if (!reconciliation.complete) {
+    throw new AssetUsageReconciliationIncompleteError();
+  }
+
+  await executeFirestore("delete", () =>
+    runTransaction(db, async (firestoreTransaction) => {
+      const assetReference = assetDocument(uid, parsedAssetId);
+      const assetSnapshot = await firestoreTransaction.get(assetReference);
+
+      if (!assetSnapshot.exists()) {
+        throw new AssetNotFoundError();
+      }
+
+      const asset = assetSnapshot.data();
+      const registryReference = assetIdentityDocument(uid, asset.identityKey);
+      const registrySnapshot = await firestoreTransaction.get(registryReference);
+      const usageSnapshot = await firestoreTransaction.get(
+        assetUsageDocument(uid, parsedAssetId),
+      );
+
+      if (!registrySnapshot.exists()) {
+        throw new AssetWithoutRegistryError();
+      }
+
+      assertRegistryMatchesAsset(
+        asset,
+        parseAssetIdentityDocument(registrySnapshot.id, registrySnapshot.data()),
+      );
+
+      if (usageSnapshot.exists()) {
+        assertUsageData(usageSnapshot, parsedAssetId);
+        throw new AssetHasTransactionsError();
+      }
+
+      firestoreTransaction.delete(assetWriteDocument(uid, parsedAssetId));
+      firestoreTransaction.delete(registryReference);
+    }),
+  );
 }

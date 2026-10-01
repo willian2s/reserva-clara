@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-import {
-  APP_HOST,
-  classifyHost,
-  PUBLIC_HOST,
-} from "@/lib/host-routing";
+import { APP_HOST, classifyHost, PUBLIC_HOST } from "./lib/host-routing";
 
 const APP_ORIGIN = `https://${APP_HOST}`;
 const PUBLIC_ORIGIN = `https://${PUBLIC_HOST}`;
@@ -16,6 +12,10 @@ function redirectToFixedPath(origin: string, pathname: string, status: 307 | 308
 
 function redirectToSameOriginPath(request: NextRequest, pathname: string) {
   return NextResponse.redirect(new URL(pathname, request.url), 307);
+}
+
+function isQuotesApiPath(pathname: string): boolean {
+  return pathname === "/api/quotes" || pathname.startsWith("/api/quotes/");
 }
 
 export function proxy(request: NextRequest) {
@@ -29,6 +29,10 @@ export function proxy(request: NextRequest) {
 
   if (hostClass === "www") {
     return redirectToFixedPath(PUBLIC_ORIGIN, pathname, 308);
+  }
+
+  if (hostClass === "public" && isQuotesApiPath(pathname)) {
+    return new NextResponse(null, { status: 404 });
   }
 
   if (hostClass === "public" && (pathname === "/login" || pathname.startsWith("/login/"))) {
@@ -67,5 +71,6 @@ export const config = {
     "/dashboard/:path*",
     "/portfolios/:path*",
     "/assets/:path*",
+    "/api/quotes/:path*",
   ],
 };

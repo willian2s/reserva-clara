@@ -18,8 +18,8 @@ import { Label } from "@/components/ui/label";
 const INVALID_FIELD_MESSAGES: Record<string, string> = {
   symbol: "Informe um símbolo válido usando letras, números, ponto, hífen ou sublinhado.",
   market: "Informe um mercado válido usando letras, números, ponto, hífen ou sublinhado.",
-  assetType: "Selecione um tipo de Asset válido.",
-  currency: "Informe uma moeda ISO 4217 em letras maiúsculas, como BRL ou USD.",
+  assetType: "Selecione um tipo de ativo válido.",
+  currency: "Informe um código de moeda com três letras, como BRL ou USD.",
 };
 
 const CREATE_ERROR_MESSAGE =
@@ -80,7 +80,6 @@ export function AssetCreateForm({
   } | null>(null);
   const [operationError, setOperationError] = useState("");
   const [feedback, setFeedback] = useState("");
-  const [normalizedIdentityKey, setNormalizedIdentityKey] = useState("");
   const [pendingIdentityKey, setPendingIdentityKey] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isReconciling, setIsReconciling] = useState(false);
@@ -97,23 +96,6 @@ export function AssetCreateForm({
     setValues((current) => ({ ...current, [field]: value }));
     setValidationError(null);
     setFeedback("");
-
-    try {
-      const input = parseAssetInput({
-        ...values,
-        [field]: value,
-      });
-      setNormalizedIdentityKey(
-        createAssetIdentityKey(
-          input.symbol,
-          input.market,
-          input.assetType,
-          input.currency,
-        ),
-      );
-    } catch {
-      setNormalizedIdentityKey("");
-    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -156,7 +138,6 @@ export function AssetCreateForm({
     setFeedback("");
     setReconciliationRequired(false);
     setPendingIdentityKey("");
-    setNormalizedIdentityKey(identityKey);
 
     try {
       const existingAsset = assets.find((asset) => asset.identityKey === identityKey);
@@ -165,8 +146,8 @@ export function AssetCreateForm({
       onCreated(asset);
       setFeedback(
         existingAsset
-          ? `Esta identidade já estava cadastrada. Asset existente: ${asset.symbol} em ${asset.market}.`
-          : `Asset ${asset.symbol} cadastrado com sucesso.`,
+          ? `Este ativo já estava cadastrado: ${asset.symbol} em ${asset.market}.`
+          : `Ativo ${asset.symbol} cadastrado com sucesso.`,
       );
     } catch (error: unknown) {
       if (error instanceof DomainError) {
@@ -198,14 +179,14 @@ export function AssetCreateForm({
       if (reconciliation.status === "found") {
         onCreated(reconciliation.asset);
         setFeedback(
-          `Cadastro confirmado após reconciliação. Asset existente: ${reconciliation.asset.symbol} em ${reconciliation.asset.market}.`,
+          `Cadastro confirmado. Ativo existente: ${reconciliation.asset.symbol} em ${reconciliation.asset.market}.`,
         );
         setOperationError("");
         setReconciliationRequired(false);
         setPendingIdentityKey("");
       } else if (reconciliation.status === "not-found") {
         setOperationError(
-          "Catálogo atualizado, mas a identidade não foi encontrada. Revise os dados antes de tentar novamente.",
+          "Catálogo atualizado, mas o ativo não foi encontrado. Revise os dados antes de tentar novamente.",
         );
         setReconciliationRequired(false);
       } else {
@@ -252,7 +233,7 @@ export function AssetCreateForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="asset-type">Tipo de Asset</Label>
+          <Label htmlFor="asset-type">Tipo de ativo</Label>
           <select
             id="asset-type"
             name="assetType"
@@ -290,15 +271,9 @@ export function AssetCreateForm({
         </div>
       </div>
 
-      {normalizedIdentityKey ? (
-        <p className="text-sm text-muted-foreground" aria-live="polite">
-          Identidade normalizada: <code className="font-mono">{normalizedIdentityKey}</code>
-        </p>
-      ) : (
-        <p className="text-sm text-muted-foreground">
-          A identidade será normalizada após preencher os quatro campos.
-        </p>
-      )}
+      <p className="text-sm text-muted-foreground">
+        O cadastro combina código, mercado, tipo e moeda para evitar duplicidades.
+      </p>
 
       {fieldError && (
         <p id={inputErrorId} className="text-sm text-destructive" role="alert">
@@ -312,7 +287,7 @@ export function AssetCreateForm({
           disabled={isDisabled || reconciliationRequired}
           aria-busy={isSubmitting}
         >
-          {isSubmitting ? "Salvando Asset..." : "Cadastrar Asset"}
+          {isSubmitting ? "Salvando ativo..." : "Cadastrar ativo"}
         </Button>
         {reconciliationRequired && (
           <Button

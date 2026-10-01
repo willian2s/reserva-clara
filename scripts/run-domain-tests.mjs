@@ -31,6 +31,7 @@ try {
         "errors.ts",
         "index.ts",
         "portfolio.ts",
+        "quote.ts",
         "transaction.ts",
         "value-objects.ts",
       ].map((file) => join(projectRoot, "src", "domain", file)),

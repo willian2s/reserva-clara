@@ -14,6 +14,7 @@ import {
   getDoc,
   getDocs,
   query,
+  runTransaction,
   serverTimestamp,
   setDoc,
   Timestamp,
@@ -28,6 +29,8 @@ const portfolioPath = (userId, portfolioId) =>
 const assetPath = (userId, assetId) => `users/${userId}/assets/${assetId}`;
 const registryPath = (userId, identityKey) =>
   `users/${userId}/assetIdentities/${identityKey}`;
+const assetUsagePath = (userId, assetId) =>
+  `users/${userId}/assetUsages/${assetId}`;
 const transactionPath = (userId, portfolioId, transactionId) =>
   `users/${userId}/portfolios/${portfolioId}/transactions/${transactionId}`;
 
@@ -82,6 +85,15 @@ async function createAtomicAsset(firestore, assetId = 'asset-a', overrides = {})
 async function createActivePortfolio(firestore, portfolioId = 'portfolio-a') {
   await assertSucceeds(
     setDoc(doc(firestore, portfolioPath('user-a', portfolioId)), validPortfolio()),
+  );
+}
+
+async function createAssetUsage(firestore, assetId = 'asset-a') {
+  await assertSucceeds(
+    setDoc(
+      doc(firestore, assetUsagePath('user-a', assetId)),
+      { assetId, createdAt: serverTimestamp() },
+    ),
   );
 }
 
@@ -479,6 +491,259 @@ test('Asset schema, identity, registry ownership, and atomic pairing are closed'
   );
 });
 
+test('Asset update preserves id and createdAt, and swaps registries atomically', async () => {
+  const firestore = testEnv.authenticatedContext('user-a').firestore();
+  await createAtomicAsset(firestore);
+
+  const assetReference = doc(firestore, assetPath('user-a', 'asset-a'));
+  const previous = await assertSucceeds(getDoc(assetReference));
+  const nextAsset = validAsset({
+    symbol: 'IVVB11',
+    identityKey: 'IVVB11~B3~etf~BRL',
+    createdAt: previous.data().createdAt,
+    updatedAt: serverTimestamp(),
+  });
+  const batch = writeBatch(firestore);
+  batch.update(assetReference, nextAsset);
+  batch.delete(doc(firestore, registryPath('user-a', 'BOVA11~B3~etf~BRL')));
+  batch.set(
+    doc(firestore, registryPath('user-a', 'IVVB11~B3~etf~BRL')),
+    { assetId: 'asset-a' },
+  );
+
+  await assertSucceeds(batch.commit());
+  const updated = await assertSucceeds(getDoc(assetReference));
+  assert.equal(updated.data()?.identityKey, 'IVVB11~B3~etf~BRL');
+  assert.deepEqual(updated.data()?.createdAt, previous.data()?.createdAt);
+  assert.equal(
+    (await assertSucceeds(
+      getDoc(doc(firestore, registryPath('user-a', 'BOVA11~B3~etf~BRL'))),
+    )).exists(),
+    false,
+  );
+  assert.equal(
+    (await assertSucceeds(
+      getDoc(doc(firestore, registryPath('user-a', 'IVVB11~B3~etf~BRL'))),
+    )).data()?.assetId,
+    'asset-a',
+  );
+});
+
+test('Asset update rejects partial, collision, and inconsistent registry writes', async () => {
+  const firestore = testEnv.authenticatedContext('user-a').firestore();
+  await createAtomicAsset(firestore);
+  const assetReference = doc(firestore, assetPath('user-a', 'asset-a'));
+  const previous = await assertSucceeds(getDoc(assetReference));
+
+  await assertFails(updateDoc(assetReference, { symbol: 'IVVB11' }));
+
+  await createAtomicAsset(firestore, 'asset-b', {
+    symbol: 'IVVB11',
+    identityKey: 'IVVB11~B3~etf~BRL',
+  });
+  const collision = writeBatch(firestore);
+  collision.update(assetReference, validAsset({
+    symbol: 'IVVB11',
+    identityKey: 'IVVB11~B3~etf~BRL',
+    createdAt: previous.data().createdAt,
+    updatedAt: serverTimestamp(),
+  }));
+  collision.delete(doc(firestore, registryPath('user-a', 'BOVA11~B3~etf~BRL')));
+  collision.set(
+    doc(firestore, registryPath('user-a', 'IVVB11~B3~etf~BRL')),
+    { assetId: 'asset-a' },
+  );
+  await assertFails(collision.commit());
+
+  const inconsistent = writeBatch(firestore);
+  inconsistent.update(assetReference, validAsset({
+    symbol: 'ITUB4',
+    identityKey: 'ITUB4~B3~stock~BRL',
+    createdAt: previous.data().createdAt,
+    updatedAt: serverTimestamp(),
+  }));
+  inconsistent.delete(doc(firestore, registryPath('user-a', 'BOVA11~B3~etf~BRL')));
+  inconsistent.set(
+    doc(firestore, registryPath('user-a', 'ITUB4~B3~stock~BRL')),
+    { assetId: 'asset-b' },
+  );
+  await assertFails(inconsistent.commit());
+
+  const unchanged = await assertSucceeds(getDoc(assetReference));
+  assert.equal(unchanged.data()?.identityKey, 'BOVA11~B3~etf~BRL');
+  assert.deepEqual(unchanged.data()?.createdAt, previous.data()?.createdAt);
+});
+
+test('Asset delete removes only the coherent pair and rejects one-sided or used deletes', async () => {
+  const firestore = testEnv.authenticatedContext('user-a').firestore();
+  await createAtomicAsset(firestore);
+  const assetReference = doc(firestore, assetPath('user-a', 'asset-a'));
+  const registryReference = doc(
+    firestore,
+    registryPath('user-a', 'BOVA11~B3~etf~BRL'),
+  );
+
+  await assertFails(deleteDoc(assetReference));
+  await assertFails(deleteDoc(registryReference));
+
+  const pair = writeBatch(firestore);
+  pair.delete(assetReference);
+  pair.delete(registryReference);
+  await assertSucceeds(pair.commit());
+  assert.equal((await assertSucceeds(getDoc(assetReference))).exists(), false);
+  assert.equal((await assertSucceeds(getDoc(registryReference))).exists(), false);
+
+  await createAtomicAsset(firestore);
+  await createAssetUsage(firestore);
+  const guardedPair = writeBatch(firestore);
+  guardedPair.delete(doc(firestore, assetPath('user-a', 'asset-a')));
+  guardedPair.delete(registryReference);
+  await assertFails(guardedPair.commit());
+
+  const usageReference = doc(firestore, assetUsagePath('user-a', 'asset-a'));
+  await assertFails(deleteDoc(usageReference));
+  assert.equal((await assertSucceeds(getDoc(assetReference))).exists(), true);
+  assert.equal((await assertSucceeds(getDoc(usageReference))).exists(), true);
+});
+
+test('Asset usage is create-only, owner-scoped, and required by Transaction', async () => {
+  const firestore = testEnv.authenticatedContext('user-a').firestore();
+  await createAtomicAsset(firestore);
+  await createActivePortfolio(firestore);
+  const transactionReference = doc(
+    firestore,
+    transactionPath('user-a', 'portfolio-a', 'transaction-atomic'),
+  );
+  const usageReference = doc(firestore, assetUsagePath('user-a', 'asset-a'));
+
+  await assertFails(setDoc(transactionReference, validTransaction()));
+
+  const atomic = writeBatch(firestore);
+  atomic.set(transactionReference, validTransaction());
+  atomic.set(usageReference, { assetId: 'asset-a', createdAt: serverTimestamp() });
+  await assertSucceeds(atomic.commit());
+
+  await assertFails(updateDoc(usageReference, { assetId: 'asset-a' }));
+  await assertFails(deleteDoc(usageReference));
+
+  const userB = testEnv.authenticatedContext('user-b').firestore();
+  await assertFails(getDoc(doc(userB, assetUsagePath('user-a', 'asset-a'))));
+  await assertFails(
+    setDoc(
+      doc(userB, assetUsagePath('user-a', 'injected')),
+      { assetId: 'injected', createdAt: serverTimestamp() },
+    ),
+  );
+  const anonymous = testEnv.unauthenticatedContext().firestore();
+  const anonymousUsageReference = doc(
+    anonymous,
+    assetUsagePath('user-a', 'asset-a'),
+  );
+  await assertFails(getDoc(anonymousUsageReference));
+  await assertFails(deleteDoc(anonymousUsageReference));
+});
+
+test('Asset delete and first Transaction race is denied without partial writes', async () => {
+  const firestore = testEnv.authenticatedContext('user-a').firestore();
+  await createAtomicAsset(firestore);
+  await createActivePortfolio(firestore);
+
+  const race = writeBatch(firestore);
+  race.delete(doc(firestore, assetPath('user-a', 'asset-a')));
+  race.delete(
+    doc(firestore, registryPath('user-a', 'BOVA11~B3~etf~BRL')),
+  );
+  race.set(
+    doc(firestore, transactionPath('user-a', 'portfolio-a', 'race')),
+    validTransaction(),
+  );
+  race.set(
+    doc(firestore, assetUsagePath('user-a', 'asset-a')),
+    { assetId: 'asset-a', createdAt: serverTimestamp() },
+  );
+  await assertFails(race.commit());
+
+  assert.equal(
+    (await assertSucceeds(
+      getDoc(doc(firestore, assetPath('user-a', 'asset-a'))),
+    )).exists(),
+    true,
+  );
+  assert.equal(
+    (await assertSucceeds(
+      getDoc(doc(firestore, transactionPath('user-a', 'portfolio-a', 'race'))),
+    )).exists(),
+    false,
+  );
+  assert.equal(
+    (await assertSucceeds(
+      getDoc(doc(firestore, assetUsagePath('user-a', 'asset-a'))),
+    )).exists(),
+    false,
+  );
+});
+
+test('Concurrent delete and first Transaction serialize on the Asset usage guard', async () => {
+  const firestore = testEnv.authenticatedContext('user-a').firestore();
+  await createAtomicAsset(firestore);
+  await createActivePortfolio(firestore);
+
+  const assetReference = doc(firestore, assetPath('user-a', 'asset-a'));
+  const registryReference = doc(
+    firestore,
+    registryPath('user-a', 'BOVA11~B3~etf~BRL'),
+  );
+  const usageReference = doc(firestore, assetUsagePath('user-a', 'asset-a'));
+  const transactionReference = doc(
+    firestore,
+    transactionPath('user-a', 'portfolio-a', 'concurrent'),
+  );
+
+  const deleteAttempt = runTransaction(firestore, async (transaction) => {
+    const asset = await transaction.get(assetReference);
+    const registry = await transaction.get(registryReference);
+    const usage = await transaction.get(usageReference);
+    if (!asset.exists() || !registry.exists() || usage.exists()) {
+      throw new Error('asset is no longer deletable');
+    }
+    transaction.delete(assetReference);
+    transaction.delete(registryReference);
+  });
+  const transactionAttempt = runTransaction(firestore, async (transaction) => {
+    const portfolio = await transaction.get(
+      doc(firestore, portfolioPath('user-a', 'portfolio-a')),
+    );
+    const asset = await transaction.get(assetReference);
+    const usage = await transaction.get(usageReference);
+    if (!portfolio.exists() || !asset.exists() || usage.exists()) {
+      throw new Error('asset is no longer available');
+    }
+    transaction.set(transactionReference, validTransaction());
+    transaction.set(usageReference, {
+      assetId: 'asset-a',
+      createdAt: serverTimestamp(),
+    });
+  });
+
+  const outcomes = await Promise.allSettled([deleteAttempt, transactionAttempt]);
+  assert.equal(
+    outcomes.filter((outcome) => outcome.status === 'fulfilled').length,
+    1,
+  );
+  assert.equal(
+    (await assertSucceeds(getDoc(assetReference))).exists(),
+    outcomes[0].status === 'fulfilled' ? false : true,
+  );
+  assert.equal(
+    (await assertSucceeds(getDoc(transactionReference))).exists(),
+    outcomes[1].status === 'fulfilled',
+  );
+  assert.equal(
+    (await assertSucceeds(getDoc(usageReference))).exists(),
+    outcomes[1].status === 'fulfilled',
+  );
+});
+
 test('Asset and registry namespaces are owner-scoped and anonymous access fails', async () => {
   const userA = testEnv.authenticatedContext('user-a').firestore();
   const userB = testEnv.authenticatedContext('user-b').firestore();
@@ -513,6 +778,7 @@ test('owner can create valid buy and sell Transactions, including schema limits'
   const firestore = testEnv.authenticatedContext('user-a').firestore();
   await createAtomicAsset(firestore);
   await createActivePortfolio(firestore);
+  await createAssetUsage(firestore);
 
   const buyReference = doc(
     firestore,
@@ -601,6 +867,7 @@ test('Transactions require an owner Asset and an active owner Portfolio', async 
   await assertFails(setDoc(transactionReference, validTransaction()));
 
   await createAtomicAsset(firestore);
+  await createAssetUsage(firestore);
   await assertSucceeds(setDoc(transactionReference, validTransaction()));
   await assertFails(
     updateDoc(transactionReference, { quantity: '2' }),
@@ -636,6 +903,13 @@ test('Transactions require an owner Asset and an active owner Portfolio', async 
       { archivedAt: serverTimestamp(), updatedAt: serverTimestamp() },
     ),
   );
+  const archivedDelete = writeBatch(firestore);
+  archivedDelete.delete(doc(firestore, assetPath('user-a', 'asset-a')));
+  archivedDelete.delete(
+    doc(firestore, registryPath('user-a', 'BOVA11~B3~etf~BRL')),
+  );
+  await assertFails(archivedDelete.commit());
+
   const archivedTransaction = doc(
     firestore,
     transactionPath('user-a', 'portfolio-a', 'transaction-archived'),
@@ -648,6 +922,7 @@ test('getAfter blocks archive plus Transaction in one commit', async () => {
   const firestore = testEnv.authenticatedContext('user-a').firestore();
   await createAtomicAsset(firestore);
   await createActivePortfolio(firestore);
+  await createAssetUsage(firestore);
 
   const batch = writeBatch(firestore);
   batch.set(

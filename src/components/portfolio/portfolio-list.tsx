@@ -237,8 +237,8 @@ export function PortfolioList() {
                   Carteiras arquivadas
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Arquivar preserva histórico e permite restauração; não remove
-                  filhos nem dados da carteira.
+                  O arquivamento preserva o histórico e permite restauração; não
+                  remove informações relacionadas nem dados da carteira.
                 </p>
               </div>
               <PortfolioCards
