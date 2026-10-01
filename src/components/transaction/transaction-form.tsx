@@ -164,7 +164,7 @@ function inputMessage(field: string) {
     case "unitPrice":
       return "Informe um preço positivo em formato decimal, sem expoente.";
     case "currency":
-      return "Informe uma moeda ISO 4217 em letras maiúsculas, como BRL ou USD.";
+      return "Informe um código de moeda com três letras, como BRL ou USD.";
     case "effectiveDate":
       return "Informe uma data civil real.";
     case "feeAmount":
@@ -595,9 +595,8 @@ export function TransactionForm({
       )}
       <p className="text-sm text-muted-foreground">
         A taxa é um valor fixo opcional. O histórico registra apenas o evento
-        informado. Não há cálculo de saldo,
-        posição, total ou rentabilidade nesta fase. Eventos são append-only:
-        não há edição ou exclusão.
+        informado. Não há cálculo de saldo, posição, total ou rentabilidade nesta
+        fase. Os lançamentos não podem ser editados nem excluídos.
       </p>
     </form>
   );

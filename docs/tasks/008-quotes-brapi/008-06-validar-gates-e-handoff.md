@@ -36,7 +36,7 @@ ownership ou resiliência.
 
 ## Dependências
 
-- `008-01` a `008-05` concluídas e revisadas.
+- `008-01` a `008-05` e `008-07` concluídas e revisadas.
 - Secrets local/preview disponíveis somente para checkpoint autorizado.
 - Fakes e fixtures cobrindo provider sem chamadas reais em CI.
 
@@ -61,7 +61,7 @@ ownership ou resiliência.
    stale/retry, cross-user, teclado/mobile e ledger durante indisponibilidade.
 6. Registrar resultado real, divergências e riscos; não marcar concluído diante
    de falha não explicada.
-7. Atualizar overview para `completed` e checklist 6/6 somente após todas as
+7. Atualizar overview para `completed` e checklist 7/7 somente após todas as
    subtarefas e evidências passarem.
 
 ## Testes e comandos de validação
@@ -87,7 +87,7 @@ disponível, seguindo precedente da 007.
   sanitização têm evidência.
 - Ledger funciona com BRAPI indisponível e nenhuma persistência/migração nova
   foi criada.
-- Overview tem exatamente seis itens, todos `[x]`, e progresso `6/6` somente
+- Overview tem exatamente sete itens, todos `[x]`, e progresso `7/7` somente
   quando isso for verdade.
 - Handoff 009/010/012 e rollback estão documentados.
 

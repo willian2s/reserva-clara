@@ -298,7 +298,7 @@ export function TransactionLedger({ portfolioId }: { portfolioId: string }) {
               ) : (
                 <p className="text-sm text-muted-foreground">
                   Registre apenas eventos de compra e venda confirmados. A
-                  correção futura será feita por evento compensatório, não por
+                  correção futura será feita por um novo lançamento, não por
                   edição ou exclusão.
                 </p>
               )}

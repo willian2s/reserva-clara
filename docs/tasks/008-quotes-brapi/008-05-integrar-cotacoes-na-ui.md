@@ -25,7 +25,8 @@ sem cálculo patrimonial e sem regressão de operações.
 - Exibição de preço, moeda, horário `quotedAt`, frescor e símbolo do provider
   quando `symbolChanged`.
 - Mensagens sanitizadas para unsupported, not-found e indisponível.
-- Requisição em lote após catálogo carregar, sem bloquear cards de identidade.
+- Requisição em lote após catálogo carregar, sem bloquear o catálogo ou os
+  dados básicos dos ativos.
 - Nenhum import de adapter, URL BRAPI, Admin SDK ou env server-only em client.
 
 ## Escopo excluído
@@ -107,7 +108,7 @@ npm run build
   somente `{ assetIds }` para `/api/quotes`, convertendo ausência/falha de sessão,
   HTTP e payload em códigos sanitizados. O catálogo mantém request ID e guard de
   montagem independentes para Quotes, consulta lotes de até 20 Assets, preserva
-  os cards de identidade em falhas e oferece atualização explícita sem retry
+  os dados básicos dos ativos em falhas e oferece atualização explícita sem retry
   automático. A apresentação exibe preço decimal, moeda, `quotedAt`, frescor
   stale/fresh e `providerSymbol` somente quando `symbolChanged`; não foi alterado
   `Asset`, `Transaction`, `unitPrice` ou o ledger.

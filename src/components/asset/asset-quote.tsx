@@ -4,9 +4,9 @@ const QUOTE_ERROR_MESSAGES: Record<QuoteErrorCode, string> = {
   UNAUTHENTICATED: "Sua sessão não está disponível para carregar esta cotação.",
   INVALID_REQUEST: "Não foi possível solicitar esta cotação.",
   BATCH_LIMIT: "Não foi possível consultar este lote de cotações.",
-  UNSUPPORTED_ASSET: "Este Asset não é suportado para cotação.",
-  CURRENCY_MISMATCH: "A moeda deste Asset não é compatível com a cotação.",
-  NOT_FOUND: "Cotação não encontrada para este Asset.",
+  UNSUPPORTED_ASSET: "Este ativo não pode ser cotado.",
+  CURRENCY_MISMATCH: "A moeda deste ativo não é compatível com a cotação.",
+  NOT_FOUND: "Cotação não encontrada para este ativo.",
   TIMEOUT: "A cotação demorou demais e está indisponível.",
   RATE_LIMITED: "A cotação está temporariamente indisponível.",
   PROVIDER_UNAVAILABLE: "A cotação está indisponível no momento.",
@@ -77,7 +77,7 @@ export function AssetQuote({
       </p>
       {quote.symbolChanged && (
         <p className="mt-1 text-sm text-muted-foreground">
-          Símbolo no provider: <code className="font-mono">{quote.providerSymbol}</code>
+          Código usado pela fonte de cotação: {quote.providerSymbol}
         </p>
       )}
     </div>

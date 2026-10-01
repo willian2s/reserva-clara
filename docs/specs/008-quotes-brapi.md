@@ -2,8 +2,8 @@
 
 ## Status
 
-`in_progress` — subtarefas 008-01, 008-02 e 008-03 concluídas; composição do
-serviço, UI e gates finais permanecem pendentes.
+`in_progress` — subtarefas 008-01 a 008-05 e 008-07 concluídas; os gates finais
+da 008-06 permanecem pendentes.
 
 ## Ticker
 
@@ -420,7 +420,9 @@ viewport e ledger funcionando com BRAPI indisponível.
    stale, timeout, retry e deduplicação.
 5. `008-05-integrar-cotacoes-na-ui.md` — conectar `/assets` somente ao endpoint,
    exibir estados e preservar independência do ledger.
-6. `008-06-validar-gates-e-handoff.md` — executar testes/gates/smoke, revisar
+6. `008-07-revisar-linguagem-e-listar-ativos.md` — remover termos internos da
+   interface e apresentar o catálogo de ativos em lista.
+7. `008-06-validar-gates-e-handoff.md` — executar testes/gates/smoke, revisar
    secrets, rollback, documentação e handoff para 009.
 
 Subtarefas são sequenciais para manter o contrato estável. A 008-03 pode ser

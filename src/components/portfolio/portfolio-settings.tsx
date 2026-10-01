@@ -414,13 +414,13 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
   return (
     <section className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6 lg:px-10 lg:py-14">
       <header className="mb-8 max-w-2xl">
-        <p className="text-sm font-medium text-primary">Administração</p>
+        <p className="text-sm font-medium text-primary">Gerenciamento</p>
         <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">
           Configurações da carteira
         </h1>
         <p className="mt-3 text-muted-foreground">
-          Gerencie os dados básicos da carteira sem misturar suas configurações
-          com o contexto patrimonial.
+          Gerencie os dados básicos da carteira sem misturar configurações com
+          as informações financeiras.
         </p>
       </header>
 
@@ -545,7 +545,7 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
                     Arquivar carteira
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    O archive preserva esta carteira e seus dados filhos para
+                    O arquivamento preserva esta carteira e seus dados para
                     consulta histórica. A carteira poderá ser restaurada depois.
                   </p>
                 </div>
@@ -591,7 +591,8 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
                         className="text-sm text-muted-foreground"
                       >
                         Digite exatamente o nome exibido para confirmar. O
-                        arquivamento não apaga filhos nem dados históricos.
+                        arquivamento não apaga informações relacionadas nem dados
+                        históricos.
                       </p>
                     </div>
 
@@ -669,9 +670,8 @@ export function PortfolioSettings({ portfolioId }: { portfolioId: string }) {
                     Restaurar carteira
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Restaure a carteira para permitir novas operações quando o
-                    ledger estiver disponível. Dados históricos permanecem
-                    intactos.
+                    Restaure a carteira para permitir novas operações. Dados
+                    históricos permanecem intactos.
                   </p>
                 </div>
                 <Button

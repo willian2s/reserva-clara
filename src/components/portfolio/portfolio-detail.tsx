@@ -26,7 +26,7 @@ export function PortfolioDetail({ portfolioId }: { portfolioId: string }) {
       <header className="mb-8 max-w-2xl">
         <p className="text-sm font-medium text-primary">Patrimônio</p>
         <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">
-          Detalhe da carteira
+          Visão da carteira
         </h1>
         <p className="mt-3 text-muted-foreground">
           Consulte os dados reais desta carteira, sem métricas patrimoniais
@@ -94,11 +94,11 @@ export function PortfolioDetail({ portfolioId }: { portfolioId: string }) {
             </p>
             <div className="space-y-3 border-t border-border pt-5">
               <h3 className="font-heading text-lg font-semibold">
-                Administração da carteira
+                Gerenciamento da carteira
               </h3>
               <p className="text-sm text-muted-foreground">
-                Alterações administrativas ficam separadas do contexto
-                patrimonial desta carteira.
+                As configurações ficam separadas das informações financeiras
+                desta carteira.
               </p>
               <Link
                 className={buttonVariants({ variant: "outline" })}

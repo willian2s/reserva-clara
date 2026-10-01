@@ -10,7 +10,7 @@ type AuthState = "checking" | "authenticated" | "redirecting";
 
 const STATUS_MESSAGES = {
   checking: "Verificando sua sessão...",
-  redirecting: "Sessão não encontrada. Redirecionando para o login...",
+  redirecting: "Sessão não encontrada. Levando você para a tela de entrada...",
 } as const;
 
 type AuthGateProps = {

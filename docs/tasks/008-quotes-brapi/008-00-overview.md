@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [008-quotes-brapi.md](../../specs/008-quotes-brapi.md)
-- **Progresso:** 5/6 subtarefas concluídas
+- **Progresso:** 6/7 subtarefas concluídas
 
 ## Objetivo
 
@@ -18,6 +18,7 @@ quando provider estiver indisponível.
 - [x] [008-04-implementar-quoteservice-cache.md](008-04-implementar-quoteservice-cache.md)
 - [x] [008-05-integrar-cotacoes-na-ui.md](008-05-integrar-cotacoes-na-ui.md)
 - [ ] [008-06-validar-gates-e-handoff.md](008-06-validar-gates-e-handoff.md)
+- [x] [008-07-revisar-linguagem-e-listar-ativos.md](008-07-revisar-linguagem-e-listar-ativos.md)
 
 ## Observações
 
@@ -46,3 +47,6 @@ quando provider estiver indisponível.
   de Quote no catálogo, lotes limitados, frescor explícito e retry/refresh manual.
   Os gates automatizados passaram; smoke visual autenticado e validação com
   provider real permanecem para 008-06, sem bloqueio de implementação registrado.
+- 008-07 foi concluída ao revisar a linguagem visível da UI e transformar o
+  catálogo de ativos em lista, sem alterar contratos ou lógica;
+  a 008-06 deve validar o resultado final, sem bloqueio registrado.

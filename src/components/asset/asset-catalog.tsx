@@ -40,10 +40,10 @@ type QuoteCatalogState =
   | { status: "error"; results: ReadonlyMap<string, QuoteResult>; code: QuoteErrorCode };
 
 const LIST_ERROR_MESSAGE =
-  "Não foi possível carregar seu catálogo de Assets. Tente novamente.";
+  "Não foi possível carregar seu catálogo de ativos. Tente novamente.";
 
 const QUOTE_ERROR_MESSAGE =
-  "Não foi possível atualizar algumas cotações. Os dados de identidade do catálogo continuam disponíveis.";
+  "Não foi possível atualizar algumas cotações. Os dados básicos dos ativos continuam disponíveis.";
 
 const ASSET_TYPE_LABELS: Record<Asset["assetType"], string> = {
   stock: "Ação",
@@ -73,7 +73,7 @@ function formatCreatedAt(createdAt: Date) {
   );
 }
 
-function AssetCards({
+function AssetList({
   assets,
   quoteResults,
   quotesLoading,
@@ -83,32 +83,27 @@ function AssetCards({
   quotesLoading: boolean;
 }) {
   return (
-    <ul className="grid gap-4 sm:grid-cols-2" aria-label="Seus Assets">
+    <ul className="divide-y divide-border border-y border-border" aria-label="Seus ativos">
       {assets.map((asset) => (
-        <li key={asset.id}>
-          <Card className="h-full">
-            <CardHeader>
+        <li key={asset.id} className="py-5 first:pt-0 last:pb-0">
+          <div className="grid gap-4 md:grid-cols-[minmax(12rem,0.8fr)_minmax(0,1.2fr)] md:items-center">
+            <div>
               <h2 className="font-heading text-base leading-snug font-semibold break-words [overflow-wrap:anywhere]">
                 {asset.symbol} <span className="text-muted-foreground">·</span>{" "}
                 {asset.market}
               </h2>
-              <CardDescription>
-                {ASSET_TYPE_LABELS[asset.assetType]} em {asset.currency}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Identidade: <code className="font-mono">{asset.identityKey}</code>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {ASSET_TYPE_LABELS[asset.assetType]} · {asset.currency}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="mt-1 text-sm text-muted-foreground">
                 Cadastrado em {formatCreatedAt(asset.createdAt)}
               </p>
-              <AssetQuote
-                loading={quotesLoading}
-                result={quoteResults.get(asset.id)}
-              />
-            </CardContent>
-          </Card>
+            </div>
+            <AssetQuote
+              loading={quotesLoading}
+              result={quoteResults.get(asset.id)}
+            />
+          </div>
         </li>
       ))}
     </ul>
@@ -282,11 +277,11 @@ export function AssetCatalog() {
       <header className="mb-8 max-w-2xl">
         <p className="text-sm font-medium text-primary">Catálogo privado</p>
         <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">
-          Assets
+          Ativos
         </h1>
         <p className="mt-3 text-muted-foreground">
-          Cadastre identidades reutilizáveis para organizar seus lançamentos,
-          sem misturar cotação ou posição.
+          Cadastre ativos para organizar seus lançamentos, sem misturar cotação
+          ou posição.
         </p>
       </header>
 
@@ -318,10 +313,10 @@ export function AssetCatalog() {
             <Card>
               <CardHeader>
                 <h2 className="font-heading text-base leading-snug font-semibold">
-                  Nenhum Asset ainda
+                  Nenhum ativo cadastrado
                 </h2>
                 <CardDescription>
-                  Crie a primeira identidade para reutilizá-la em suas carteiras.
+                  Cadastre o primeiro ativo para reutilizá-lo em suas carteiras.
                 </CardDescription>
               </CardHeader>
             </Card>
@@ -338,7 +333,7 @@ export function AssetCatalog() {
                 >
                   {quotesLoading
                     ? "Carregando cotações..."
-                    : "Cotações consultadas separadamente do catálogo."}
+                    : "As cotações são atualizadas separadamente dos dados dos ativos."}
                 </p>
                 <Button
                   type="button"
@@ -359,7 +354,7 @@ export function AssetCatalog() {
                 </Card>
               )}
 
-              <AssetCards
+              <AssetList
                 assets={assets}
                 quoteResults={quoteState.results}
                 quotesLoading={quotesLoading}
@@ -371,10 +366,10 @@ export function AssetCatalog() {
         <Card className="order-1 lg:order-2">
           <CardHeader>
             <h2 className="font-heading text-base leading-snug font-semibold">
-              {isEmpty ? "Cadastrar primeiro Asset" : "Novo Asset"}
+              {isEmpty ? "Cadastrar primeiro ativo" : "Novo ativo"}
             </h2>
             <CardDescription>
-              A mesma identidade será reutilizada em vez de duplicada.
+              O mesmo cadastro será reutilizado em vez de duplicado.
             </CardDescription>
           </CardHeader>
           <CardContent>

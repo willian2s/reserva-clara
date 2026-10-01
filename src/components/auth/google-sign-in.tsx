@@ -27,11 +27,11 @@ type GoogleSignInProps = {
 
 const STATUS_MESSAGES = {
   checking: "Verificando sua sessão...",
-  signingIn: "Abrindo login do Google...",
-  authenticated: "Login confirmado. Redirecionando...",
-  cancelled: "Login cancelado. Você pode tentar novamente.",
+  signingIn: "Abrindo a entrada do Google...",
+  authenticated: "Entrada confirmada. Abrindo seu espaço...",
+  cancelled: "Entrada cancelada. Você pode tentar novamente.",
   popupBlocked:
-    "O navegador bloqueou o popup. Permita popups para este site e tente novamente.",
+    "O navegador bloqueou a janela de entrada. Permita janelas para este site e tente novamente.",
   genericError:
     "Não foi possível entrar agora. Verifique sua conexão e tente novamente.",
 } as const;

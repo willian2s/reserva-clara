@@ -9,7 +9,7 @@ export default async function NotFound() {
   const hostClass = classifyHost(requestHeaders.get("host") ?? "");
   const returnToApp = ["app", "local", "preview"].includes(hostClass);
   const returnHref = returnToApp ? "/dashboard" : "/";
-  const returnLabel = returnToApp ? "Voltar ao dashboard" : "Voltar ao início";
+  const returnLabel = "Voltar ao início";
 
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16 sm:px-6 lg:py-24">
