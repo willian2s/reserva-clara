@@ -2,8 +2,8 @@
 
 ## Status
 
-`in_progress` — subtarefas 008-01 a 008-05 e 008-07 concluídas; os gates finais
-da 008-06 permanecem pendentes.
+`completed` — subtarefas 008-01 a 008-07 concluídas; os gates finais, o smoke
+manual e o handoff da 008-06 foram validados.
 
 ## Ticker
 
@@ -37,8 +37,7 @@ fase 009.
 Depois do fechamento do núcleo 007, foi aberta uma emenda no próprio ticker
 007 para lifecycle de Asset (`assetId` estável, edição e exclusão condicionada).
 Essa emenda é dona do CRUD e não deve ser implementada por nenhuma subtarefa
-008; a 008-06 permanece bloqueada pelo smoke manual ainda pendente e não
-confirmado nesta sessão.
+008; a 008-06 foi concluída após a confirmação do smoke manual autenticado.
 
 ## Objetivo
 

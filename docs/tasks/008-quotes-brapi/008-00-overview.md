@@ -1,8 +1,8 @@
 # 008 — Quotes & BRAPI
 
-- **Status geral:** in_progress
+- **Status geral:** completed
 - **Spec:** [008-quotes-brapi.md](../../specs/008-quotes-brapi.md)
-- **Progresso:** 6/7 subtarefas concluídas
+- **Progresso:** 7/7 subtarefas concluídas
 
 ## Objetivo
 
@@ -17,7 +17,7 @@ quando provider estiver indisponível.
 - [x] [008-03-implementar-adapter-brapi.md](008-03-implementar-adapter-brapi.md)
 - [x] [008-04-implementar-quoteservice-cache.md](008-04-implementar-quoteservice-cache.md)
 - [x] [008-05-integrar-cotacoes-na-ui.md](008-05-integrar-cotacoes-na-ui.md)
-- [ ] [008-06-validar-gates-e-handoff.md](008-06-validar-gates-e-handoff.md)
+- [x] [008-06-validar-gates-e-handoff.md](008-06-validar-gates-e-handoff.md)
 - [x] [008-07-revisar-linguagem-e-listar-ativos.md](008-07-revisar-linguagem-e-listar-ativos.md)
 
 ## Observações
@@ -55,9 +55,9 @@ quando provider estiver indisponível.
   13 testes e os testes de Quote passaram com 6 de domínio, 7 de adapter, 8 de
   serviço e 8 de route. O comando documentado de Java emitiu aviso porque
   `/usr/libexec/java_home` não existe neste Linux, mas usou o OpenJDK 21
-  disponível. O smoke manual autenticado e o checkpoint de acessibilidade ainda
-  não foram confirmados em ambiente autorizado; por isso a subtarefa permanece
-  `blocked`, o item continua `[ ]` e o progresso permanece `6/7`.
+  disponível. A validação manual autenticada foi confirmada como ok pelo
+  solicitante, incluindo o checkpoint de acessibilidade; a subtarefa está
+  `completed`, o item está `[x]` e o progresso é `7/7`.
 - Rollout futuro de 008 permanece restrito a local/preview com secrets
   server-only e sem deploy nesta fase. Rollback remove route/UI/serviço e
   desabilita secrets sem tocar Assets, Transactions ou Rules; suspeita de

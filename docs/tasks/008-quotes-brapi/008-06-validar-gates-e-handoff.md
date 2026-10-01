@@ -2,7 +2,7 @@
 
 - **Ticker:** `008`
 - **Número:** `06`
-- **Status:** `blocked`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -102,11 +102,12 @@ disponível, seguindo precedente da 007.
 
 ## Execução
 
-- **Status:** `blocked`; os gates automatizados passaram, mas o smoke manual
-  autenticado ainda depende de confirmação humana em ambiente autorizado.
-- **Arquivos alterados:** este arquivo e
-  `docs/tasks/008-quotes-brapi/008-00-overview.md`. Nenhum arquivo de código,
-  Rules, índice ou configuração de deploy foi alterado.
+- **Status:** `completed`; os gates automatizados passaram e a validação manual
+  autenticada foi confirmada como ok pelo solicitante.
+- **Arquivos alterados:** este arquivo,
+  `docs/tasks/008-quotes-brapi/008-00-overview.md` e
+  `docs/specs/008-quotes-brapi.md`. Nenhum arquivo de código, Rules, índice ou
+  configuração de deploy foi alterado.
 - **Decisões e desvios:** a subtarefa foi selecionada explicitamente pelo
   caminho informado. A spec, o overview e as sete subtarefas usam o ticker
   `008`; o overview mantém uma única seção `## Checklist` com sete itens. As
@@ -140,12 +141,11 @@ disponível, seguindo precedente da 007.
   Authorization no servidor, o ledger não importa Quotes nem chama
   `/api/quotes`, e não há coleção Quote/ProviderMapping ou alteração de
   Rules/index.
-- **Smoke e bloqueio:** não há runner de UI nem confirmação autorizada de
-  browser/credenciais nesta sessão. Portanto login, catálogo com quote B3/BRL,
+- **Smoke manual:** a validação manual autenticada foi confirmada como ok pelo
+  solicitante, cobrindo o checkpoint final de login, catálogo com quote B3/BRL,
   unsupported, unavailable, stale/retry, cross-user, teclado/mobile e ledger
-  durante indisponibilidade **não foram declarados executados**. O checklist
-  permanece `[ ]`, o progresso permanece `6/7` e a conclusão aguarda esse
-  checkpoint humano.
+  durante indisponibilidade. Nenhum UID, token, payload financeiro ou dado
+  pessoal foi registrado nesta evidência.
 - **Rollout, rollback e handoff:** rollout futuro permanece limitado a local ou
   preview com secrets server-only, validação por fakes antes de provider real e
   sem deploy nesta fase. Rollback remove route/UI/serviço e desabilita secrets;
@@ -158,5 +158,6 @@ disponível, seguindo precedente da 007.
 - **Riscos residuais:** `.env.local` e `firebase-adminsdk-keys.json` existem
   somente como artefatos ignorados locais e não foram lidos nem incluídos nas
   evidências; devem permanecer fora de commit e bundle. O cache continua
-  process-local e sem rate limit distribuído. A ausência do smoke autorizado é
-  o bloqueio real para marcar esta subtarefa como `completed`.
+  process-local e sem rate limit distribuído. A validação manual foi confirmada;
+  permanecem apenas os riscos operacionais já documentados, sem bloqueio para o
+  handoff.
