@@ -2,7 +2,7 @@
 
 - **Ticker:** `009`
 - **Número:** `04`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -72,3 +72,33 @@ tratar ausência de cotação como valor zero.
 - Não chamar `QuoteService` do domínio.
 - Não usar BasisPoints/target allocation só porque o tipo existe no projeto.
 - Não chamar diferença negativa de performance histórica.
+
+## Execução
+
+- **Arquivos alterados:** `src/domain/market-position.ts`,
+  `src/domain/allocation.ts`, `src/domain/errors.ts`, `src/domain/index.ts`,
+  `scripts/run-domain-tests.mjs`, `tests/domain.test.mjs` e este arquivo,
+  além de `docs/tasks/009-positions-allocation/009-00-overview.md`.
+- **Decisões e desvios:** `deriveMarketPosition` retorna `null` para Position
+  fechada, preserva `fresh`/`stale`, propaga indisponibilidade e recusa
+  referências incompatíveis com erro de composição. Valuation usa produto
+  racional exato e calcula diferença nominal assinada antes da materialização.
+  `calculateAllocation` aceita somente Positions da carteira informada, ignora
+  fechadas, soma apenas Market Positions na moeda-base, ordena por comparação
+  lexical determinística e representa denominador zero com `allocation: null`.
+  Não foram introduzidos target allocation, FX, provider, persistência ou UI.
+- **Comandos executados:** `npm run test:domain`, `npm run lint`,
+  `npm exec next typegen && npx tsc --noEmit`, `npm run build` e
+  `git diff --check`.
+- **Resultados e evidências:** 13 testes de domínio passaram, cobrindo
+  valuation fresh/stale, indisponibilidade, moeda e Asset incompatíveis,
+  posição fechada, diferença negativa, Allocation completa/parcial/vazia,
+  moeda-base, ordenação independente da entrada, carteira divergente e
+  denominador zero. Lint, typegen, TypeScript, build e diff check passaram sem
+  erros. A revisão independente inicialmente encontrou dois bloqueadores
+  (portfolioId e ordenação), ambos corrigidos; a revisão posterior retornou
+  **APROVADO**.
+- **Riscos residuais:** a Allocation opera sobre os valores públicos já
+  materializados de Market Position, conforme o contrato; não há FX nem
+  persistência para recuperar precisão adicional. O crescimento dos racionais
+  permanece limitado pela capacidade de `bigint`.

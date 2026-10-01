@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [009-positions-allocation.md](../../specs/009-positions-allocation.md)
-- **Progresso:** 3/6 subtarefas concluídas
+- **Progresso:** 4/6 subtarefas concluídas
 
 ## Objetivo
 
@@ -15,7 +15,7 @@ antecipar o dashboard da fase 010.
 - [x] [009-01-fechar-contratos-e-politica.md](009-01-fechar-contratos-e-politica.md)
 - [x] [009-02-estender-aritmetica-decimal.md](009-02-estender-aritmetica-decimal.md)
 - [x] [009-03-implementar-position-engine.md](009-03-implementar-position-engine.md)
-- [ ] [009-04-implementar-market-position-e-allocation.md](009-04-implementar-market-position-e-allocation.md)
+- [x] [009-04-implementar-market-position-e-allocation.md](009-04-implementar-market-position-e-allocation.md)
 - [ ] [009-05-compor-read-side-de-carteira.md](009-05-compor-read-side-de-carteira.md)
 - [ ] [009-06-validar-gates-e-handoff.md](009-06-validar-gates-e-handoff.md)
 
@@ -40,3 +40,7 @@ antecipar o dashboard da fase 010.
   ponderada, fees, backfill determinístico, agrupamento por `assetId`, erros
   explícitos, zeragem e materialização racional sem persistência. A próxima
   subtarefa pode implementar Market Position e Allocation.
+- 009-04 concluída: Market Position e Allocation puros exportados pelo domínio,
+  com fresh/stale/unavailable, diferença nominal assinada, moeda-base,
+  diagnósticos parciais, ordenação determinística e denominador zero seguro.
+  A próxima subtarefa pode compor o read-side da carteira.

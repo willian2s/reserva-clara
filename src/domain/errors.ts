@@ -10,7 +10,8 @@ export type DomainErrorCode =
   | "POSITION_ASSET_NOT_FOUND"
   | "POSITION_ASSET_MISMATCH"
   | "POSITION_CURRENCY_MISMATCH"
-  | "POSITION_INVALID_LEDGER";
+  | "POSITION_INVALID_LEDGER"
+  | "POSITION_COMPOSITION_FAILED";
 
 export class DomainError extends Error {
   constructor(
@@ -120,5 +121,12 @@ export class PositionInvalidLedgerError extends DomainError {
   constructor() {
     super("position: ledger references are inconsistent", "POSITION_INVALID_LEDGER");
     this.name = "PositionInvalidLedgerError";
+  }
+}
+
+export class PositionCompositionError extends DomainError {
+  constructor() {
+    super("position: derived values have incompatible references", "POSITION_COMPOSITION_FAILED");
+    this.name = "PositionCompositionError";
   }
 }

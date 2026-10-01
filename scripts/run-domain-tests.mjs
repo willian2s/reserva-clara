@@ -27,10 +27,12 @@ try {
       buildDirectory,
       ...[
         "asset.ts",
+        "allocation.ts",
         "decimal-reducer.ts",
         "errors.ts",
         "index.ts",
         "portfolio.ts",
+        "market-position.ts",
         "position-engine.ts",
         "quote.ts",
         "transaction.ts",
