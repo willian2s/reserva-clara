@@ -2,7 +2,7 @@
 
 - **Ticker:** `007`
 - **Número:** `14`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -60,6 +60,27 @@ git diff --check
 
 ## Execução
 
-- **Status:** `pending`; a emenda não está pronta para rollout.
-- **Riscos residuais:** ausência de cobertura de UI automatizada e eventual
-  volume de Portfolios exigem checkpoint antes de abrir exclusão.
+- **Status:** `completed`; os gates técnicos passaram, o usuário confirmou os
+  testes autenticados de editar e excluir e autorizou o fechamento em ambiente
+  de desenvolvimento sem usuários. Não houve dados legados, deploy produtivo,
+  publicação de Rules ou alteração de ambiente nesta execução.
+- **Arquivos alterados:** este arquivo e o overview 007; nenhuma alteração de
+  código, Rules, dados ou ambiente foi feita nesta execução.
+- **Decisões e desvios:** o fechamento foi limitado ao ambiente de
+  desenvolvimento conforme checkpoint humano do usuário; não foi declarado
+  rollout produtivo. O rollback documentado remove as ações da UI e
+  retorna Rules para negar update/delete, sem desfazer edições confirmadas,
+  remover guards ou restaurar Assets. Nenhum handoff novo foi iniciado.
+- **Comandos executados:** `npm run test:domain`, `npm run test:rules`,
+  `npm run lint`, `npm exec next typegen`, `npx tsc --noEmit`, `npm run build`
+  e `git diff --check`.
+- **Resultados e evidências:** 7 testes de domínio e 19 testes do Emulator de
+  Rules passaram; lint, geração de tipos, TypeScript, build e diff check também
+  passaram. O usuário confirmou que os testes autenticados de editar e excluir
+  foram executados com sucesso. A confirmação não detalhou individualmente os
+  cenários sem uso, com uso e conflito; eles não são atribuídos além dessa
+  evidência manual agregada.
+- **Riscos residuais:** não há runner automatizado de UI. Deploy produtivo,
+  publicação de Rules e auditoria de dados produtivos permanecem fora desta
+  execução e exigem novo checkpoint caso o ambiente deixe de ser somente de
+  desenvolvimento.

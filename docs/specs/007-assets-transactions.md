@@ -2,10 +2,11 @@
 
 ## Status
 
-`amended/in_progress` — o núcleo original foi concluído e teve smoke manual
-confirmado pelo checkpoint humano do handoff. A emenda de lifecycle de Asset
-(007-10 a 007-14) está planejada e reabre somente o escopo necessário para
-edição e exclusão segura.
+`amended/completed` — o núcleo original e a emenda de lifecycle de Asset
+(007-10 a 007-14) foram concluídos em ambiente de desenvolvimento sem usuários,
+com gates técnicos e smoke manual confirmados por checkpoint humano. Rollout
+produtivo, publicação de Rules e auditoria de dados produtivos permanecem fora
+desta execução e exigem novo checkpoint.
 
 ## Ticker
 
