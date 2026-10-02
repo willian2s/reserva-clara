@@ -1,9 +1,14 @@
 import type { Asset } from "./asset";
 import type { AllocationResult } from "./allocation";
+import {
+  addDecimalRationals,
+  decimalToRational,
+  materializeDecimalRational,
+} from "./decimal-reducer";
 import type { MarketPosition } from "./market-position";
 import type { Portfolio } from "./portfolio";
 import type { Position } from "./position-engine";
-import type { QuoteErrorCode, Quote } from "./quote";
+import type { QuoteErrorCode, Quote, QuoteResult } from "./quote";
 import type { BaseCurrencyCode, CurrencyCode, DecimalString, DocumentId } from "./value-objects";
 
 export type KnownAmountStatus = "empty" | "complete" | "partial";
@@ -43,6 +48,89 @@ export type KnownAmount = Readonly<{
   knownAmount: DecimalString;
   unavailable: readonly AmountGap[];
 }>;
+
+export type KnownAmountInput = Readonly<{
+  currency: CurrencyCode;
+  values: readonly DecimalString[];
+  unavailable: readonly AmountGap[];
+  hasItems: boolean;
+}>;
+
+function compareAmountGaps(left: AmountGap, right: AmountGap): number {
+  if (left.portfolioId !== right.portfolioId) {
+    return left.portfolioId < right.portfolioId ? -1 : 1;
+  }
+
+  if (left.scope === "asset" && right.scope === "asset") {
+    if (left.assetId === right.assetId) return 0;
+    return left.assetId < right.assetId ? -1 : 1;
+  }
+
+  if (left.scope === right.scope) return 0;
+  return left.scope === "portfolio" ? -1 : 1;
+}
+
+/** Builds an exact monetary summary without imputing excluded values as zero. */
+export function createKnownAmount(input: KnownAmountInput): KnownAmount {
+  let total = decimalToRational("0");
+  for (const value of input.values) {
+    total = addDecimalRationals(total, decimalToRational(value));
+  }
+
+  return {
+    currency: input.currency,
+    status: !input.hasItems
+      ? "empty"
+      : input.unavailable.length > 0
+        ? "partial"
+        : "complete",
+    knownAmount: materializeDecimalRational(total),
+    unavailable: [...input.unavailable].sort(compareAmountGaps),
+  };
+}
+
+export type QuoteCoverageInput = Readonly<{
+  positionCurrency: CurrencyCode;
+  result: QuoteResult | undefined;
+}>;
+
+/** Counts quote states for open Positions; this is not a monetary coverage percentage. */
+export function deriveQuoteCoverage(
+  inputs: readonly QuoteCoverageInput[],
+): QuoteCoverage {
+  let fresh = 0;
+  let stale = 0;
+  let unavailable = 0;
+
+  for (const input of inputs) {
+    if (
+      input.result === undefined ||
+      input.result.status === "unavailable" ||
+      input.result.quote.price.currency !== input.positionCurrency
+    ) {
+      unavailable += 1;
+    } else if (input.result.quote.freshness === "fresh") {
+      fresh += 1;
+    } else {
+      stale += 1;
+    }
+  }
+
+  const requested = inputs.length;
+  if (requested === 0) {
+    return { status: "none", requested: 0, fresh: 0, stale: 0, unavailable: 0 };
+  }
+
+  if (fresh === requested) {
+    return { status: "fresh", requested, fresh, stale: 0, unavailable: 0 };
+  }
+
+  if (stale === requested) {
+    return { status: "stale", requested, fresh: 0, stale, unavailable: 0 };
+  }
+
+  return { status: "mixed", requested, fresh, stale, unavailable };
+}
 
 export type PositionReadItem = Readonly<{
   /** Presentation metadata only; Asset is not merged into MarketPosition. */
