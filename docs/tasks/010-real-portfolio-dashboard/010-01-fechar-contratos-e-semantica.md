@@ -2,7 +2,7 @@
 
 - **Ticker:** `010`
 - **Número:** `01`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -91,3 +91,32 @@ exports e contratos existentes continuam compilando; não declarar runtime novo.
 - Não transformar contrato de dashboard em snapshot ou read model persistível.
 - Não expor mensagem de provider/Firebase em `AmountGap`.
 - Não criar abstração genérica além dos dois dashboards desta fase.
+
+## Registro de execução
+
+- **Status:** `completed`
+- **Arquivos alterados:** `src/domain/portfolio-summary.ts`,
+  `src/domain/index.ts`, `docs/specs/010-real-portfolio-dashboard.md`,
+  `docs/tasks/010-real-portfolio-dashboard/010-00-overview.md` e este arquivo.
+- **Decisões:** contratos puros foram exportados em módulo dedicado; `AmountGap`
+  é discriminado por `asset`/`portfolio` e contém somente IDs e razões
+  sanitizadas; `QuoteCoverage` conta unidades solicitadas, sem percentual de
+  cobertura monetária; global usa `active-portfolios` e `BaseCurrencyCode`
+  (BRL). Stale permanece valorizável, unavailable não recebe zero e custo
+  investido permanece independente de Quote quando o custo está em BRL.
+  `composition-failed` é falha de Portfolio, nunca gap de Asset; Quote
+  unavailable exige código sanitizado, enquanto incompatibilidade de moeda não
+  carrega código; a cobertura obedece `requested = fresh + stale + unavailable`.
+  `GlobalPortfolioCandidate` permite diagnosticar uma moeda-base não-BRL no seam
+  global sem relaxar o contrato persistido V1.
+- **Desvios:** nenhum. Não foram alterados UI, read-side, contratos
+  persistidos, reducers, Rules ou endpoint de Quotes.
+- **Comandos executados:** `npm run test:domain`, `npm run test:positions`,
+  `npm run test:positions-read`, `npm run lint`, `npm exec next typegen`,
+  `npx tsc --noEmit`, `npm run build` e `git diff --check`.
+- **Resultados e evidências:** todos os comandos concluíram com código zero;
+  os harnesses de domínio/read-side continuaram compilando com os exports
+  novos. A matriz de totais, razões, copy normativa e escopo BRL foi registrada
+  na spec 010.
+- **Riscos residuais:** a projeção enriquecida e a composição global ainda não
+  consomem os contratos; permanecem deliberadamente para 010-02 e 010-03.

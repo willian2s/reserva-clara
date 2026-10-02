@@ -1,8 +1,8 @@
 # 010 — Real Portfolio Dashboard
 
-- **Status geral:** pending
+- **Status geral:** in_progress
 - **Spec:** [010-real-portfolio-dashboard.md](../../specs/010-real-portfolio-dashboard.md)
-- **Progresso:** 0/7 subtarefas concluídas
+- **Progresso:** 1/7 subtarefas concluídas
 
 ## Objetivo
 
@@ -12,7 +12,7 @@ atualização manual e nenhuma fonte patrimonial paralela.
 
 ## Checklist
 
-- [ ] [010-01-fechar-contratos-e-semantica.md](010-01-fechar-contratos-e-semantica.md)
+- [x] [010-01-fechar-contratos-e-semantica.md](010-01-fechar-contratos-e-semantica.md)
 - [ ] [010-02-refatorar-projecao-de-carteira.md](010-02-refatorar-projecao-de-carteira.md)
 - [ ] [010-03-compor-read-side-global.md](010-03-compor-read-side-global.md)
 - [ ] [010-04-criar-apresentacao-patrimonial.md](010-04-criar-apresentacao-patrimonial.md)

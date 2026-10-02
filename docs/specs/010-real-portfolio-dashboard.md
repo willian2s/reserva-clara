@@ -320,15 +320,66 @@ permanece N por natureza do schema atual.
 
 ### Contratos conceituais
 
-Os nomes finais são fechados em 010-01, preservando esta semântica:
+Os nomes finais são fechados em 010-01 e exportados por
+`src/domain/portfolio-summary.ts`, preservando esta semântica:
 
 ```ts
+type AmountGap =
+  | Readonly<{
+      scope: "asset";
+      portfolioId: DocumentId;
+      assetId: DocumentId;
+      reason:
+        | "quote-unavailable"
+        | "quote-currency-mismatch"
+        | "base-currency-mismatch";
+    }>
+  | Readonly<{
+      scope: "portfolio";
+      portfolioId: DocumentId;
+      reason:
+        | "read-failed"
+        | "invalid-ledger"
+        | "composition-failed"
+        | "base-currency-mismatch";
+    }>;
+
 type KnownAmount = Readonly<{
   currency: CurrencyCode;
   status: "empty" | "complete" | "partial";
   knownAmount: DecimalString;
   unavailable: readonly AmountGap[];
 }>;
+
+type QuoteCoverage =
+  | Readonly<{
+      status: "none";
+      requested: 0;
+      fresh: 0;
+      stale: 0;
+      unavailable: 0;
+    }>
+  | Readonly<{
+      status: "fresh";
+      requested: number;
+      fresh: number;
+      stale: 0;
+      unavailable: 0;
+    }>
+  | Readonly<{
+      status: "stale";
+      requested: number;
+      fresh: 0;
+      stale: number;
+      unavailable: 0;
+    }>
+  | Readonly<{
+      status: "mixed";
+      requested: number;
+      fresh: number;
+      stale: number;
+      unavailable: number;
+    }>;
 
 type PositionReadItem = Readonly<{
   asset: Pick<Asset, "id" | "symbol" | "market" | "assetType" | "currency">;
@@ -343,8 +394,13 @@ type PositionReadItem = Readonly<{
       }
     | {
         status: "unavailable";
-        reason: "quote-unavailable" | "quote-currency-mismatch";
-        quoteCode?: QuoteErrorCode;
+        reason: "quote-unavailable";
+        quoteCode: QuoteErrorCode;
+      }
+    | {
+        status: "unavailable";
+        reason: "quote-currency-mismatch";
+        quoteCode?: never;
       };
 }>;
 
@@ -357,6 +413,12 @@ type PortfolioDashboardRead = Readonly<{
   quotes: QuoteCoverage;
 }>;
 
+type GlobalPortfolioCandidate = Readonly<
+  Omit<Portfolio, "baseCurrency"> & {
+    baseCurrency: "BRL" | CurrencyCode;
+  }
+>;
+
 type GlobalPortfolioEntry =
   | Readonly<{
       status: "ready";
@@ -366,13 +428,17 @@ type GlobalPortfolioEntry =
     }>
   | Readonly<{
       status: "unavailable";
-      portfolio: Portfolio;
-      reason: "read-failed" | "invalid-ledger" | "composition-failed";
+      portfolio: GlobalPortfolioCandidate;
+      reason:
+        | "read-failed"
+        | "invalid-ledger"
+        | "composition-failed"
+        | "base-currency-mismatch";
     }>;
 
 type GlobalDashboardRead = Readonly<{
   scope: "active-portfolios";
-  currency: CurrencyCode;
+  currency: "BRL";
   portfolios: readonly GlobalPortfolioEntry[];
   marketValue: KnownAmount;
   investedAmount: KnownAmount;
@@ -380,10 +446,59 @@ type GlobalDashboardRead = Readonly<{
 }>;
 ```
 
-`AmountGap` deve identificar o escopo afetado por IDs e razão estável, sem
-payload financeiro ou mensagem externa. `QuoteCoverage` conta fresh, stale e
-unavailable e deriva estado `none | fresh | stale | mixed`; contagens não
-substituem a lista de diagnósticos.
+`AmountGap` identifica o escopo afetado por IDs e uma razão estável, sem payload
+financeiro, mensagem de provider ou erro externo. `QuoteCoverage` conta
+unidades solicitadas e deriva `none` somente quando `requested` é zero;
+`fresh`/`stale` representam cobertura exclusivamente daquele estado e `mixed`
+representa qualquer combinação restante, inclusive somente indisponíveis. As
+contagens são inteiros finitos não negativos e obedecem
+`requested = fresh + stale + unavailable`. Quote disponível com moeda
+incompatível conta como `unavailable`; Position em moeda não-base com Quote
+compatível conta como `fresh`/`stale`, embora fique fora do amount sem FX. No
+detalhe, a unidade é uma Position aberta; no global, é um `assetId` aberto
+deduplicado antes da consulta compartilhada. As contagens não substituem a
+lista de diagnósticos.
+
+#### Matriz normativa de totais
+
+| Situação | Patrimônio (`marketValue`) | Custo (`investedAmount`) |
+| --- | --- | --- |
+| Sem Positions abertas | `empty`, `knownAmount: "0"`, sem gaps | `empty`, `knownAmount: "0"`, sem gaps |
+| Todas abertas valorizadas em BRL | `complete`, soma conhecida | `complete`, soma do custo remanescente |
+| Quote stale em BRL | `complete`, stale entra na soma | `complete`, independe da Quote |
+| Quote unavailable ou moeda da Quote incompatível em Position BRL | `partial`, soma apenas o conhecido e gap do Asset | `complete`, independe da Quote |
+| Position em moeda diferente da moeda-base, com ou sem Quote | `partial`, excluída sem FX e gap do Asset | `partial`, excluída sem FX e gap do Asset |
+| Todas as Quotes indisponíveis com Positions abertas | `partial`, `knownAmount: "0"` | `complete` se os custos forem BRL |
+| Carteira indisponível no global | `partial`, sem zero imputado e gap da Portfolio | `partial`, sem zero imputado e gap da Portfolio |
+
+Uma carteira sem Positions abertas nunca vira `partial`; uma carteira com
+Positions abertas que não podem ser valorizadas nunca volta a `empty`. O custo
+é sempre o custo de aquisição remanescente das Positions abertas, nunca compras
+históricas, aportes, caixa ou performance.
+
+Para uma Position não-BRL, `base-currency-mismatch` é o diagnóstico do amount
+mesmo quando a Quote também está unavailable; o item ainda preserva o motivo da
+Quote em `PositionReadItem`. Para Positions BRL, o diagnóstico de Quote é
+`quote-unavailable` ou `quote-currency-mismatch`. Assim cada amount tem no
+máximo um gap por `portfolioId + assetId`, sem ocultar o estado da Quote no item.
+Items, gaps, entries e carteiras são ordenados deterministicamente por
+`portfolioId` e depois `assetId`; a identidade de uma posição global é sempre
+`portfolioId + assetId`, nunca apenas `assetId`.
+
+`composition-failed` nunca é diagnóstico de Asset nem estado de
+`currentValue`. Asset ausente, associação inconsistente, resultado duplicado ou
+referência incompatível interrompe a leitura individual; no global, uma falha
+estrutural restrita a uma carteira produz entry e gap de Portfolio, enquanto
+falhas comuns de autenticação, catálogo ou listagem permanecem fatais.
+
+`quote-unavailable` sempre preserva um `quoteCode` sanitizado. Já
+`quote-currency-mismatch` representa Quote disponível incompatível e não carrega
+código de provider. Uma carteira candidata cuja moeda-base difira da moeda
+global vira entry indisponível com `base-currency-mismatch`, gera gap de
+Portfolio nos dois amounts globais e não recebe conversão implícita. O
+repository V1 continua aceitando somente Portfolio BRL; o candidato existe para
+que a composição global trate explicitamente qualquer dado compatível que surja
+nesse seam, sem alterar schema ou parser.
 
 ### Política de falhas
 
@@ -406,9 +521,17 @@ substituem a lista de diagnósticos.
 - `partial` deve ser tão visível quanto o número principal;
 - “patrimônio total” só é usado quando a cobertura é completa; caso contrário,
   “patrimônio conhecido”;
-- “custo investido” sempre traz explicação de custo remanescente;
+- o rótulo normativo do custo é “Custo investido das posições abertas”, com
+  explicação de custo remanescente;
 - fresh/stale/unavailable e horário de Quote aparecem por posição;
-- arquivada recebe banner e não entra na navegação como carteira ativa.
+- stale é “Cotação desatualizada; valor corrente calculado com a última cotação
+  disponível” e unavailable é “Cotação indisponível; este item ficou fora do
+  patrimônio conhecido”;
+- diferença nominal é “Diferença nominal atual”, nunca rendimento ou
+  performance;
+- carteira arquivada recebe “Carteira arquivada — leitura somente. Os valores
+  usam cotações atuais e não representam um snapshot do arquivamento” e não
+  entra na navegação como carteira ativa.
 
 ## Alternativas descartadas
 
