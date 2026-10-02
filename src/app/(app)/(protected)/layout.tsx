@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AuthGate } from "@/components/auth/auth-gate";
+import { DashboardRefreshButton } from "@/components/dashboard/dashboard-refresh-button";
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   return (
@@ -24,7 +25,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
               priority
               className="h-auto w-36 sm:w-44"
             />
-            <nav aria-label="Navegação principal">
+             <nav aria-label="Navegação principal">
               <ul className="flex items-center gap-2 text-sm font-medium">
                 <li>
                   <Link
@@ -50,9 +51,10 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
                     Ativos
                   </Link>
                 </li>
-              </ul>
-            </nav>
-          </div>
+               </ul>
+             </nav>
+             <DashboardRefreshButton />
+           </div>
         </header>
         <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col">
           {children}

@@ -5,12 +5,19 @@ import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
+  CardDescription,
   CardContent,
   CardHeader,
 } from "@/components/ui/card";
-import { usePortfolio } from "@/components/portfolio/use-portfolio";
+import { AllocationList } from "@/components/financial/allocation-list";
+import { KnownAmountCard } from "@/components/financial/known-amount-card";
+import { QuoteCoverageCard } from "@/components/financial/quote-coverage-card";
+import { PositionTable } from "@/components/financial/position-table";
+import { usePortfolioDashboard } from "@/components/portfolio/use-portfolio-dashboard";
+import type { PortfolioDashboardRead } from "@/domain/portfolio-summary";
 
-const DETAIL_ERROR_MESSAGE = "Não foi possível acessar esta carteira.";
+const DETAIL_ERROR_MESSAGE =
+  "Não foi possível carregar os dados desta carteira. Tente novamente.";
 
 function formatCreatedAt(createdAt: Date) {
   return new Intl.DateTimeFormat("pt-BR", {
@@ -18,34 +25,199 @@ function formatCreatedAt(createdAt: Date) {
   }).format(createdAt);
 }
 
+function PortfolioActions({ portfolioId }: { portfolioId: string }) {
+  return (
+    <nav
+      className="flex flex-wrap items-center gap-3 border-t border-border pt-5"
+      aria-label="Ações da carteira"
+    >
+      <Link
+        className={buttonVariants({ variant: "outline" })}
+        href={`/portfolios/${portfolioId}/transactions`}
+      >
+        Operações
+      </Link>
+      <Link
+        className={buttonVariants({ variant: "outline" })}
+        href={`/portfolios/${portfolioId}/settings`}
+      >
+        Configurações
+      </Link>
+      <Link
+        className={buttonVariants({ variant: "ghost" })}
+        href="/assets"
+      >
+        Ativos
+      </Link>
+      <Link className={buttonVariants({ variant: "ghost" })} href="/portfolios">
+        Todas as carteiras
+      </Link>
+    </nav>
+  );
+}
+
+function PortfolioDashboardContent({
+  read,
+  portfolioId,
+}: {
+  read: PortfolioDashboardRead;
+  portfolioId: string;
+}) {
+  const openItems = read.items.filter((item) => !item.position.closed);
+  const itemsByAssetId = new Map(
+    openItems.map((item) => [item.asset.id, item]),
+  );
+  const allocationItems = read.allocation.entries.map((entry) => {
+    const item = itemsByAssetId.get(entry.assetId);
+    return {
+      assetId: entry.assetId,
+      label: item
+        ? `${item.asset.symbol} · ${item.asset.market}`
+        : entry.assetId,
+      marketValue: entry.marketValue,
+      allocation: entry.allocation,
+    };
+  });
+  const isArchived = read.portfolio.archivedAt !== null;
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-primary">
+                Carteira {isArchived ? "arquivada" : "ativa"}
+              </p>
+              <h2 className="mt-1 break-words font-heading text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">
+                {read.portfolio.name}
+              </h2>
+              <CardDescription>
+                Moeda base: {read.portfolio.baseCurrency} · Criada em {formatCreatedAt(read.portfolio.createdAt)}
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isArchived ? (
+            <p className="rounded-card border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+              Carteira arquivada — leitura somente. Os valores usam cotações
+              atuais e não representam um snapshot do arquivamento.
+            </p>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Visão corrente derivada das posições abertas e das cotações
+              disponíveis.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <KnownAmountCard
+          title="Valor investido"
+          amount={read.investedAmount}
+          description="Custo de aquisição remanescente das posições abertas; não representa aportes ou performance."
+        />
+        <KnownAmountCard
+          title="Patrimônio"
+          amount={read.marketValue}
+          description="Soma das cotações conhecidas das posições abertas na moeda-base."
+        />
+      </div>
+
+      {openItems.length === 0 ? (
+        <Card>
+          <CardHeader>
+            <h2 className="font-heading text-base font-semibold">
+              Nenhuma posição aberta
+            </h2>
+            <CardDescription>
+              {isArchived
+                ? "Esta carteira arquivada não possui posições atuais; novas operações continuam bloqueadas."
+                : "Esta carteira não possui operações que formem uma posição atual."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {isArchived
+                ? "Consulte o histórico ou abra as configurações para restaurar a carteira antes de registrar uma operação."
+                : "Consulte o histórico ou cadastre um ativo para começar uma nova operação."}
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                className={buttonVariants({ variant: "outline" })}
+                href={`/portfolios/${portfolioId}/transactions`}
+              >
+                Abrir histórico
+              </Link>
+              {isArchived ? (
+                <Link
+                  className={buttonVariants({ variant: "ghost" })}
+                  href={`/portfolios/${portfolioId}/settings`}
+                >
+                  Abrir configurações
+                </Link>
+              ) : (
+                <Link
+                  className={buttonVariants({ variant: "ghost" })}
+                  href="/assets"
+                >
+                  Cadastrar ativo
+                </Link>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        <PositionTable items={openItems} allocation={read.allocation.entries} />
+      )}
+
+      <details className="min-w-0 rounded-card border border-border px-4 py-3">
+        <summary className="cursor-pointer text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+          Ver composição e cobertura das cotações
+        </summary>
+        <div className="mt-4 space-y-6">
+          <QuoteCoverageCard coverage={read.quotes} />
+          <AllocationList allocation={read.allocation} items={allocationItems} />
+        </div>
+      </details>
+
+      <PortfolioActions portfolioId={portfolioId} />
+    </div>
+  );
+}
+
 export function PortfolioDetail({ portfolioId }: { portfolioId: string }) {
-  const { state: currentState, retry } = usePortfolio(portfolioId);
+  const { state, refresh } = usePortfolioDashboard(portfolioId);
+  const read = state.data?.portfolio.id === portfolioId ? state.data : null;
+  const hasRead = read !== null;
+  const isScopePending = state.data !== null && !hasRead;
 
   return (
     <section className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6 lg:px-10 lg:py-14">
       <header className="mb-8 max-w-2xl">
         <p className="text-sm font-medium text-primary">Patrimônio</p>
         <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">
-          Visão da carteira
+          {read?.portfolio.name ?? "Visão da carteira"}
         </h1>
         <p className="mt-3 text-muted-foreground">
-          Consulte os dados reais desta carteira, sem métricas patrimoniais
-          calculadas nesta fase.
+          Consulte o patrimônio conhecido, a composição e as posições atuais.
         </p>
       </header>
 
-      {currentState.status === "loading" && (
+      {(state.status === "loading" || isScopePending) && !hasRead && (
         <p
           className="text-sm text-muted-foreground"
           role="status"
           aria-live="polite"
           aria-busy="true"
         >
-          Carregando carteira...
+          Carregando dados da carteira...
         </p>
       )}
 
-      {currentState.status === "unavailable" && (
+      {state.status === "error" && !isScopePending && !hasRead && (
         <Card role="alert" aria-live="assertive">
           <CardHeader>
             <h2 className="font-heading text-base font-semibold">
@@ -58,7 +230,7 @@ export function PortfolioDetail({ portfolioId }: { portfolioId: string }) {
               <Button
                 type="button"
                 variant="outline"
-                onClick={retry}
+                onClick={() => refresh()}
               >
                 Tentar novamente
               </Button>
@@ -73,62 +245,30 @@ export function PortfolioDetail({ portfolioId }: { portfolioId: string }) {
         </Card>
       )}
 
-      {currentState.status === "ready" && (
-        <Card>
-          <CardHeader>
-            <p className="text-sm font-medium text-primary">Carteira</p>
-            <h2 className="font-heading break-words text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">
-              {currentState.portfolio.name}
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Moeda base: {currentState.portfolio.baseCurrency}
+      {state.status === "refreshing" && hasRead && (
+        <p className="mb-4 text-sm text-muted-foreground" role="status" aria-live="polite" aria-busy="true">
+          Atualizando dados da carteira...
+        </p>
+      )}
+
+      {state.status === "error" && hasRead && (
+        <Card role="alert" aria-live="assertive" className="mb-6">
+          <CardContent className="flex flex-wrap items-center justify-between gap-4 p-6">
+            <p className="text-sm text-destructive">
+              {state.error ?? DETAIL_ERROR_MESSAGE} A última leitura válida
+              continua visível.
             </p>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <p className="text-sm text-muted-foreground">
-              Criada em {formatCreatedAt(currentState.portfolio.createdAt)}
-            </p>
-            <p className="rounded-card border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
-              Recursos patrimoniais estarão disponíveis em fases futuras. Esta
-              carteira ainda não exibe saldo, valores ou posições.
-            </p>
-            <div className="space-y-3 border-t border-border pt-5">
-              <h3 className="font-heading text-lg font-semibold">
-                Gerenciamento da carteira
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                As configurações ficam separadas das informações financeiras
-                desta carteira.
-              </p>
-              <Link
-                className={buttonVariants({ variant: "outline" })}
-                href={`/portfolios/${currentState.portfolio.id}/settings`}
-              >
-                Configurações da carteira
-              </Link>
-            </div>
-            <div className="space-y-3 border-t border-border pt-5">
-              <h3 className="font-heading text-lg font-semibold">
-                Histórico de operações
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Consulte e registre compras e vendas sem cálculos patrimoniais.
-              </p>
-              <Link
-                className={buttonVariants({ variant: "outline" })}
-                href={`/portfolios/${currentState.portfolio.id}/transactions`}
-              >
-                Abrir histórico de operações
-              </Link>
-            </div>
-            <Link
-              className={buttonVariants({ variant: "outline" })}
-              href="/portfolios"
-            >
-              Voltar para carteiras
-            </Link>
+            <Button type="button" variant="outline" onClick={() => refresh()}>
+              Tentar atualizar novamente
+            </Button>
           </CardContent>
         </Card>
+      )}
+
+      {hasRead && (
+        <>
+          <PortfolioDashboardContent read={read} portfolioId={portfolioId} />
+        </>
       )}
     </section>
   );

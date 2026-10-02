@@ -9,6 +9,16 @@ import {
 } from "@/components/dashboard/dashboard-read-state";
 
 const DEFAULT_ERROR_MESSAGE = "Não foi possível atualizar os dados. Tente novamente.";
+export const DASHBOARD_REFRESH_EVENT = "reserva-clara:dashboard-refresh";
+export const DASHBOARD_REFRESH_STATUS_EVENT = "reserva-clara:dashboard-refresh-status";
+
+function publishRefreshStatus(isRefreshing: boolean): void {
+  window.dispatchEvent(
+    new CustomEvent(DASHBOARD_REFRESH_STATUS_EVENT, {
+      detail: { isRefreshing },
+    }),
+  );
+}
 
 export type DashboardReadOptions = Readonly<{
   /** Invalidates an in-flight read when the owning user or scope changes. */
@@ -39,14 +49,17 @@ export function useDashboardRead<T>(
     const requestId = requestIdRef.current + 1;
     requestIdRef.current = requestId;
     setState((current) => dashboardReadReducer(current, { type: "request", requestId }));
+    publishRefreshStatus(true);
 
     void Promise.resolve().then(() => readRef.current()).then(
       (data) => {
         if (!mountedRef.current || requestId !== requestIdRef.current) return;
+        publishRefreshStatus(false);
         setState((current) => dashboardReadReducer(current, { type: "success", requestId, data }));
       },
       () => {
         if (!mountedRef.current || requestId !== requestIdRef.current) return;
+        publishRefreshStatus(false);
         setState((current) => dashboardReadReducer(current, {
           type: "failure",
           requestId,
@@ -72,8 +85,20 @@ export function useDashboardRead<T>(
       effectIsActive = false;
       mountedRef.current = false;
       requestIdRef.current += 1;
+      publishRefreshStatus(false);
     };
   }, [refresh, scopeKey]);
+
+  useEffect(() => {
+    const handleRefreshRequest = () => {
+      refresh();
+    };
+
+    window.addEventListener(DASHBOARD_REFRESH_EVENT, handleRefreshRequest);
+    return () => {
+      window.removeEventListener(DASHBOARD_REFRESH_EVENT, handleRefreshRequest);
+    };
+  }, [refresh]);
 
   return { state, refresh };
 }

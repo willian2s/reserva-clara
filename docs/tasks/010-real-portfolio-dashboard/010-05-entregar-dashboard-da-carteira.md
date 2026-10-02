@@ -2,7 +2,7 @@
 
 - **Ticker:** `010`
 - **Número:** `05`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -94,3 +94,65 @@ carteira arquivada.
 - Não esconder posição sem Quote só porque não há `MarketPosition`.
 - Não permitir ação patrimonial em carteira arquivada.
 - Não expor mensagens internas de domínio/Firebase/provider.
+
+## Registro de execução
+
+- **Status:** `completed`
+- **Arquivos alterados:** `src/components/portfolio/use-portfolio-dashboard.ts`,
+  `src/components/portfolio/portfolio-detail.tsx`,
+  `src/components/financial/position-table.tsx`,
+  `src/components/dashboard/use-dashboard-read.ts`,
+  `src/components/dashboard/dashboard-refresh-button.tsx` e
+  `src/app/(app)/(protected)/layout.tsx`.
+- **Decisões:** o detalhe passou a consumir uma única leitura composta de
+  `readPortfolioPositions`, com repositories e Quote client reais injetados no
+  hook. O estado compartilhado preserva a última leitura durante refresh e
+  falha posterior, enquanto o `requestId` descarta respostas obsoletas. A UI
+  exibe somente posições abertas, usa `KnownAmountCard`, `AllocationList`,
+  `QuoteCoverageCard` e `PositionTable`, preserva indisponibilidade/moeda
+  incompatível sem imputar zero e mostra o estado/timestamp da cotação. A
+  atualização normal fica centralizada no botão do topo, com feedback de
+  atualização e bloqueio contra cliques repetidos; o detalhe mantém apenas
+  retry contextual para erros, e o cleanup limpa o estado global ao trocar de
+  carteira. As
+  posições abertas usam uma tabela resumida em desktop e linhas empilhadas em
+  mobile, reduzindo a densidade técnica sem perder os diagnósticos essenciais.
+  O estado e os diagnósticos da cotação continuam disponíveis no card de
+  cobertura, nos gaps da composição e em detalhes recolhidos por ativo, sem
+  poluir cada linha da tabela.
+  Carteira arquivada permanece consultável com copy explícita de leitura
+  corrente e sem sugestão de nova operação.
+- **Desvios:** não houve alteração funcional de requisitos. A nomenclatura
+  visual `Custo investido das posições abertas` foi aprovada pelo produto como
+  `Valor investido`, com a descrição mantendo o significado de custo de
+  aquisição. Não foram modificados schema, Rules, repositories, ledger, rotas,
+  matemática patrimonial ou persistência. O diagnóstico da composição continua
+  resumido por quantidade no componente compartilhado; os motivos sanitizados
+  permanecem visíveis nos cards e nos gaps dos totais.
+- **Comandos executados:** `npm run test:positions-read`,
+  `npm run test:dashboard-read`, `npm run test:financial-presentation`,
+  `npm run lint`, `npm exec next typegen`, `npx tsc --noEmit`, `npm run build` e
+  `git diff --check`.
+- **Resultados e evidências:** todos os comandos concluíram com código zero.
+  Passaram 9 testes de read-side individual, 8 de read-side global e 6 de
+  apresentação; lint, typegen, TypeScript, build Next.js 16.3.5 e diff check
+  também passaram. A revisão independente não encontrou blockers ou majors e
+  aprovou as correções de archive, troca de `portfolioId` e tabela responsiva.
+- **Riscos residuais:** não há runner React nem smoke automatizado; permanece
+  pendente a validação manual de teclado, zoom, contraste, largura de 320 px e
+  fixtures visuais de archive/empty/partial/refresh, prevista para o fechamento
+  da fase em 010-07.
+- **Ajuste visual posterior:** a coluna `Quantidade` foi centralizada no
+  cabeçalho e nas células da tabela para melhorar a separação visual em relação
+  ao custo médio.
+- **Ajuste visual da referência:** a tabela de posições passou a apresentar
+  `Ativo`, `Valor atualizado`, `Valor investido`, `Quantidade` e `% do
+  patrimônio`, usando os `AllocationEntry` já derivados. P&L, rentabilidade e
+  TWR não foram adicionados porque permanecem fora do escopo desta spec.
+- **Ajuste de nomenclatura:** por solicitação do produto, os cards aparecem na
+  ordem `Valor investido | Patrimônio`; a descrição do primeiro mantém explícito
+  que o valor é o custo de aquisição remanescente das posições abertas.
+- **Ajuste de densidade:** composição corrente e cobertura das cotações ficam
+  recolhidas em uma seção opcional, sem desaparecerem do read-side ou dos
+  diagnósticos disponíveis ao usuário. Essa seção aparece abaixo da tabela de
+  posições e antes das ações finais da carteira.
