@@ -2,7 +2,7 @@
 
 > **Reserva Clara — Seu patrimônio, com clareza.**
 
-Atualizado em: **2026-09-29**
+Atualizado em: **2026-10-02**
 
 Este documento define a direção de produto e a ordem macro de evolução do Reserva Clara.
 
@@ -305,7 +305,7 @@ A fase estabeleceu que um Portfolio com ledger não pode depender de hard delete
 
 # 4. Ledger patrimonial
 
-## 007 — Assets & Transactions ✅ (emenda de lifecycle em andamento)
+## 007 — Assets & Transactions ✅ (emenda de lifecycle concluída)
 
 ### Objetivo
 
@@ -418,7 +418,7 @@ Isso não bloqueia a 008 ou a 009, mas deve permanecer explícito.
 
 # 5. Dados de mercado
 
-## 008 — Quotes & BRAPI ⏭️
+## 008 — Quotes & BRAPI ✅
 
 ### Objetivo
 
@@ -504,7 +504,7 @@ ledger continua funcionando
 
 # 6. Motor patrimonial
 
-## 009 — Positions & Allocation
+## 009 — Positions & Allocation ✅
 
 ### Objetivo
 
@@ -578,7 +578,7 @@ Se houver read model/cache, ele deve ser reconstruível a partir do ledger.
 
 # 7. Dashboard patrimonial real
 
-## 010 — Real Portfolio Dashboard
+## 010 — Real Portfolio Dashboard ⏭️
 
 ### Objetivo
 
@@ -1348,11 +1348,11 @@ Essas fases são possibilidades, não backlog obrigatório.
    ↓
 007 Assets + Transactions ✅
    ↓
-008 Quotes & BRAPI ⏭️
+008 Quotes & BRAPI ✅
    ↓
-009 Positions + Allocation
+009 Positions + Allocation ✅
    ↓
-010 Dashboard
+010 Dashboard ⏭️
    ↓
 011 Target Allocation + Contributions
    ↓
@@ -1396,8 +1396,10 @@ Fases 007–010.
 
 Estado atual:
 
-- 007 concluída;
-- 008 é a próxima fase.
+- 007 concluída, incluindo a emenda de lifecycle;
+- 008 concluída;
+- 009 concluída;
+- 010 é a próxima fase.
 
 Resultado esperado ao concluir o marco:
 

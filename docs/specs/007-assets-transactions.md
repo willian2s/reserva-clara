@@ -23,8 +23,8 @@ fases anteriores pode conter hashes antigos e não substitui o checkout atual.
 O núcleo original da fase já entregou parser, converter, repository, UI e Rules
 para Asset/Transaction. O histórico desta spec registra que a Portfolio teve
 de migrar de hard delete para archive antes da abertura do ledger. O baseline
-atual é o contrato V2 owner-scoped descrito abaixo; a única lacuna reaberta é o
-lifecycle de Asset definido na emenda 007-10 a 007-14.
+atual é o contrato V2 owner-scoped descrito abaixo; o lifecycle de Asset
+definido na emenda 007-10 a 007-14 também foi concluído.
 
 O checkout usa Next.js `16.3.5`, React `19.2.8`, TypeScript strict, Tailwind 4,
 shadcn `base-nova`, Base UI, Firebase Web `12.19.0` e npm. Não há runner de UI,
@@ -34,10 +34,10 @@ alterar rotas, layouts ou parâmetros dinâmicos.
 
 O núcleo 007 permanece histórico e compatível: Asset continua owner-scoped,
 reutilizável entre Portfolios e referenciado por `assetId` nas Transactions.
-Uma decisão posterior do produto exige agora edição preservando o mesmo ID e
-exclusão somente quando não houver Transaction vinculada. Essa emenda não será
-implementada na fase 008 de Quotes; 008-06 continua bloqueada apenas pelo
-smoke manual ainda pendente e não confirmado nesta sessão.
+Uma decisão posterior do produto exigiu edição preservando o mesmo ID e exclusão
+somente quando não houver Transaction vinculada. Essa emenda foi concluída no
+próprio ticker 007 e não foi implementada na fase 008 de Quotes; a 008-06 foi
+concluída após a confirmação do smoke manual autenticado.
 
 ## Objetivo
 
