@@ -2,7 +2,32 @@
 
 - **Ticker:** `010`
 - **Número:** `04`
-- **Status:** `pending`
+- **Status:** `completed`
+
+## Correções da revisão independente
+
+- `PositionCard` agora diferencia cotação indisponível de cotação incompatível,
+  sem exibir código de provider no segundo caso; também explica quando o valor
+  contextual está fora da moeda-base e dos totais.
+- `useDashboardRead` transforma exceções síncronas da leitura em rejeições,
+  invalida respostas pendentes ao mudar `scopeKey` e agenda uma leitura do novo
+  escopo sem alterar a API existente de `read`/mensagem.
+- `AllocationList` permite quebra de valores longos em larguras de 320 px.
+- O harness puro cobre as novas mensagens centralizadas de moeda e cotação.
+
+## Evidências da correção
+
+- `npm run test:financial-presentation`: 6/6 testes aprovados.
+- `npm run lint`: aprovado.
+- `npm exec next typegen`: aprovado.
+- `npx tsc --noEmit`: aprovado após o typegen.
+- `npm run build`: aprovado.
+- `git diff --check`: aprovado.
+
+## Fora desta subtarefa
+
+A montagem das rotas e dashboards de carteira/global, além do gate final da fase,
+continua dependente das subtarefas 010-05, 010-06 e 010-07; não foi alterada aqui.
 
 ## Objetivo e resultado esperado
 
@@ -93,3 +118,50 @@ largura 320 px e desktop, nomes longos e contraste sem depender de cor.
 - Não usar verde/vermelho como única distinção de sinal.
 - Não duplicar `AssetQuote` sem avaliar reutilização da copy de erros.
 - Não generalizar componentes além dos requisitos concretos da fase.
+
+## Registro de execução
+
+- **Status:** `completed`
+- **Arquivos alterados:** `src/components/financial/financial-format.ts`,
+  `src/components/financial/financial-copy.ts`,
+  `src/components/financial/known-amount-card.tsx`,
+  `src/components/financial/quote-coverage-card.tsx`,
+  `src/components/financial/allocation-list.tsx`,
+  `src/components/financial/position-card.tsx`,
+  `src/components/dashboard/dashboard-read-state.ts`,
+  `src/components/dashboard/use-dashboard-read.ts`,
+  `src/components/asset/asset-quote.tsx`,
+  `tests/financial-presentation.test.mjs`,
+  `scripts/run-financial-presentation-tests.mjs` e `package.json`.
+- **Decisões:** formatadores operam sobre strings canônicas, com agrupamento e
+  arredondamento exatos para centavos, sem converter valores financeiros para
+  `number`; percentuais são razões textuais e `null` permanece indisponível.
+  Timestamps de Quote são apresentados em pt-BR no fuso `America/Sao_Paulo`.
+  Copy de status, códigos de Quote e gaps foi centralizada. Os componentes
+  recebem contratos/valores prontos, exibem estados textuais e não fazem I/O ou
+  matemática patrimonial. O reducer preserva a última leitura durante refresh e
+  erro, descarta `requestId` obsoleto, protege unmount e o hook invalida mudança
+  de `scopeKey` (incluindo limpeza da leitura anterior).
+- **Desvios:** nenhum requisito foi alterado. Não foi introduzido teste React,
+  gráfico, biblioteca pesada, rota ou integração de dashboard, conforme o
+  escopo da subtarefa; a composição usa lista acessível sem barra autoritativa.
+- **Comandos executados:** `npm run test:financial-presentation`,
+  `npm run test:domain`, `npm run test:positions`,
+  `npm run test:positions-read`, `npm run test:dashboard-read`,
+  `npm run test:quotes-adapter`, `npm run test:quotes-service`,
+  `npm run test:quotes-route`, `npm run lint`, `npm exec next typegen`,
+  `npx tsc --noEmit`, `npm run build` e `git diff --check`.
+- **Resultados e evidências:** o harness da subtarefa passou 6/6 testes,
+  incluindo limites, sinal negativo, percentuais nulos, copy de moeda/cotação,
+  preservação da última leitura e respostas obsoletas. Os harnesses existentes
+  passaram com 14 testes de domínio, 4 de posições, 9 de read-side individual,
+  8 de read-side global, 7 do adapter de Quotes, 8 do serviço e 8 da rota.
+   Lint, typegen, TypeScript, build Next.js 16.3.5 e `git diff --check` passaram.
+  A revisão independente final não encontrou bloqueadores; confirmou a
+  distinção de estados de Quote, `scopeKey`/unmount/`requestId`, overflow mobile,
+  copy centralizada e ausência de conversão financeira para `number`.
+- **Riscos residuais:** não há teste automatizado de renderização React nem
+  smoke manual de teclado, zoom, contraste e largura de 320 px nesta execução;
+  esses gates permanecem para as telas 010-05/010-06 e o fechamento 010-07.
+  A integração efetiva do hook e das peças nas duas rotas também permanece
+  fora desta subtarefa.

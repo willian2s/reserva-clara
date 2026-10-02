@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [010-real-portfolio-dashboard.md](../../specs/010-real-portfolio-dashboard.md)
-- **Progresso:** 3/7 subtarefas concluídas
+- **Progresso:** 4/7 subtarefas concluídas
 
 ## Objetivo
 
@@ -15,7 +15,7 @@ atualização manual e nenhuma fonte patrimonial paralela.
 - [x] [010-01-fechar-contratos-e-semantica.md](010-01-fechar-contratos-e-semantica.md)
 - [x] [010-02-refatorar-projecao-de-carteira.md](010-02-refatorar-projecao-de-carteira.md)
 - [x] [010-03-compor-read-side-global.md](010-03-compor-read-side-global.md)
-- [ ] [010-04-criar-apresentacao-patrimonial.md](010-04-criar-apresentacao-patrimonial.md)
+- [x] [010-04-criar-apresentacao-patrimonial.md](010-04-criar-apresentacao-patrimonial.md)
 - [ ] [010-05-entregar-dashboard-da-carteira.md](010-05-entregar-dashboard-da-carteira.md)
 - [ ] [010-06-entregar-dashboard-global.md](010-06-entregar-dashboard-global.md)
 - [ ] [010-07-validar-gates-e-handoff.md](010-07-validar-gates-e-handoff.md)
@@ -35,3 +35,6 @@ atualização manual e nenhuma fonte patrimonial paralela.
 - 010-03 concluída com composição global ativa, Quotes deduplicadas, falhas
   isoladas e reconciliação decimal; a integração visual permanece nas próximas
   subtarefas.
+- 010-04 concluída com formatadores exatos pt-BR, copy sanitizada centralizada,
+  peças acessíveis de métricas/cobertura/composição/posição e reducer/hook de
+  refresh concorrente; a integração nas rotas permanece em 010-05 e 010-06.

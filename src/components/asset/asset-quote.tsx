@@ -1,33 +1,10 @@
-import type { QuoteErrorCode, QuoteResult } from "@/domain/quote";
-
-const QUOTE_ERROR_MESSAGES: Record<QuoteErrorCode, string> = {
-  UNAUTHENTICATED: "Sua sessão não está disponível para carregar esta cotação.",
-  INVALID_REQUEST: "Não foi possível solicitar esta cotação.",
-  BATCH_LIMIT: "Não foi possível consultar este lote de cotações.",
-  UNSUPPORTED_ASSET: "Este ativo não pode ser cotado.",
-  CURRENCY_MISMATCH: "A moeda deste ativo não é compatível com a cotação.",
-  NOT_FOUND: "Cotação não encontrada para este ativo.",
-  TIMEOUT: "A cotação demorou demais e está indisponível.",
-  RATE_LIMITED: "A cotação está temporariamente indisponível.",
-  PROVIDER_UNAVAILABLE: "A cotação está indisponível no momento.",
-  INVALID_PROVIDER_RESPONSE: "A cotação retornou uma resposta inválida.",
-  NOT_CONFIGURED: "A cotação está indisponível no momento.",
-};
-
-function formatPrice(decimal: string) {
-  return decimal.replace(".", ",");
-}
-
-function formatQuotedAt(value: string) {
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(new Date(value));
-}
-
-function unavailableMessage(code: QuoteErrorCode) {
-  return QUOTE_ERROR_MESSAGES[code];
-}
+import type { QuoteResult } from "@/domain/quote";
+import { formatDecimal, formatTimestamp } from "@/components/financial/financial-format";
+import {
+  quoteErrorMessage,
+  quoteFreshnessLabel,
+  quoteUnavailableDescription,
+} from "@/components/financial/financial-copy";
 
 export function AssetQuote({
   loading,
@@ -54,26 +31,25 @@ export function AssetQuote({
 
     return (
       <div className="rounded-control border border-border bg-muted/30 p-3">
-        <p className="text-sm font-medium">Cotação indisponível</p>
-        <p className="mt-1 text-sm text-muted-foreground">{unavailableMessage(code)}</p>
+        <p className="text-sm font-medium">{quoteUnavailableDescription()}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{quoteErrorMessage(code)}</p>
       </div>
     );
   }
 
   const { quote } = result;
-  const isStale = quote.freshness === "stale";
 
   return (
     <div className="rounded-control border border-border bg-muted/30 p-3">
       <p className="text-sm font-medium">
-        {isStale ? "Cotação desatualizada" : "Cotação atualizada"}
+        {quoteFreshnessLabel(quote.freshness)}
       </p>
       <p className="mt-1 text-lg font-semibold tracking-tight">
-        {formatPrice(quote.price.decimal)} {quote.price.currency}
+        {formatDecimal(quote.price.decimal)} {quote.price.currency}
       </p>
       <p className="mt-1 text-sm text-muted-foreground">
         Cotada em{" "}
-        <time dateTime={quote.quotedAt}>{formatQuotedAt(quote.quotedAt)}</time>
+        <time dateTime={quote.quotedAt}>{formatTimestamp(quote.quotedAt)}</time>
       </p>
       {quote.symbolChanged && (
         <p className="mt-1 text-sm text-muted-foreground">
