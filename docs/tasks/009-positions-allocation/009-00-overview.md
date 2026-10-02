@@ -1,8 +1,8 @@
 # 009 — Positions & Allocation
 
-- **Status geral:** in_progress
+- **Status geral:** completed
 - **Spec:** [009-positions-allocation.md](../../specs/009-positions-allocation.md)
-- **Progresso:** 5/6 subtarefas concluídas
+- **Progresso:** 6/6 subtarefas concluídas
 
 ## Objetivo
 
@@ -17,7 +17,7 @@ antecipar o dashboard da fase 010.
 - [x] [009-03-implementar-position-engine.md](009-03-implementar-position-engine.md)
 - [x] [009-04-implementar-market-position-e-allocation.md](009-04-implementar-market-position-e-allocation.md)
 - [x] [009-05-compor-read-side-de-carteira.md](009-05-compor-read-side-de-carteira.md)
-- [ ] [009-06-validar-gates-e-handoff.md](009-06-validar-gates-e-handoff.md)
+- [x] [009-06-validar-gates-e-handoff.md](009-06-validar-gates-e-handoff.md)
 
 ## Observações
 
@@ -49,3 +49,10 @@ antecipar o dashboard da fase 010.
   respeita lotes de 20, preserva posições em falhas sanitizadas e não solicita
   cotação para posições fechadas. Testes, lint, typegen, TypeScript e build
   passaram; a próxima subtarefa pode executar os gates finais e o handoff.
+- 009-06 concluída: foi criado o harness dedicado `test:positions` (4 testes),
+  além dos testes de domínio (13), read-side (6), Quotes (7/8/8) e Rules
+  Emulator (19). Lint, typegen, TypeScript, build e diff check também
+  passaram. A inspeção confirmou ausência de persistência Position/Quote,
+  índice, migration, segredo ou alteração de UI; os handoffs para
+  010/011/012/015/016/017/020/021 estão registrados na spec. A revisão
+  independente foi **APROVADA**, sem bloqueadores.

@@ -2,7 +2,7 @@
 
 - **Ticker:** `009`
 - **Número:** `06`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -88,3 +88,38 @@ git diff --check
 - Não aceitar smoke produtivo ou deploy como necessário para esta fase.
 - Se o ledger grande ou custo de leitura bloquear, registrar o limite e
   encaminhar para 021, sem criar read model autoritativo como atalho.
+
+## Execução
+
+- **Arquivos alterados:** `package.json`, `scripts/run-position-tests.mjs`,
+  `tests/position.test.mjs`, `docs/specs/009-positions-allocation.md`, este
+  arquivo e `docs/tasks/009-positions-allocation/009-00-overview.md`. Nenhum
+  arquivo de runtime, Rules, schema, índice, migration ou UI foi alterado.
+- **Decisões e desvios:** foi criado o harness dedicado `test:positions`, com
+  compilação CommonJS temporária do mesmo conjunto de módulos de domínio e
+  quatro testes sintéticos de Position: custo médio/fees e ordenação, zeragem
+  sem mutação, agrupamento por Asset e erros de ledger/moeda/saldo. O leitor
+  mantém harness próprio em `test:positions-read`. A instrução macOS
+  `/usr/libexec/java_home` continua inexistente neste Linux; Java 21 instalado
+  foi confirmado e o Rules Emulator passou.
+- **Comandos executados:** `npm run test:positions` (4/4), `npm run
+  test:domain` (13/13), `npm run test:positions-read` (6/6), `npm run
+  test:quotes-adapter` (7/7), `npm run test:quotes-service` (8/8), `npm run
+  test:quotes-route` (8/8), `JAVA_HOME=$(/usr/libexec/java_home -v 21) npm
+  run test:rules` (19/19), `java -version`, `npm run lint`, `npm exec next
+  typegen`, `npx tsc --noEmit`, `npm run build` e `git diff --check`.
+- **Resultados e evidências:** todos os testes executáveis passaram; lint,
+  typegen, TypeScript, build e diff check passaram sem erros. O Rules Emulator
+  executou com Java OpenJDK 21.0.12.1. A inspeção do módulo client e dos
+  chunks client gerados não encontrou Admin SDK, BRAPI, `QuoteService` ou
+  segredo. `firebase.json` referencia somente `firestore.rules`; não há
+  `firestore.indexes.json`, migration ou coleção Position/Quote. O dashboard
+  existente aparece no build, mas não houve alteração de UI/rota nesta fase.
+  A revisão dos handoffs para 010, 011, 012, 015, 016, 017, 020 e 021 foi
+  registrada na spec. A revisão independente retornou **APROVADO**, sem
+  bloqueadores; confirmou o ticker, o checklist único `6/6`, as evidências,
+  os handoffs e o escopo da alteração.
+- **Riscos residuais:** o leitor continua client-only, efêmero e dependente das
+  Rules; custo de recomputação de ledger grande segue encaminhado para 021 e a
+  garantia forte de escrita para 020. O teste dedicado não altera contratos ou
+  comportamento de produção.

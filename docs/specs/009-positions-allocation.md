@@ -2,9 +2,9 @@
 
 ## Status
 
-`in_progress` — 009-01 fechou os contratos e 009-02 implementou a aritmética
-decimal; Position Engine, valuation, read-side e gates finais permanecem
-pendentes.
+`completed` — contratos, aritmética decimal, Position Engine, valuation,
+read-side e gates finais foram executados e evidenciados nas subtarefas 009-01
+a 009-06.
 
 ## Ticker
 
