@@ -112,6 +112,9 @@ export async function fetchQuoteBatch(
       ? parsedResults
       : unavailableResults(assetIds, "INVALID_PROVIDER_RESPONSE");
   } catch (error) {
+    if (isRecord(error) && error.code === "UNAUTHENTICATED") {
+      throw error;
+    }
     return unavailableResults(assetIds, sanitizeQuoteErrorCode(error));
   }
 }

@@ -2,7 +2,7 @@
 
 - **Ticker:** `010`
 - **Número:** `03`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -97,3 +97,36 @@ git diff --check
 - Não assumir que Quote compartilhada autoriza acesso ao Asset; o endpoint
   continua verificando ownership.
 - Não transformar carteira inválida em carteira com patrimônio zero.
+
+## Registro de execução
+
+- **Status:** `completed`
+- **Arquivos alterados:** `src/data/positions/dashboard-read.ts`,
+  `src/data/positions/portfolio-read.ts`, `tests/dashboard-read.test.mjs`,
+  `scripts/run-dashboard-read-tests.mjs` e `package.json`.
+- **Decisões:** o leitor lista catálogo e carteiras uma vez, filtra arquivadas,
+  lê um ledger por carteira ativa e prepara cada carteira isoladamente. Assets
+  abertos são unidos por `assetId`, ordenados e cotados em lotes sequenciais de
+  até 20; a mesma lista sanitizada é projetada por todas as carteiras legíveis.
+  Falhas de ledger/composição viram entries indisponíveis com gaps de Portfolio,
+  sem imputação de zero; falhas de autenticação permanecem fatais. Totais,
+  shares e coverage usam os helpers decimais e a cobertura de Quote é contada
+  por Asset deduplicado. Moeda-base diferente de BRL é excluída sem FX.
+- **Desvios:** nenhum requisito foi alterado. O batching compartilhado recebeu
+  apenas a correção necessária para não converter `UNAUTHENTICATED` em Quote
+  indisponível; não foram alterados schema, Rules, repositories ou UI.
+- **Comandos executados:** `npm run test:domain`, `npm run test:positions`,
+  `npm run test:positions-read`, `npm run test:dashboard-read`,
+  `npm run test:quotes-service`, `npm run test:quotes-route`, `npm run lint`,
+  `npm exec next typegen`, `npx tsc --noEmit`, `npm run build` e
+  `git diff --check`.
+- **Resultados e evidências:** todos os comandos concluíram com código zero.
+  Os harnesses passaram com 14 testes de domínio, 4 de posições, 9 de
+  read-side individual e 8 de read-side global; Quotes service passou 8 e
+  Quotes route passou 8. Os testes globais comprovam catálogo único, archive,
+  ledger isolado, deduplicação, chunking sequencial 20+1, stale/unavailable,
+  moeda, falha de autenticação, denominador zero e reconciliação decimal. A
+  revisão independente final não encontrou bloqueadores.
+- **Riscos residuais:** não há teste específico separado para autenticação fatal
+  em cada uma das dependências de catálogo/ledger, embora os erros sejam
+  propagados pelo boundary. Smoke de UI permanece nas subtarefas seguintes.

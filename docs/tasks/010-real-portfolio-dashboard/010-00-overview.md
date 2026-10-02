@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [010-real-portfolio-dashboard.md](../../specs/010-real-portfolio-dashboard.md)
-- **Progresso:** 2/7 subtarefas concluídas
+- **Progresso:** 3/7 subtarefas concluídas
 
 ## Objetivo
 
@@ -14,7 +14,7 @@ atualização manual e nenhuma fonte patrimonial paralela.
 
 - [x] [010-01-fechar-contratos-e-semantica.md](010-01-fechar-contratos-e-semantica.md)
 - [x] [010-02-refatorar-projecao-de-carteira.md](010-02-refatorar-projecao-de-carteira.md)
-- [ ] [010-03-compor-read-side-global.md](010-03-compor-read-side-global.md)
+- [x] [010-03-compor-read-side-global.md](010-03-compor-read-side-global.md)
 - [ ] [010-04-criar-apresentacao-patrimonial.md](010-04-criar-apresentacao-patrimonial.md)
 - [ ] [010-05-entregar-dashboard-da-carteira.md](010-05-entregar-dashboard-da-carteira.md)
 - [ ] [010-06-entregar-dashboard-global.md](010-06-entregar-dashboard-global.md)
@@ -31,5 +31,7 @@ atualização manual e nenhuma fonte patrimonial paralela.
 - Não há migration, mudança de Rules, índice, secret, deploy, target allocation,
   histórico, FX ou read model persistido nesta fase.
 - 010-02 concluída com projeção individual compartilhável, totals conhecidos,
-  metadados de Asset/Quote e facade legada compatível; 010-03 permanece o
-  próximo passo e não foi iniciado.
+  metadados de Asset/Quote e facade legada compatível.
+- 010-03 concluída com composição global ativa, Quotes deduplicadas, falhas
+  isoladas e reconciliação decimal; a integração visual permanece nas próximas
+  subtarefas.
