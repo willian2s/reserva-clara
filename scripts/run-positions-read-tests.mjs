@@ -7,7 +7,20 @@ import { spawnSync } from "node:child_process";
 const require = createRequire(import.meta.url);
 const projectRoot = resolve(dirname(new URL(import.meta.url).pathname), "..");
 const compiler = require.resolve("typescript/bin/tsc");
-const buildDirectory = await mkdtemp(join(tmpdir(), "reserva-clara-domain-"));
+const buildDirectory = await mkdtemp(join(tmpdir(), "reserva-clara-positions-read-"));
+const domainFiles = [
+  "allocation.ts",
+  "asset.ts",
+  "decimal-reducer.ts",
+  "errors.ts",
+  "index.ts",
+  "market-position.ts",
+  "portfolio.ts",
+  "position-engine.ts",
+  "quote.ts",
+  "transaction.ts",
+  "value-objects.ts",
+].map((file) => join(projectRoot, "src", "domain", file));
 
 try {
   const compile = spawnSync(
@@ -23,21 +36,12 @@ try {
       "--esModuleInterop",
       "--strict",
       "--skipLibCheck",
+      "--rootDir",
+      join(projectRoot, "src"),
       "--outDir",
       buildDirectory,
-      ...[
-        "asset.ts",
-        "allocation.ts",
-        "decimal-reducer.ts",
-        "errors.ts",
-        "index.ts",
-        "portfolio.ts",
-        "market-position.ts",
-        "position-engine.ts",
-        "quote.ts",
-        "transaction.ts",
-        "value-objects.ts",
-      ].map((file) => join(projectRoot, "src", "domain", file)),
+      ...domainFiles,
+      join(projectRoot, "src", "data", "positions", "portfolio-read.ts"),
     ],
     { cwd: projectRoot, stdio: "inherit" },
   );
@@ -47,10 +51,10 @@ try {
   } else {
     const tests = spawnSync(
       process.execPath,
-      ["--test", join(projectRoot, "tests", "domain.test.mjs")],
+      ["--test", join(projectRoot, "tests", "positions-read.test.mjs")],
       {
         cwd: projectRoot,
-        env: { ...process.env, DOMAIN_TEST_BUILD: buildDirectory },
+        env: { ...process.env, POSITIONS_READ_TEST_BUILD: buildDirectory },
         stdio: "inherit",
       },
     );

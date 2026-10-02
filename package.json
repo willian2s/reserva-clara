@@ -11,6 +11,8 @@
     "start": "next start",
     "lint": "eslint",
     "test:domain": "node scripts/run-domain-tests.mjs",
+    "test:positions": "node scripts/run-position-tests.mjs",
+    "test:positions-read": "node scripts/run-positions-read-tests.mjs",
     "test:quotes-adapter": "node scripts/run-quotes-adapter-tests.mjs",
     "test:quotes-service": "node scripts/run-quotes-service-tests.mjs",
     "test:quotes-route": "node scripts/run-quotes-route-tests.mjs",

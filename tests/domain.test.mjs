@@ -194,6 +194,70 @@ test("decimal operations use exact carry, borrow and comparison", () => {
   assert.equal(domain.compareDecimalStrings("0.999", "1"), -1);
 });
 
+test("decimal rational operations preserve exact intermediates and materialize half-up", () => {
+  assert.deepEqual(domain.decimalToRational("1.2500"), {
+    numerator: 5n,
+    denominator: 4n,
+  });
+  assert.equal(domain.multiplyDecimalStrings("0.99", "0.01"), "0.0099");
+  assert.equal(domain.divideDecimalStrings("1", "4"), "0.25");
+  assert.equal(domain.divideDecimalStrings("1", "3"), "0.333333333333333333");
+  assert.equal(domain.divideDecimalStrings("2", "3"), "0.666666666666666667");
+  assert.equal(
+    domain.materializeDecimalRational({
+      numerator: -2000000000000000001n,
+      denominator: 2000000000000000000n,
+    }),
+    "-1.000000000000000001",
+  );
+
+  const exactSum = domain.addDecimalRationals(
+    domain.divideDecimalRationals(domain.decimalToRational("1"), domain.decimalToRational("3")),
+    domain.divideDecimalRationals(domain.decimalToRational("1"), domain.decimalToRational("3")),
+  );
+  assert.equal(domain.materializeDecimalRational(exactSum), "0.666666666666666667");
+  assert.equal(
+    domain.materializeDecimalRational(
+      domain.decimalToRational("123456789012345678901234567890.123456789012345678"),
+    ),
+    "123456789012345678901234567890.123456789012345678",
+  );
+  assert.equal(
+    domain.materializeDecimalRational(
+      domain.subtractDecimalRationals(
+        domain.decimalToRational("1"),
+        domain.decimalToRational("1.25"),
+      ),
+    ),
+    "-0.25",
+  );
+});
+
+test("signed decimal difference and rational failures remain explicit", () => {
+  assert.equal(domain.subtractSignedDecimalStrings("0", "2"), "-2");
+  assert.equal(domain.subtractSignedDecimalStrings("1.10", "1.1"), "0");
+  assert.throws(
+    () => domain.subtractDecimalStrings("0", "1"),
+    errorCode("INVALID_DECIMAL"),
+  );
+  assert.throws(
+    () => domain.divideDecimalStrings("1", "0"),
+    errorCode("INVALID_DOMAIN_VALUE"),
+  );
+  assert.throws(
+    () => domain.multiplyDecimalStrings("999999999999999999999999999999", "10"),
+    errorCode("POSITION_ARITHMETIC_OVERFLOW"),
+  );
+  assert.throws(
+    () => domain.divideDecimalStrings("999999999999999999999999999999", "0.1"),
+    errorCode("POSITION_ARITHMETIC_OVERFLOW"),
+  );
+  assert.throws(
+    () => domain.subtractSignedDecimalStrings("999999999999999999999999999999", "-1"),
+    errorCode("POSITION_ARITHMETIC_OVERFLOW"),
+  );
+});
+
 test("Transaction is a closed buy/sell contract and preserves Timestamp precision", () => {
   const parsed = transaction({ id: "tx-a", quantity: "1.2300", seconds: 42, nanoseconds: 123 });
   assert.equal(parsed.quantity, "1.23");
@@ -330,4 +394,366 @@ test("reducer sorts backfill, same-day ties and rejects mixed assets or negative
     ]),
     errorCode("INVALID_REFERENCE"),
   );
+});
+
+test("position engine calculates weighted cost, fees, proportional sales and explicit closure", () => {
+  const asset = { id: "asset-a", currency: "BRL" };
+  const trade = ({
+    id,
+    kind = "buy",
+    quantity,
+    price,
+    fee = null,
+    effectiveDate = "2026-01-01",
+    seconds = 1,
+    nanoseconds = 0,
+  }) => domain.parseTransaction({
+    id,
+    assetId: asset.id,
+    kind,
+    quantity,
+    unitPrice: { currency: "BRL", decimal: price },
+    fee,
+    effectiveDate,
+    createdAt: { seconds, nanoseconds },
+  });
+
+  const position = domain.reducePosition({
+    portfolioId: "portfolio-a",
+    asset,
+    transactions: [
+      trade({ id: "sell", kind: "sell", quantity: "1", price: "999", fee: { currency: "BRL", decimal: "2" }, effectiveDate: "2026-01-03" }),
+      trade({ id: "buy-late", quantity: "1", price: "20", effectiveDate: "2026-01-02" }),
+      trade({ id: "buy-early", quantity: "2", price: "10", fee: { currency: "BRL", decimal: "1" } }),
+    ],
+  });
+
+  assert.deepEqual(position, {
+    portfolioId: "portfolio-a",
+    assetId: "asset-a",
+    currency: "BRL",
+    quantity: "2",
+    investedAmount: "27.333333333333333333",
+    averageCost: "13.666666666666666667",
+    closed: false,
+  });
+
+  const closed = domain.reducePosition({
+    portfolioId: "portfolio-a",
+    asset,
+    transactions: [
+      trade({ id: "buy", quantity: "3", price: "10" }),
+      trade({ id: "sell-all", kind: "sell", quantity: "3", price: "12", effectiveDate: "2026-01-02" }),
+    ],
+  });
+  assert.deepEqual(closed, {
+    portfolioId: "portfolio-a",
+    assetId: "asset-a",
+    currency: "BRL",
+    quantity: "0",
+    investedAmount: "0",
+    averageCost: null,
+    closed: true,
+  });
+
+  const fractionTrades = [
+    trade({ id: "fraction-a", quantity: "0.1", price: "3.3" }),
+    trade({ id: "fraction-b", quantity: "0.2", price: "6.6", effectiveDate: "2026-01-02" }),
+  ];
+  const originalFractionTrades = [...fractionTrades];
+  assert.deepEqual(
+    domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset,
+      transactions: [fractionTrades[1], fractionTrades[0]],
+    }),
+    {
+      portfolioId: "portfolio-a",
+      assetId: "asset-a",
+      currency: "BRL",
+      quantity: "0.3",
+      investedAmount: "1.65",
+      averageCost: "5.5",
+      closed: false,
+    },
+  );
+  assert.deepEqual(fractionTrades, originalFractionTrades);
+});
+
+test("position engine groups by Asset identity, orders deterministically and validates ledger references", () => {
+  const assets = [
+    { id: "asset-z", currency: "USD" },
+    { id: "asset-a", currency: "BRL" },
+    { id: "asset-empty", currency: "BRL" },
+  ];
+  const makeTransaction = ({ id, assetId, currency, kind = "buy", quantity = "1", price = "10", effectiveDate = "2026-01-01", seconds = 1, nanoseconds = 0, fee = null }) =>
+    domain.parseTransaction({
+      id,
+      assetId,
+      kind,
+      quantity,
+      unitPrice: { currency, decimal: price },
+      fee,
+      effectiveDate,
+      createdAt: { seconds, nanoseconds },
+    });
+
+  const transactions = [
+    makeTransaction({ id: "z-buy", assetId: "asset-z", currency: "USD", price: "3" }),
+    makeTransaction({ id: "a-buy", assetId: "asset-a", currency: "BRL", price: "2" }),
+  ];
+  assert.deepEqual(
+    domain.reducePositions({ portfolioId: "portfolio-a", assets, transactions }).map(({ assetId }) => assetId),
+    ["asset-a", "asset-z"],
+  );
+
+  const tiedTransactions = [
+    makeTransaction({ id: "b-sell", assetId: "asset-a", currency: "BRL", kind: "sell", quantity: "1", price: "50", nanoseconds: 2 }),
+    makeTransaction({ id: "a-buy", assetId: "asset-a", currency: "BRL", quantity: "1", price: "2", nanoseconds: 2 }),
+  ];
+  assert.equal(
+    domain.reducePosition({ portfolioId: "portfolio-a", asset: assets[1], transactions: tiedTransactions }).closed,
+    true,
+  );
+  assert.equal(
+    domain.reducePosition({ portfolioId: "portfolio-a", asset: assets[1], transactions: [...tiedTransactions].reverse() }).closed,
+    true,
+  );
+
+  assert.throws(
+    () => domain.reducePositions({
+      portfolioId: "portfolio-a",
+      assets,
+      transactions: [makeTransaction({ id: "missing", assetId: "asset-missing", currency: "BRL" })],
+    }),
+    errorCode("POSITION_ASSET_NOT_FOUND"),
+  );
+  assert.throws(
+    () => domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset: assets[0],
+      transactions: [makeTransaction({ id: "wrong", assetId: "asset-a", currency: "BRL" })],
+    }),
+    errorCode("POSITION_ASSET_MISMATCH"),
+  );
+  assert.throws(
+    () => domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset: assets[0],
+      transactions: [makeTransaction({ id: "currency", assetId: "asset-z", currency: "BRL" })],
+    }),
+    errorCode("POSITION_CURRENCY_MISMATCH"),
+  );
+  assert.throws(
+    () => domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset: assets[0],
+      transactions: [makeTransaction({ id: "fee-currency", assetId: "asset-z", currency: "USD", fee: { currency: "BRL", decimal: "1" } })],
+    }),
+    errorCode("POSITION_CURRENCY_MISMATCH"),
+  );
+  assert.throws(
+    () => domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset: assets[0],
+      transactions: [makeTransaction({ id: "sell", assetId: "asset-z", currency: "USD", kind: "sell" })],
+    }),
+    errorCode("INSUFFICIENT_QUANTITY"),
+  );
+  assert.throws(
+    () => domain.reducePosition({
+      portfolioId: "portfolio-a",
+      asset: assets[1],
+      transactions: [makeTransaction({
+        id: "overflow",
+        assetId: "asset-a",
+        currency: "BRL",
+        quantity: "999999999999999999999999999999",
+        price: "10",
+      })],
+    }),
+    errorCode("POSITION_ARITHMETIC_OVERFLOW"),
+  );
+});
+
+test("market position values fresh and stale quotes, preserving unavailable diagnostics", () => {
+  const openPosition = {
+    portfolioId: "portfolio-a",
+    assetId: "asset-a",
+    currency: "BRL",
+    quantity: "2",
+    investedAmount: "25",
+    averageCost: "12.5",
+    closed: false,
+  };
+  const closedPosition = { ...openPosition, quantity: "0", investedAmount: "0", averageCost: null, closed: true };
+  const quoteResult = ({ assetId = "asset-a", currency = "BRL", price = "10", freshness = "fresh" } = {}) =>
+    domain.parseQuoteResult({
+      assetId,
+      status: "available",
+      quote: {
+        assetId,
+        provider: "brapi",
+        requestedSymbol: "PETR4",
+        providerSymbol: "PETR4",
+        symbolChanged: false,
+        price: { currency, decimal: price },
+        quotedAt: "2026-09-30T12:00:00Z",
+        fetchedAt: "2026-09-30T12:00:01Z",
+        freshness,
+      },
+    });
+
+  assert.deepEqual(domain.deriveMarketPosition(openPosition, quoteResult()), {
+    status: "available",
+    marketPosition: {
+      portfolioId: openPosition.portfolioId,
+      assetId: openPosition.assetId,
+      currency: openPosition.currency,
+      quantity: openPosition.quantity,
+      investedAmount: openPosition.investedAmount,
+      averageCost: openPosition.averageCost,
+      marketValue: "20",
+      nominalDifference: "-5",
+      freshness: "fresh",
+    },
+  });
+  assert.equal(
+    domain.deriveMarketPosition(openPosition, quoteResult({ price: "11", freshness: "stale" })).marketPosition.freshness,
+    "stale",
+  );
+  assert.equal(domain.deriveMarketPosition(closedPosition, quoteResult()), null);
+
+  assert.deepEqual(
+    domain.deriveMarketPosition(
+      openPosition,
+      domain.parseQuoteResult({ assetId: "asset-a", status: "unavailable", code: "TIMEOUT" }),
+    ),
+    {
+      status: "unavailable",
+      assetId: "asset-a",
+      reason: "quote-unavailable",
+      quoteCode: "TIMEOUT",
+    },
+  );
+  assert.deepEqual(
+    domain.deriveMarketPosition(openPosition, quoteResult({ currency: "USD" })),
+    {
+      status: "unavailable",
+      assetId: "asset-a",
+      reason: "quote-currency-mismatch",
+    },
+  );
+  assert.throws(
+    () => domain.deriveMarketPosition(openPosition, quoteResult({ assetId: "asset-other" })),
+    errorCode("POSITION_COMPOSITION_FAILED"),
+  );
+});
+
+test("allocation excludes closed and incompatible positions and reports complete, partial and empty states", () => {
+  const position = ({ assetId, currency = "BRL", closed = false }) => ({
+    portfolioId: "portfolio-a",
+    assetId,
+    currency,
+    quantity: closed ? "0" : "1",
+    investedAmount: closed ? "0" : "10",
+    averageCost: closed ? null : "10",
+    closed,
+  });
+  const available = (assetId, currency, marketValue, portfolioId = "portfolio-a") => ({
+    status: "available",
+    marketPosition: {
+      portfolioId,
+      assetId,
+      currency,
+      quantity: "1",
+      investedAmount: "10",
+      averageCost: "10",
+      marketValue,
+      nominalDifference: "0",
+      freshness: "fresh",
+    },
+  });
+  const complete = domain.calculateAllocation({
+    portfolioId: "portfolio-a",
+    currency: "BRL",
+    positions: [position({ assetId: "asset-b" }), position({ assetId: "asset-a" }), position({ assetId: "asset-closed", closed: true })],
+    marketPositionResults: [available("asset-b", "BRL", "20"), available("asset-a", "BRL", "20")],
+  });
+  assert.deepEqual(complete, {
+    portfolioId: "portfolio-a",
+    currency: "BRL",
+    status: "complete",
+    totalMarketValue: "40",
+    entries: [
+      { assetId: "asset-a", marketValue: "20", allocation: "0.5" },
+      { assetId: "asset-b", marketValue: "20", allocation: "0.5" },
+    ],
+    unavailable: [],
+  });
+  assert.deepEqual(
+    domain.calculateAllocation({
+      portfolioId: "portfolio-a",
+      currency: "BRL",
+      positions: [position({ assetId: "asset-a" }), position({ assetId: "asset-b" }), position({ assetId: "asset-closed", closed: true })],
+      marketPositionResults: [available("asset-a", "BRL", "20"), available("asset-b", "BRL", "20")],
+    }),
+    complete,
+  );
+  assert.throws(
+    () => domain.calculateAllocation({
+      portfolioId: "portfolio-a",
+      currency: "BRL",
+      positions: [{ ...position({ assetId: "asset-other" }), portfolioId: "portfolio-other" }],
+      marketPositionResults: [available("asset-other", "BRL", "20", "portfolio-other")],
+    }),
+    errorCode("POSITION_COMPOSITION_FAILED"),
+  );
+
+  const partial = domain.calculateAllocation({
+    portfolioId: "portfolio-a",
+    currency: "BRL",
+    positions: [position({ assetId: "asset-a" }), position({ assetId: "asset-b" }), position({ assetId: "asset-c", currency: "USD" })],
+    marketPositionResults: [
+      available("asset-c", "USD", "30"),
+      available("asset-a", "BRL", "20"),
+      { status: "unavailable", assetId: "asset-b", reason: "quote-unavailable", quoteCode: "NOT_FOUND" },
+    ],
+  });
+  assert.deepEqual(partial, {
+    portfolioId: "portfolio-a",
+    currency: "BRL",
+    status: "partial",
+    totalMarketValue: "20",
+    entries: [{ assetId: "asset-a", marketValue: "20", allocation: "1" }],
+    unavailable: [
+      { assetId: "asset-b", reason: "quote-unavailable" },
+      { assetId: "asset-c", reason: "base-currency-mismatch" },
+    ],
+  });
+
+  assert.deepEqual(
+    domain.calculateAllocation({
+      portfolioId: "portfolio-a",
+      currency: "BRL",
+      positions: [],
+      marketPositionResults: [],
+    }),
+    {
+      portfolioId: "portfolio-a",
+      currency: "BRL",
+      status: "empty",
+      totalMarketValue: "0",
+      entries: [],
+      unavailable: [],
+    },
+  );
+  const zeroDenominator = domain.calculateAllocation({
+    portfolioId: "portfolio-a",
+    currency: "BRL",
+    positions: [position({ assetId: "asset-zero" })],
+    marketPositionResults: [available("asset-zero", "BRL", "0")],
+  });
+  assert.equal(zeroDenominator.totalMarketValue, "0");
+  assert.equal(zeroDenominator.entries[0].allocation, null);
 });

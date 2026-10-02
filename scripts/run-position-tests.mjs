@@ -7,7 +7,7 @@ import { spawnSync } from "node:child_process";
 const require = createRequire(import.meta.url);
 const projectRoot = resolve(dirname(new URL(import.meta.url).pathname), "..");
 const compiler = require.resolve("typescript/bin/tsc");
-const buildDirectory = await mkdtemp(join(tmpdir(), "reserva-clara-domain-"));
+const buildDirectory = await mkdtemp(join(tmpdir(), "reserva-clara-position-"));
 
 try {
   const compile = spawnSync(
@@ -31,8 +31,8 @@ try {
         "decimal-reducer.ts",
         "errors.ts",
         "index.ts",
-        "portfolio.ts",
         "market-position.ts",
+        "portfolio.ts",
         "position-engine.ts",
         "quote.ts",
         "transaction.ts",
@@ -47,10 +47,10 @@ try {
   } else {
     const tests = spawnSync(
       process.execPath,
-      ["--test", join(projectRoot, "tests", "domain.test.mjs")],
+      ["--test", join(projectRoot, "tests", "position.test.mjs")],
       {
         cwd: projectRoot,
-        env: { ...process.env, DOMAIN_TEST_BUILD: buildDirectory },
+        env: { ...process.env, POSITION_TEST_BUILD: buildDirectory },
         stdio: "inherit",
       },
     );
