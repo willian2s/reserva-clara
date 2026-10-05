@@ -2,7 +2,7 @@
 
 - **Ticker:** `011`
 - **Número:** `03`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -78,3 +78,67 @@ que controllers, EF Core, Firebase ou BRAPI contaminem regras de negócio.
 - Não introduzir abstração sem dois usos concretos.
 - Não transformar detalhes Firestore em conceitos de Domain.
 - Não congelar contratos HTTP antes da subtarefa 06.
+
+## Registro da execução
+
+### Status
+
+`completed`
+
+### Arquivos alterados
+
+- `docs/specs/011-revisao-roadmap-evolucao-arquitetural.md`
+- `docs/roadmap/reserva-clara-roadmap.md`
+- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-00-overview.md`
+- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-01-inventariar-frontend-e-next.md`
+- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-02-mapear-dominio-dados-e-riscos.md`
+- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-08-registrar-adrs-e-handoff.md`
+- `docs/context/2026-09-29-chat-summary.md`
+- este arquivo
+
+### Decisões e desvios
+
+- A sequência de desenho ficou explícita como Produto/UX/UI → casos de uso →
+  API Contract → Application → Domain → Persistence.
+- O modelo de persistência não define automaticamente a API; controllers ficam
+  finos e regras permanecem em Application/Domain.
+- Foram registrados os boundaries de Domain, Application, Infrastructure, API,
+  frontend, Firebase e BRAPI sem introduzir tecnologias ou padrões novos.
+- A Fase 011 foi delimitada como discovery/redução de incertezas, com critérios
+  de encerramento que não exigem especificar o sistema inteiro.
+- Desvio controlado: não foi criado um arquivo de arquitetura separado; a
+  decisão foi registrada nos artefatos canônicos já existentes (spec e roadmap)
+  para manter a revisão pontual solicitada.
+
+### Comandos executados
+
+- `git diff --check`
+- validação documental dos tickers, subtarefas, headings oficiais 011–021 e
+  checklist do overview
+- revisão independente do diff documental por agente `review`
+
+### Resultados e evidências
+
+- A spec e o roadmap apresentam uma única sequência oficial pós-010, com as
+  propostas antigas marcadas como histórico/superseded.
+- C0 registra a alternativa A escolhida para a integridade do `SELL`, com motivo,
+  escopo permitido, owner, critério de saída e proibição de replicar a falha;
+  alternativas B/C permanecem documentadas como opções não escolhidas.
+- O gate 021 agora valida o sistema funcionando e inclui autenticação,
+  PostgreSQL/EF Core, BRAPI, contratos, cutover, testes, deploy,
+  observabilidade, segurança e remoção do legado.
+- A revisão independente encontrou e foi corrigida a inconsistência que ainda
+  dizia que o roadmap estava bloqueado/não sincronizado; o contexto histórico
+  também foi marcado como superseded.
+- Nenhum arquivo de código, banco, deploy, segredo ou configuração externa foi
+  alterado.
+
+### Riscos residuais
+
+- C0 foi decidido como **A — aceitação temporária restrita a dev/testes**. O
+  projeto não possui usuários ativos; portanto só são permitidos dados
+  sintéticos/descartáveis, sem writes patrimoniais em staging/produção ou dados
+  reais. O owner operacional é o maintainer do projeto, e a saída ocorre antes
+  do primeiro usuário ativo, dado real, staging/produção ou cutover.
+- A 012 ainda precisa realizar a descoberta de produto/UX/UI; portanto os
+  contratos da API continuam provisórios.

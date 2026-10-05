@@ -212,20 +212,29 @@ users/{uid}
    passa a ser autoritativo após o point of no return.
 3. Não fazer dual-write de produção. Migração usa cópia, staging, comparação e
    freeze/fence.
-4. Contratos HTTP são fechados por vertical slice, após discovery de UX dessa
-   slice, e mantêm compatibilidade de deploy N/N-1 quando necessário.
-5. Domain não depende de EF Core, HTTP, Firebase, Supabase ou BRAPI.
-6. Application contém casos de uso, autorização contextual, validação e ports.
-7. Infrastructure contém EF Core/Npgsql, Firebase token integration, BRAPI e
-   serviços externos.
-8. API compõe dependências e expõe HTTP; controller/endpoint não contém regra
-   financeira.
-9. O browser usa Firebase apenas para autenticação e usa HTTP para dados.
-10. Testes com PostgreSQL real provam comportamento que SQLite/EF InMemory não
+4. A sequência de desenho é Produto/UX/UI → casos de uso → API Contract →
+   Application → Domain → Persistence. A API representa capacidades e casos de
+   uso do produto, não o modelo do banco ou as entidades do EF Core.
+5. Contratos HTTP são provisórios durante o discovery e fechados por vertical
+   slice somente após a UX dessa slice; mantêm compatibilidade de deploy N/N-1
+   quando necessário.
+6. Domain não depende de EF Core, PostgreSQL, Supabase, Firebase, Firebase
+   Admin, HTTP, ASP.NET Core ou BRAPI.
+7. Application contém casos de uso, autorização contextual, validação e ports,
+   sem depender diretamente de detalhes de Infrastructure.
+8. Infrastructure contém EF Core/Npgsql, Firebase token integration, BRAPI e
+   serviços externos; a API traduz HTTP para casos de uso e mantém controllers
+   finos.
+9. O browser conhece a API, usa Firebase apenas para autenticação e nunca
+   acessa PostgreSQL/Supabase diretamente. Firebase fornece identidade; o
+   ASP.NET Core valida essa identidade e controla autorização.
+10. BRAPI é uma integração externa do backend, não uma dependência do Domain ou
+    do frontend.
+11. Testes com PostgreSQL real provam comportamento que SQLite/EF InMemory não
     representam: constraints, locks, transações, índices e eventual RLS.
-11. Observabilidade, segurança e deploy são capacidades de cada slice, não uma
+12. Observabilidade, segurança e deploy são capacidades de cada slice, não uma
     fase cosmética no final.
-12. Next/Firestore só são removidos depois de paridade, migração, cutover e soak.
+13. Next/Firestore só são removidos depois de paridade, migração, cutover e soak.
 
 ## 5. Roadmap revisado: fases 011–021
 
@@ -237,9 +246,20 @@ produzir o plano verificável antes de implementar.
 **Contexto:** o domínio tem contratos valiosos, mas está misturado com limitações
 do Firestore e há risco conhecido em `SELL` direto.
 
-**Escopo:** inventário Next/frontend, domínio/server/data, dados Firestore,
-volumetria, modelo relacional lógico, limites de camadas, auth Firebase → API,
-contratos iniciais, UX baseline, testes, migração, deploy, riscos e ADRs.
+**Escopo:** discovery e redução de incertezas: inventário Next/frontend,
+domínio/server/data, dados Firestore, volumetria, modelo relacional lógico,
+limites de camadas, auth Firebase → API, UX baseline, testes, migração, deploy,
+riscos e ADRs. A fase responde somente às perguntas necessárias para iniciar a
+migração com segurança; não tenta especificar todo o sistema futuro.
+
+Não são exigidos nesta fase todos os endpoints, DTOs, componentes, detalhes de
+implementação ou contratos definitivos da API, nem decisões prematuras de
+infraestrutura que dependam das fases posteriores. Esses detalhes permanecem
+abertos quando dependerem de descoberta de UX/UI, domínio ou implementação.
+
+**Princípio de encerramento:** a 011 deve eliminar incertezas arquiteturais e de
+migração capazes de causar retrabalho estrutural. Detalhes que não ameaçam essa
+segurança devem ser deliberadamente refinados depois.
 
 **Entregáveis:** mapas as-is/to-be, matriz preservar/reusar/reescrever/remover,
 catálogo de dados e queries, ERD lógico, matriz Firestore→PostgreSQL, threat
@@ -255,7 +275,11 @@ dados sanitizados; decisão da stack já tomada.
 **Critérios de aceite:** nenhum acoplamento Next relevante sem classificação;
 modelo Firestore completo; ownership/IDs/decimais/timestamps mapeados; boundary
 de `SELL` tratado como risco imediato; ADRs cobrem decisões irreversíveis;
-roadmap e handoff não exigem big-bang.
+roadmap e handoff não exigem big-bang. A fase pode ser encerrada quando houver
+decisão explícita para C0, limites de camadas e autoridade dos dados definidos,
+dependências críticas para 012/013 identificadas, estratégia de migração e
+critérios de validação suficientes para iniciar a próxima etapa com segurança,
+e uma lista rastreável de decisões ainda abertas sem bloquear a fundação.
 
 **Testes necessários:** revisão cruzada entre código e inventário; amostras
 sintéticas/anonimizadas; validação de todos os paths, contratos e links; threat
@@ -275,13 +299,24 @@ os contratos de cada vertical.
 **Contexto:** a UI atual cresceu por fases e não deve ser apenas transportada
 para Vite. Dashboard, carteiras, ativos e operações precisam ser reavaliados.
 
-**Escopo:** pesquisa heurística, navegação, mobile, acessibilidade, fluxos de
-criação/edição, design system, estados loading/error/empty/offline/session,
-microcopy, densidade financeira, protótipos e contratos provisórios.
+**Escopo:** revisão de produto, UX, UI e arquitetura de informação — não apenas
+modernização visual. A análise parte da evolução até a 010: patrimônio,
+carteiras, ativos, transações, posições, alocação, cotações, dashboards e
+projeções. Deve responder: **a interface atual é realmente a melhor forma de
+ajudar o usuário a compreender e gerenciar seu patrimônio?**
+
+Inclui pesquisa heurística, navegação, hierarquia visual, densidade financeira,
+mobile, acessibilidade, feedback, loading/error/empty/offline/session,
+microcopy, formulários, fluxos de criação/edição, consistência entre telas,
+design system, componentes reutilizáveis e protótipos. Cada tela, fluxo ou
+conceito pode ser mantido, simplificado, reorganizado, substituído, removido ou
+dividido em novos fluxos.
 
 **Entregáveis:** mapa de jornadas, nova IA, protótipos responsivos, inventário de
-componentes, decisão de design system, matriz WCAG, capacidades da API e
-exemplos de payload/erro por slice.
+componentes, decisão de design system, matriz WCAG, capacidades provisórias da
+API e exemplos de payload/erro por slice. A 012 pode alterar requisitos da API;
+essas mudanças alimentam a fase de definição dos contratos e não são descartadas
+para preservar a interface antiga.
 
 **Tasks:** auditar telas; entrevistar/validar premissas; redesenhar navegação e
 shell; prototipar fluxos; testar teclado/mobile; mapear impactos em DTOs;
@@ -291,7 +326,9 @@ priorizar mudanças; registrar decisão de arquitetura frontend.
 
 **Critérios de aceite:** fluxos 001–010 cobertos; nenhum contrato é congelado
 antes do protótipo correspondente; estados críticos e acessibilidade estão
-especificados; feedback de UX está refletido no backlog/API.
+especificados; feedback de UX está refletido no backlog e nos requisitos da API;
+as decisões de manter, simplificar, reorganizar, substituir, remover ou dividir
+fluxos estão justificadas.
 
 **Testes necessários:** walkthrough com cenários, avaliação heurística, teclado,
 zoom 200%, 320 px, contraste, linguagem e testes de protótipo.
@@ -583,7 +620,7 @@ config Firebase cruzada entre ambientes, migrations concorrentes.
 **Decisões:** hosting, topologia de hosts, cutover global versus cohort, RTO/RPO,
 retenção, point of no return e processo de release.
 
-### 021 — Legacy Retirement & Operational Handoff
+### 021 — Migration Completion / Production Readiness & Legacy Retirement
 
 **Objetivo:** remover a arquitetura antiga após soak e tornar o novo stack a
 única base mantida.
@@ -623,7 +660,7 @@ retenção ou rollback operacional não ensaiado.
 
 | Gate | Evidência mínima | Bloqueia |
 | --- | --- | --- |
-| C0 — Risco atual contido | Decisão explícita sobre `SELL`: uso confiável aceito por prazo, writes suspensos ou bridge temporário server-side planejado. | Continuação da migração sem risco aceito. |
+| C0 — Risco atual contido | **A — aceitação temporária restrita a dev/testes**, escolhida porque o projeto ainda não possui usuários ativos. São permitidos apenas dados sintéticos/descartáveis; não são permitidos writes patrimoniais em staging/produção nem dados reais. O owner operacional é o maintainer do projeto. A saída ocorre antes do primeiro usuário ativo, dado real, avanço para staging/produção ou cutover; o backend novo não pode replicar a fragilidade. | Continuação da migração sem escopo permitido, owner e condição de saída registrados. |
 | C1 — Discovery fechado | Inventários, ERD, threat model, ADRs e plano de migração revisados. | 012–016 sem arquitetura. |
 | C2 — Fundação reproduzível | CI, Vite/API, PostgreSQL real, migrations e staging skeleton. | Feature nova no alvo. |
 | C3 — Auth E2E | Token válido funciona; issuer/audience/exp/cross-user falham. | Dados privados na API. |
@@ -635,6 +672,32 @@ retenção ou rollback operacional não ensaiado.
 | C9 — Read-only cutover | Novo stack lê dados finais e smoke passa antes de writes. | Point of no return. |
 | C10 — PostgreSQL writes | Primeiro write no PostgreSQL; Firestore não volta a ser destino. | Rollback para Firestore. |
 | C11 — Retirement | Soak sem tráfego/erro antigo e retenção aprovada. | Remoção final. |
+
+### Critérios de sucesso da migração
+
+O migration gate valida o sistema funcionando, não apenas a presença de arquivos
+ou estruturas. A migração só é concluída quando, no mínimo:
+
+1. o usuário executa os principais fluxos existentes;
+2. o frontend roda independentemente do Next.js;
+3. o backend roda independentemente do frontend;
+4. o Firebase ID Token é validado no backend;
+5. PostgreSQL é a fonte oficial após o cutover;
+6. EF Core controla o acesso ao PostgreSQL;
+7. regras de negócio críticas estão no backend;
+8. não existem writes patrimoniais críticos diretamente pelo frontend;
+9. os dados migrados foram reconciliados;
+10. os principais fluxos têm cobertura de testes adequada;
+11. o deploy dos componentes pode ser feito independentemente quando apropriado;
+12. o caminho antigo de persistência foi removido ou explicitamente desativado;
+13. não existem dependências críticas da aplicação em recursos específicos do
+    Next.js;
+14. a documentação arquitetural está atualizada.
+
+Somente depois desse gate o projeto retorna ao desenvolvimento normal de
+features. O gate deve incluir evidências de execução em ambiente representativo,
+autorização, observabilidade mínima, segurança, deploy e cutover; compilar ou
+passar testes isolados não é suficiente.
 
 ### Fluxo de cutover
 
@@ -975,8 +1038,10 @@ gates e handoff.
   migração/paridade.
 - Fases futuras do roadmap antigo permanecem como histórico de intenção, mas
   sua antiga numeração não é ordem executável depois desta revisão.
-- A atualização física do roadmap canônico continua pendente por bloqueio de
-  permissão; esta spec é a fonte persistida da revisão até a sincronização.
+- O roadmap canônico foi sincronizado com esta revisão em
+  `docs/roadmap/reserva-clara-roadmap.md`; spec e roadmap devem permanecer
+  coerentes, com a spec detalhando os critérios e o roadmap apresentando a
+  sequência oficial.
 
 ## 18. Definição de pronto desta revisão
 
@@ -988,12 +1053,13 @@ gates e handoff.
   deploy, migração incremental e remoção antiga estão explícitos;
 - itens antigos superseded estão mapeados, não apagados;
 - nenhuma implementação, deploy, migration ou segredo foi criado/alterado;
-- o bloqueio de edição do roadmap canônico está registrado sem alegar sucesso.
+- o roadmap canônico está sincronizado sem alterar código, deploy, banco ou
+  configuração externa.
 
 ## Referências
 
 - `AGENTS.md`.
-- `docs/roadmap/reserva-clara-roadmap.md` (baseline ainda não sincronizado).
+- `docs/roadmap/reserva-clara-roadmap.md` (roadmap canônico sincronizado).
 - `docs/specs/001-primeira-vertical-autenticacao.md` a
   `docs/specs/010-real-portfolio-dashboard.md`.
 - `docs/decisions/001-autenticacao-google-popup.md`.

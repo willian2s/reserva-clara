@@ -327,8 +327,9 @@ e `docs/tasks/**`; o inventário completo foi registrado nesta subtarefa.
   à paridade, cutover, soak e fase 021.
 - O inventário foi incorporado ao arquivo da subtarefa em vez de criar um novo
   arquivo fora dos diretórios permitidos.
-- O status da spec foi alinhado a `in_progress`; o overview permanece em `1/8`
-  e somente 011-01 está concluída.
+- Registro histórico da execução: naquele momento, o status da spec foi
+  alinhado a `in_progress`, o overview estava em `1/8` e somente 011-01 estava
+  concluída. O estado atual deve ser consultado no overview da fase.
 
 ## Comandos executados e resultados
 
@@ -377,7 +378,10 @@ e `docs/tasks/**`; o inventário completo foi registrado nesta subtarefa.
 
 ## Riscos residuais
 
-- A decisão de contenção do `SELL` continua pendente de C0/011-02.
+- C0 foi decidido como aceitação temporária restrita a dev/testes: apenas dados
+  sintéticos/descartáveis, sem writes em staging/produção ou dados reais, com
+  owner maintainer e saída antes do primeiro usuário ativo, dado real,
+  staging/produção ou cutover.
 - O modelo relacional, a autorização ASP.NET/RLS, o router Vite e os contratos
   HTTP ainda não foram definidos; isso pertence às próximas subtarefas.
 - A política de hosts/deploy ainda depende da revisão de ambientes e cutover.

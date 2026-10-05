@@ -2,7 +2,7 @@
 
 > **Reserva Clara — Seu patrimônio, com clareza.**
 
-Atualizado em: **2026-10-02**
+Atualizado em: **2026-10-05**
 
 Este documento define a direção de produto e a ordem macro de evolução do Reserva Clara.
 
@@ -133,6 +133,52 @@ Evitar sem necessidade concreta:
 - state managers globais;
 - dependências pesadas;
 - infraestrutura administrativa prematura.
+
+## 2.8 Boundaries da arquitetura pós-migração
+
+A sequência de desenho e implementação deve ser:
+
+```text
+Produto / UX / UI
+        ↓
+Casos de uso
+        ↓
+API Contract
+        ↓
+Application
+        ↓
+Domain
+        ↓
+Persistence
+```
+
+O modelo de persistência não define automaticamente o modelo da API. Evitar
+tratar `EF Entity → DTO → Controller` como arquitetura padrão. Preferir:
+
+```text
+HTTP Request
+    ↓
+API
+    ↓
+Application / Use Case
+    ↓
+Domain
+    ↓
+Infrastructure
+    ↓
+EF Core
+    ↓
+PostgreSQL
+```
+
+Controllers permanecem finos e regras de negócio ficam nos casos de uso e no
+Domain. O Domain não conhece EF Core, PostgreSQL, Supabase, Firebase, Firebase
+Admin, HTTP, ASP.NET Core ou BRAPI. Application não depende diretamente de
+detalhes de Infrastructure; Infrastructure implementa mecanismos externos; API
+traduz HTTP para casos de uso; o frontend conhece a API, não o banco. Firebase
+fornece identidade, ASP.NET Core valida a identidade e controla autorização,
+BRAPI é integração externa do backend, e o browser nunca acessa
+PostgreSQL/Supabase diretamente.
 
 ---
 
@@ -410,7 +456,17 @@ SELL 15  ❌ pelo repository/reducer
 
 Firestore Security Rules não conseguem reconstruir o ledger completo para garantir saldo quantitativo contra um cliente autenticado que ignore o repository.
 
-A garantia forte desse invariant exigirá futuramente um boundary confiável de escrita/aggregate.
+A garantia forte desse invariant exige um boundary confiável de escrita/aggregate
+antes do cutover. Um cliente autenticado pode criar uma operação `SELL`
+diretamente no Firestore respeitando o schema, mas sem passar por todas as
+validações patrimoniais, permitindo saldo negativo.
+
+O checkpoint C0 foi decidido como **A — aceitação temporária restrita a
+dev/testes**, pois o projeto ainda não possui usuários ativos. Só são permitidos
+dados sintéticos/descartáveis; não são permitidos writes patrimoniais em
+staging/produção nem dados reais. O owner operacional é o maintainer do projeto,
+e a saída ocorre antes do primeiro usuário ativo, dado real, avanço para
+staging/produção ou cutover. O backend novo não pode reproduzir a fragilidade.
 
 Isso não bloqueia a 008 ou a 009, mas deve permanecer explícito.
 
@@ -578,7 +634,7 @@ Se houver read model/cache, ele deve ser reconstruível a partir do ledger.
 
 # 7. Dashboard patrimonial real
 
-## 010 — Real Portfolio Dashboard ⏭️
+## 010 — Real Portfolio Dashboard ✅
 
 ### Objetivo
 
@@ -621,9 +677,160 @@ Não mostrar performance histórica antes de existir histórico confiável.
 
 ---
 
-# 8. Planejamento de alocação
+# 8. Rebaseline pós-migração — sequência oficial
 
-## 011 — Contribution Planning
+As fases 001–010 permanecem o histórico e baseline do produto. A partir da 011,
+a sequência oficial é a de migração abaixo; nenhuma feature nova começa antes
+do migration gate da 021.
+
+## 011 — Discovery, Architecture & Migration Baseline
+
+**Objetivo:** eliminar incertezas arquiteturais e de migração capazes de causar
+retrabalho estrutural, produzindo informação suficiente para iniciar a próxima
+etapa com segurança.
+
+Esta é uma fase de discovery e redução de incertezas, não uma tentativa de
+especificar todo o sistema futuro. Não exige todos os endpoints, DTOs,
+componentes, detalhes de implementação ou contratos definitivos da API, nem
+decisões prematuras de infraestrutura dependentes das fases posteriores. Esses
+detalhes ficam deliberadamente abertos quando dependem de descoberta de UX/UI,
+domínio ou implementação.
+
+**Escopo:** inventário do Next/frontend e do domínio/dados, riscos e volumetria
+sanitizada, modelo relacional lógico, limites de camadas, Firebase → API,
+integridade do `SELL`, estratégia de migração, testes, ambientes, riscos e
+ADRs. Não cria Vite, .NET, schema, migration, endpoint, infraestrutura ou
+deploy.
+
+**Critérios de encerramento:** C0 decidido com risco, escopo permitido e saída;
+autoridade dos dados e boundaries definidos; dependências críticas para 012/013
+identificadas; estratégia de migração, validação e rollback suficiente para o
+próximo passo; ADRs e handoff revisados; decisões abertas listadas sem bloquear
+a fundação. A fase pode terminar mesmo com detalhes de slices ainda pendentes.
+
+## 012 — Product, UX/UI, Information Architecture & Provisional API Discovery
+
+**Objetivo:** realizar revisão de produto, UX, UI e arquitetura de informação —
+não uma simples modernização visual — antes de congelar os contratos de cada
+vertical.
+
+A revisão parte da evolução até a 010: patrimônio, carteiras, ativos,
+transações, posições, alocação, cotações, dashboards e projeções. A pergunta
+central é: **a interface atual é realmente a melhor forma de ajudar o usuário a
+compreender e gerenciar seu patrimônio?**
+
+Avaliar arquitetura da informação, navegação, hierarquia e densidade visual,
+mobile, acessibilidade, feedback, loading, empty/error states, microcopy,
+formulários, fluxos de criação/edição, consistência entre telas, design system,
+componentes reutilizáveis e jornadas. Qualquer tela, fluxo ou conceito pode ser
+mantido, simplificado, reorganizado, substituído, removido ou dividido.
+
+**Relação com a API:** UX/UI informa casos de uso; casos de uso informam o API
+Contract; o contrato informa Application, Domain e Persistence. A API não será
+desenhada a partir do banco/EF Core, e a 012 pode mudar requisitos da API. O
+resultado alimenta a fase de definição dos contratos e nenhum contrato é
+congelado antes do protótipo correspondente.
+
+## 013 — Frontend / Backend Foundation
+
+Criar a base reproduzível de React/TypeScript/Vite, ASP.NET Core em camadas,
+PostgreSQL real, EF Core, testes, CI, configuração, observabilidade mínima e
+deploy não produtivo. Builds, frontend e API devem publicar
+independentemente; migrations não rodam no startup.
+
+## 014 — Authentication Walking Skeleton
+
+Provar React/Vite → Firebase Authentication → Firebase ID Token → ASP.NET Core
+→ PostgreSQL com validação estrita de token, `CurrentOwner`, autorização,
+CORS, Problem Details, limites, segurança e observabilidade. O sistema deve
+falhar fechado para token inválido e isolamento entre owners.
+
+## 015 — Domain / Application Compatibility Harness
+
+Portar regras por vertical slice, com fixtures/golden masters, value objects,
+erros, ports e casos de uso sem dependência de EF/HTTP. Não fazer tradução
+mecânica de entidades TypeScript para C# nem deixar DTOs contaminarem Domain.
+
+## 016 — PostgreSQL / EF Core Foundation & Repeatable Migrator
+
+Provar o modelo relacional, constraints, ownership, precisão, migrations,
+roles, importação repetível, staging e reconciliação com PostgreSQL real. O EF
+Core permanece em Infrastructure e o schema não é exposto ao browser.
+
+## 017 — Portfolio Vertical Slice & React/Vite Shell
+
+Entregar a primeira jornada completa no novo stack: shell, autenticação, API,
+Application, EF Core, PostgreSQL, UX aprovada, testes E2E e dry-run de migração,
+sem o browser tocar Firestore nessa experiência.
+
+## 018 — Assets & Transactions Trusted Vertical Slice
+
+Mover catálogo e ledger para boundary confiável, eliminando a fragilidade de
+`SELL` direto pelo SDK no alvo. Provar concorrência, idempotência, append-only,
+ownership, locks/transações, migração e reconciliação.
+
+## 019 — BRAPI, Positions, Dashboards & Frontend Completion
+
+Completar BRAPI no backend, posições, alocação, dashboards e paridade funcional
+das fases 008–010 no Vite, com UX/UI revisada, estados, mobile, acessibilidade,
+telemetria e E2E.
+
+## 020 — Data Migration, Independent Deploy & Controlled Cutover
+
+Executar rehearsals, cópia final, write fence, importação, reconciliação,
+backups/restore, observabilidade, deploy independente e cutover controlado.
+Após o primeiro write PostgreSQL, Firestore não volta a ser destino.
+
+## 021 — Migration Completion / Production Readiness & Legacy Retirement
+
+Validar o sistema em funcionamento, concluir soak e retirar os caminhos antigos
+de persistência e dependências críticas do Next.js. O projeto só retorna ao
+desenvolvimento normal de features quando o gate validar, no mínimo:
+
+- principais fluxos existentes funcionando para o usuário;
+- frontend independente do Next.js e backend independente do frontend;
+- Firebase ID Token validado no backend;
+- PostgreSQL fonte oficial após cutover e EF Core controlando seu acesso;
+- regras críticas no backend e nenhum write patrimonial crítico pelo frontend;
+- dados migrados reconciliados e cobertura de testes adequada;
+- deploy independente quando apropriado, observabilidade mínima e segurança;
+- caminho antigo de persistência removido ou explicitamente desativado;
+- ausência de dependências críticas específicas do Next.js;
+- documentação arquitetural atualizada.
+
+### Gate C0 — integridade do `SELL`
+
+Decisão registrada: **A — aceitação temporária restrita a dev/testes**. Como não
+há usuários ativos, a fragilidade fica limitada a dados sintéticos/descartáveis;
+não são permitidos writes patrimoniais em staging/produção nem dados reais. O
+owner operacional é o maintainer do projeto. A condição de saída é o primeiro
+usuário ativo, dado real, avanço para staging/produção ou cutover — o que ocorrer
+primeiro. O backend novo não replica a fragilidade.
+
+### Gates de migração
+
+```text
+C0 risco contido → C1 discovery fechado → C2 fundação → C3 auth E2E
+→ C4 compatibilidade → C5 Portfolio → C6 ledger confiável
+→ C7 paridade 001–010 → C8 rehearsal → C9 read-only
+→ C10 PostgreSQL writes → C11 retirement
+```
+
+Compilar, passar testes isolados ou criar estruturas não basta: o gate valida
+execução integrada, autorização, PostgreSQL/EF Core, BRAPI, contratos, dados
+migrados, deploy, observabilidade, segurança e remoção do legado.
+
+---
+
+# 9. Histórico do planejamento pós-010 (superseded)
+
+As propostas abaixo são preservadas como histórico/rebaseline. Seus números e
+nomes não são a sequência oficial atual; foram sucedidos pela migração 011–021
+acima. Não iniciar essas propostas antes do gate da 021.
+
+# Antiga proposta — Planejamento de alocação (formerly 011)
+
+### Antiga proposta 011 — Contribution Planning
 
 ### Objetivo
 
@@ -676,9 +883,9 @@ Não apresentar o resultado como:
 
 ---
 
-# 9. Histórico patrimonial
+# Antiga proposta — Histórico patrimonial (formerly 012)
 
-## 012 — Snapshots & Wealth History
+### Antiga proposta 012 — Snapshots & Wealth History
 
 ### Objetivo
 
@@ -725,9 +932,9 @@ Snapshots não substituem Transactions.
 
 ---
 
-# 10. Metas financeiras
+# Antiga proposta — Metas financeiras (formerly 013)
 
-## 013 — Goals
+### Antiga proposta 013 — Goals
 
 ### Objetivo
 
@@ -767,9 +974,9 @@ Projeções devem usar hipóteses explícitas.
 
 ---
 
-# 11. Reserva de emergência
+# Antiga proposta — Reserva de emergência (formerly 014)
 
-## 014 — Emergency Reserve
+### Antiga proposta 014 — Emergency Reserve
 
 ### Objetivo
 
@@ -809,9 +1016,9 @@ planejamento da carteira
 
 ---
 
-# 12. Ledger financeiro expandido
+# Antiga proposta — Ledger financeiro expandido (formerly 015)
 
-## 015 — Expanded Transactions
+### Antiga proposta 015 — Expanded Transactions
 
 ### Objetivo
 
@@ -855,9 +1062,9 @@ em vez de alterar fatos históricos silenciosamente.
 
 ---
 
-# 13. Caixa e fluxo financeiro
+# Antiga proposta — Caixa e fluxo financeiro (formerly 016)
 
-## 016 — Cash Ledger
+### Antiga proposta 016 — Cash Ledger
 
 ### Objetivo
 
@@ -895,9 +1102,9 @@ Permitindo:
 
 ---
 
-# 14. Multi-moeda e FX
+# Antiga proposta — Multi-moeda e FX (formerly 017)
 
-## 017 — Currency & FX
+### Antiga proposta 017 — Currency & FX
 
 ### Objetivo
 
@@ -924,9 +1131,9 @@ Sempre preservar moeda original.
 
 ---
 
-# 15. Importação e exportação
+# Antiga proposta — Importação e exportação (formerly 018)
 
-## 018 — Import / Export
+### Antiga proposta 018 — Import / Export
 
 ### Import
 
@@ -975,9 +1182,9 @@ JSON
 
 ---
 
-# 16. Conta e ciclo dos dados
+# Antiga proposta — Conta e ciclo dos dados (formerly 019)
 
-## 019 — Account & Data Management
+### Antiga proposta 019 — Account & Data Management
 
 ### Objetivo
 
@@ -1004,9 +1211,9 @@ Essa fase pode exigir boundary server-side/Admin controlado.
 
 ---
 
-# 17. Boundary financeiro confiável
+# Antiga proposta — Boundary financeiro confiável (formerly 020)
 
-## 020 — Trusted Financial Write Boundary
+### Antiga proposta 020 — Trusted Financial Write Boundary
 
 ### Objetivo
 
@@ -1055,9 +1262,9 @@ Objetivo:
 
 ---
 
-# 18. Performance e escala
+# Antiga proposta — Performance e escala (formerly 021)
 
-## 021 — Read Models & Performance
+### Antiga proposta 021 — Read Models & Performance
 
 ### Objetivo
 
@@ -1091,9 +1298,9 @@ ledger não
 
 ---
 
-# 19. Segurança e privacidade
+# Antiga proposta — Segurança e privacidade (formerly 022)
 
-## 022 — Security & Privacy Hardening
+### Antiga proposta 022 — Security & Privacy Hardening
 
 ### Objetivo
 
@@ -1120,9 +1327,9 @@ Cross-user A/B continua sendo requisito de segurança.
 
 ---
 
-# 20. Observabilidade
+# Antiga proposta — Observabilidade (formerly 023)
 
-## 023 — Operational Observability
+### Antiga proposta 023 — Operational Observability
 
 ### Objetivo
 
@@ -1152,9 +1359,9 @@ Adicionar stack externa somente quando houver necessidade concreta.
 
 ---
 
-# 21. Onboarding
+# Antiga proposta — Onboarding (formerly 024)
 
-## 024 — Product Onboarding
+### Antiga proposta 024 — Product Onboarding
 
 ### Objetivo
 
@@ -1184,9 +1391,9 @@ Definir alocação
 
 ---
 
-# 22. Qualidade consolidada
+# Antiga proposta — Qualidade consolidada (formerly 025)
 
-## 025 — Accessibility, UX & Performance Pass
+### Antiga proposta 025 — Accessibility, UX & Performance Pass
 
 ### Objetivo
 
@@ -1211,9 +1418,9 @@ Fazer auditoria consolidada antes de abertura maior.
 
 ---
 
-# 23. Automação de engenharia
+# Antiga proposta — Automação de engenharia (formerly 026)
 
-## 026 — Engineering Automation
+### Antiga proposta 026 — Engineering Automation
 
 ### Objetivo
 
@@ -1249,9 +1456,9 @@ build
 
 ---
 
-# 24. Private Beta
+# Antiga proposta — Private Beta (formerly 027)
 
-## 027 — Private Beta
+### Antiga proposta 027 — Private Beta
 
 ### Pré-condição
 
@@ -1284,9 +1491,9 @@ Foco em aprendizado, não escala.
 
 ---
 
-# 25. Reserva Clara V1
+# Antiga proposta — Reserva Clara V1 (formerly 028)
 
-## 028 — Public Beta / V1
+### Antiga proposta 028 — Public Beta / V1
 
 ### Mínimo esperado
 
@@ -1312,7 +1519,7 @@ Goals podem entrar na V1 ou imediatamente depois conforme feedback e ritmo do pr
 
 ---
 
-# 26. Pós-V1
+# Antiga proposta — Pós-V1 (formerly 029+)
 
 A partir daqui, o roadmap deve ser dirigido principalmente por uso real.
 
@@ -1337,7 +1544,7 @@ Essas fases são possibilidades, não backlog obrigatório.
 
 ---
 
-# 27. Mapa de dependências
+# 10. Mapa de dependências oficial
 
 ```text
 001 Auth ✅
@@ -1352,33 +1559,36 @@ Essas fases são possibilidades, não backlog obrigatório.
    ↓
 009 Positions + Allocation ✅
    ↓
-010 Dashboard ⏭️
-   ↓
-011 Target Allocation + Contributions
-   ↓
-012 Snapshots / History
-   ↓
-┌──────────────┬────────────────┐
-│ 013 Goals    │ 014 Emergency  │
-│              │ Reserve        │
-└──────┬───────┴────────┬───────┘
-       ↓                ↓
-     Planning Intelligence
-              ↓
-015+ Ledger expansion / Cash / FX
-              ↓
-Import / Export / Data Management
-              ↓
-Trusted Boundary / Scale / Security
-              ↓
-Private Beta
-              ↓
-V1
+010 Dashboard ✅
+    ↓
+011 Discovery / Architecture
+    ↓
+012 Product / UX / UI / API Discovery
+    ↓
+013 Foundation
+     ↓
+014 Authentication Walking Skeleton
+     ↓
+015 Domain / Application Harness
+     ↓
+016 PostgreSQL / EF Core / Migrator
+     ↓
+017 Portfolio Vertical Slice
+     ↓
+018 Assets & Transactions Trusted Slice
+     ↓
+019 BRAPI / Positions / Dashboards / Frontend
+     ↓
+020 Migration / Controlled Cutover
+     ↓
+021 Migration Completion / Production Readiness
+     ↓
+Feature backlog reabre após o migration gate
 ```
 
 ---
 
-# 28. Grandes marcos
+# 11. Grandes marcos
 
 ## Marco A — Fundação ✅
 
@@ -1399,7 +1609,7 @@ Estado atual:
 - 007 concluída, incluindo a emenda de lifecycle;
 - 008 concluída;
 - 009 concluída;
-- 010 é a próxima fase.
+- 010 concluída e é a última fase antes da migração.
 
 Resultado esperado ao concluir o marco:
 
@@ -1417,47 +1627,40 @@ Esse é o primeiro grande marco de valor patrimonial do produto.
 
 ---
 
-## Marco C — Planejamento
+## Marco C — Migração e fundação do novo stack
 
-Fases 011–014.
+Fases 011–021.
 
-O produto evolui de:
+O produto primeiro reduz incertezas e valida a mudança de arquitetura:
 
-> Onde estou?
-
-para:
-
-> Onde quero chegar e qual deve ser meu próximo movimento?
+> Como migrar com segurança sem perder os contratos patrimoniais?
 
 Entram:
 
-- alocação;
-- aportes;
-- histórico;
-- metas;
-- reserva.
+- discovery arquitetural;
+- revisão real de produto/UX/UI;
+- frontend React/Vite;
+- backend ASP.NET Core;
+- PostgreSQL/EF Core;
+- autenticação, migração, cutover e retirement do legado.
 
 ---
 
-## Marco D — Produto financeiro completo
+## Marco D — Retorno ao desenvolvimento de features
 
-Fases 015–021.
+Somente após a conclusão da 021 e do migration gate.
 
 Entram:
 
-- ledger expandido;
-- caixa;
-- FX;
-- import/export;
-- gestão de dados;
-- boundary confiável;
-- escala.
+- Contribution Planning e demais features de produto, em nova numeração
+  posterior e conforme o handoff da 021.
 
 ---
 
-## Marco E — Produto público
+## Marco E — Produto público (histórico)
 
-Fases 022–028.
+As antigas fases 022–028 permanecem apenas como backlog/rebaseline histórico;
+não são a sequência de migração atual.
 
 Entram:
 
@@ -1471,7 +1674,7 @@ Entram:
 
 ---
 
-# 29. Sequência crítica
+# 12. Sequência crítica
 
 Não pular do ledger diretamente para visualizações sofisticadas.
 
@@ -1489,11 +1692,14 @@ Dashboard
 
 Essa cadeia forma o núcleo patrimonial do Reserva Clara.
 
-Depois dela, funcionalidades como histórico, alocação, aportes, metas e planejamento podem ser construídas sobre uma base confiável.
+Depois dela, a migração segue pela sequência Produto/UX/UI → casos de uso →
+API Contract → Application → Domain → Persistence e pelos gates 011–021. Só
+então funcionalidades como alocação, aportes, metas e planejamento podem ser
+construídas sobre a base confiável do novo stack.
 
 ---
 
-# 30. Como usar este roadmap no modo Plano
+# 13. Como usar este roadmap no modo Plano
 
 Para planejar uma fase, use:
 

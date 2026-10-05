@@ -332,7 +332,13 @@ Primeiro dashboard patrimonial real, com:
 
 Sem inventar performance histórica antes de haver snapshots/histórico confiável.
 
-## 011–014 — planejamento patrimonial
+## Histórico — planejamento patrimonial anterior à migração
+
+> Este resumo foi escrito antes da rebaseline pós-010. As fases abaixo são
+> contexto histórico/superseded, não a sequência operacional atual. A sequência
+> oficial é 011–021 — Discovery, Architecture, Foundation e Migration — no
+> roadmap canônico e na spec 011. Features de produto só retornam após o gate
+> da 021.
 
 ### 011 — Contribution Planning
 

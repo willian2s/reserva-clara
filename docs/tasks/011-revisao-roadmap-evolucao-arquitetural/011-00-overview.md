@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [011-revisao-roadmap-evolucao-arquitetural.md](../../specs/011-revisao-roadmap-evolucao-arquitetural.md)
-- **Progresso:** 2/8 subtarefas concluídas
+- **Progresso:** 3/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -15,7 +15,7 @@ backend, sem iniciar a implementação da nova stack.
 
 - [x] [011-01-inventariar-frontend-e-next.md](011-01-inventariar-frontend-e-next.md)
 - [x] [011-02-mapear-dominio-dados-e-riscos.md](011-02-mapear-dominio-dados-e-riscos.md)
-- [ ] [011-03-desenhar-arquitetura-alvo-e-camadas.md](011-03-desenhar-arquitetura-alvo-e-camadas.md)
+- [x] [011-03-desenhar-arquitetura-alvo-e-camadas.md](011-03-desenhar-arquitetura-alvo-e-camadas.md)
 - [ ] [011-04-modelar-postgresql-e-migracao.md](011-04-modelar-postgresql-e-migracao.md)
 - [ ] [011-05-definir-identidade-e-seguranca.md](011-05-definir-identidade-e-seguranca.md)
 - [ ] [011-06-revisar-ux-frontend-e-contratos.md](011-06-revisar-ux-frontend-e-contratos.md)
@@ -32,15 +32,31 @@ backend, sem iniciar a implementação da nova stack.
   progressivamente arquitetura, dados, segurança, produto e operação.
 - O risco de `SELL` acima do saldo via SDK Firestore direto deve receber uma
   decisão de contenção em C0, sem introduzir dual-write.
-- A atualização do roadmap canônico está bloqueada pela política atual de
-  edição. A revisão persistida está na spec e deve ser sincronizada quando a
-  permissão para `docs/roadmap/**` estiver disponível.
+- O roadmap canônico foi sincronizado com a revisão em
+  `docs/roadmap/reserva-clara-roadmap.md`; a spec detalha os critérios e o
+  roadmap mantém a sequência oficial 011–021.
 - 011-01 concluída com inventário de rotas, layouts, hosts, acoplamentos Next,
   auth/dados, UX/a11y, testabilidade, matriz de destino e riscos residuais.
 - A baseline técnica permaneceu verde; não houve alteração de código. A próxima
 -  subtarefa 011-02 concluiu o inventário de domínio, dados, ownership, queries,
   Quotes/BRAPI, legado, riscos e opções para C0; nenhum código foi alterado.
-- C0 continua sendo gate operacional: a decisão sobre aceitar temporariamente o
-  risco de `SELL`, suspender writes ou usar bridge server-side deve ocorrer antes
-  de C1/avanço de writes patrimoniais. Não houve dual-write nem implementação de
-  bridge nesta subtarefa.
+- C0 continua sendo gate operacional: foi escolhida a aceitação temporária
+  restrita a dev/testes. Não houve dual-write nem implementação de bridge; a
+  condição de saída deve ser respeitada antes de usuários, dados reais,
+  staging/produção ou cutover.
+- A 011 foi explicitamente limitada a discovery e redução de incertezas; não
+  exige endpoints, DTOs, componentes ou contratos definitivos completos.
+- A 011-03 registrou a sequência Produto/UX/UI → casos de uso → API Contract →
+  Application → Domain → Persistence e os boundaries contra CRUD orientado ao
+  banco.
+- O roadmap canônico preserva 001–010 como histórico e usa 011–021 como única
+  sequência oficial pós-migração; as propostas antigas estão marcadas apenas
+  como rebaseline histórico.
+- A revisão confirmou que 012 pode alterar os requisitos da API e que o gate
+  021 valida o sistema em funcionamento antes do retorno às features.
+- C0 decidido como **A — aceitação temporária restrita a dev/testes**: o projeto
+  não possui usuários ativos, portanto só são permitidos dados
+  sintéticos/descartáveis; não são permitidos writes patrimoniais em
+  staging/produção nem dados reais. O owner operacional é o maintainer do
+  projeto, e a saída ocorre antes do primeiro usuário ativo, dado real,
+  staging/produção ou cutover.

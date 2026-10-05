@@ -389,15 +389,13 @@ Opções registráveis para C0:
 | B — suspender writes financeiros | Desabilitar create de Transaction/SELL até o boundary confiável | Interrompe a funcionalidade, mas contém o risco de integridade |
 | C — bridge transitório server-side | Roteia writes para endpoint confiável que valida saldo, concorrência e idempotência, sem dual-write | Exige implementação e operação temporárias; Firestore continua única autoridade até fence |
 
-**Recomendação desta análise:** como a volumetria, população e confiabilidade
-dos clientes não foram comprovadas, usar B se houver qualquer usuário não
-confiável; usar A somente com owner humano explícito, allowlist de ambiente e
-prazo curto; escolher C apenas se a continuidade de writes for indispensável.
-Nenhuma opção autoriza dual-write. O deadline é **antes de C1 e antes de
-qualquer novo write patrimonial fora do fluxo confiável**; o responsável pelo
-go/no-go deve registrar opção, ambiente, data de expiração, evidência de
-monitoramento e plano de rollback. A decisão não foi executada nesta subtarefa
-de documentação e permanece risco/gate residual do overview.
+**Decisão registrada posteriormente ao inventário:** escolher **A — aceitação
+temporária restrita a dev/testes**, porque o projeto não possui usuários ativos.
+São permitidos apenas dados sintéticos/descartáveis; não são permitidos writes
+patrimoniais em staging/produção nem dados reais. O owner operacional é o
+maintainer do projeto. A saída ocorre antes do primeiro usuário ativo, dado real,
+avanço para staging/produção ou cutover. B e C permanecem alternativas
+documentadas, mas não escolhidas; nenhuma opção autoriza dual-write.
 
 ## Evidências cruzadas e lacunas
 
@@ -438,8 +436,9 @@ de documentação e permanece risco/gate residual do overview.
   exige auditoria/backfill e fence antes de permitir delete confiável.
 - A idempotência depende de reservar/reutilizar o mesmo `transactionId`; o
   parâmetro opcional do repository não elimina duplicação quando omitido.
-- A escolha C0 continua sujeita ao go/no-go humano antes de C1; a recomendação
-  conservadora é suspender writes quando o ambiente não for confiável.
+- C0 foi decidido como A restrita a dev/testes. Se o ambiente deixar de ser
+  exclusivamente de desenvolvimento, a condição de saída exige suspender writes
+  ou implementar boundary/bridge confiável antes de continuar.
 
 ## Comandos executados e resultados
 
@@ -487,8 +486,10 @@ de C0. Os gates técnicos passaram sem alteração de código de produção.
 
 ## Riscos residuais
 
-- C0 ainda não foi operacionalmente decidido: `SELL` direto permanece possível
-  fora do repository até suspensão ou boundary confiável.
+- C0 foi decidido como aceitação temporária restrita a dev/testes: `SELL` direto
+  permanece possível apenas com dados sintéticos/descartáveis, sem writes em
+  staging/produção ou dados reais, até o primeiro usuário ativo, dado real,
+  avanço para staging/produção ou cutover.
 - Transactions legadas sem `assetUsages` podem enfraquecer o bloqueio de delete
   de Asset; nenhum backfill/auditoria foi executado nesta sessão.
 - Volumetria e anomalias reais não foram observadas; tamanho de ledger, dados

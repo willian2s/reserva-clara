@@ -24,7 +24,8 @@ para as fases 012–016.
 
 - Criar/revisar ADRs listadas na spec 011.
 - Marcar cada decisão como proposed/accepted/superseded com evidência.
-- Atualizar o roadmap canônico com fases 011–021 quando houver permissão.
+- Conferir e manter o roadmap canônico sincronizado com as fases 011–021 e o
+  histórico 001–010; a sincronização inicial foi antecipada nesta revisão.
 - Consolidar gates C0–C11, riscos residuais e primeiras tarefas elegíveis.
 - Produzir handoff para 012/013/014/015/016.
 
@@ -38,7 +39,8 @@ para as fases 012–016.
 ## Dependências
 
 - 011-01 a 011-07 concluídas.
-- Permissão de edição de `docs/roadmap/**` para sincronização canônica.
+- Roadmap canônico já sincronizado; a subtarefa deve validar coerência final,
+  não aguardar uma permissão de edição.
 
 ## Arquivos e símbolos prováveis
 
@@ -53,7 +55,8 @@ para as fases 012–016.
    consequências forem realmente inseparáveis.
 3. Registrar alternativas, evidências, consequências e gatilho de revisão.
 4. Distinguir decisões aceitas de hipóteses/experimentos pendentes.
-5. Atualizar o roadmap preservando fases 001–010 e mapeando futuro superseded.
+5. Conferir o roadmap sincronizado, preservando fases 001–010 e mapeando o
+   planejamento antigo como superseded.
 6. Conferir fases 011–021, dependências, gates e ordem crítica.
 7. Registrar risco residual C0 e blockers para 012–016.
 8. Atualizar status/checklist apenas para subtarefas realmente concluídas.
@@ -71,7 +74,7 @@ para as fases 012–016.
 
 - Decisões estruturais têm ADR e owner/gatilho de revisão.
 - Histórico não foi reescrito e supersession é temporalmente correta.
-- Roadmap canônico está sincronizado ou há bloqueio concreto registrado.
+- Roadmap canônico está sincronizado com spec, overview e handoff.
 - Gates e handoffs indicam o que pode começar em paralelo e o que bloqueia.
 - Nenhum código, deploy, banco, segredo ou configuração externa foi alterado.
 
@@ -80,5 +83,5 @@ para as fases 012–016.
 - Não aceitar ADR genérica que esconda decisões distintas.
 - Não marcar Vercel/Firestore como removidos antes da 021.
 - Não usar número de fase futura como se já estivesse executada.
-- A ausência de permissão para o roadmap deve permanecer explícita; não simular
-  atualização bem-sucedida.
+- Não reabrir a sequência antiga nem executar novamente a sincronização já
+  realizada; registrar qualquer divergência concreta entre os documentos.
