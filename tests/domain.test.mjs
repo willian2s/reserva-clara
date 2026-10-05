@@ -757,3 +757,69 @@ test("allocation excludes closed and incompatible positions and reports complete
   assert.equal(zeroDenominator.totalMarketValue, "0");
   assert.equal(zeroDenominator.entries[0].allocation, null);
 });
+
+test("portfolio summary keeps exact known amounts and quote coverage states", () => {
+  const known = domain.createKnownAmount({
+    currency: "BRL",
+    values: ["0.1", "0.2", "999999999999999999999999999999"],
+    unavailable: [{
+      scope: "asset",
+      portfolioId: "portfolio-a",
+      assetId: "asset-z",
+      reason: "quote-unavailable",
+    }],
+    hasItems: true,
+  });
+
+  assert.deepEqual(known, {
+    currency: "BRL",
+    status: "partial",
+    knownAmount: "999999999999999999999999999999.3",
+    unavailable: [{
+      scope: "asset",
+      portfolioId: "portfolio-a",
+      assetId: "asset-z",
+      reason: "quote-unavailable",
+    }],
+  });
+  assert.deepEqual(domain.createKnownAmount({
+    currency: "BRL",
+    values: [],
+    unavailable: [],
+    hasItems: false,
+  }), {
+    currency: "BRL",
+    status: "empty",
+    knownAmount: "0",
+    unavailable: [],
+  });
+
+  const quote = (assetId, currency, freshness) => ({
+    assetId,
+    status: "available",
+    quote: {
+      assetId,
+      provider: "brapi",
+      requestedSymbol: "PETR4",
+      providerSymbol: "PETR4",
+      symbolChanged: false,
+      price: { currency, decimal: "10" },
+      quotedAt: "2026-09-30T12:00:00Z",
+      fetchedAt: "2026-09-30T12:00:01Z",
+      freshness,
+    },
+  });
+
+  assert.deepEqual(domain.deriveQuoteCoverage([
+    { positionCurrency: "BRL", result: quote("asset-a", "BRL", "fresh") },
+    { positionCurrency: "BRL", result: quote("asset-b", "BRL", "stale") },
+    { positionCurrency: "BRL", result: { assetId: "asset-c", status: "unavailable", code: "TIMEOUT" } },
+    { positionCurrency: "USD", result: quote("asset-d", "BRL", "fresh") },
+  ]), {
+    status: "mixed",
+    requested: 4,
+    fresh: 1,
+    stale: 1,
+    unavailable: 2,
+  });
+});

@@ -7,6 +7,10 @@ const require = createRequire(import.meta.url);
 const build = process.env.POSITIONS_READ_TEST_BUILD;
 const domain = require(resolve(build, "domain/index.js"));
 const { readPortfolioPositions } = require(resolve(build, "data/positions/portfolio-read.js"));
+const {
+  preparePortfolioPositions,
+  projectPortfolioDashboard,
+} = require(resolve(build, "data/positions/portfolio-projection.js"));
 
 const errorCode = (code) => (error) => error?.code === code;
 
@@ -36,6 +40,7 @@ const transaction = ({
   kind = "buy",
   quantity = "1",
   price = "10",
+  currency = "BRL",
   effectiveDate = "2026-01-01",
 }) =>
   domain.parseTransaction({
@@ -43,7 +48,7 @@ const transaction = ({
     assetId,
     kind,
     quantity,
-    unitPrice: { currency: "BRL", decimal: price },
+    unitPrice: { currency, decimal: price },
     effectiveDate,
     createdAt: { seconds: 1, nanoseconds: 0 },
   });
@@ -92,6 +97,21 @@ test("composes ledger, valuation and allocation with injected owner-scoped bound
   assert.deepEqual(result.marketPositions.map(({ assetId }) => assetId), ["asset-a", "asset-b"]);
   assert.deepEqual(result.allocation.entries.map(({ assetId }) => assetId), ["asset-a", "asset-b"]);
   assert.equal(result.allocation.status, "complete");
+  assert.deepEqual(result.items.map(({ asset }) => asset.id), ["asset-a", "asset-b"]);
+  assert.equal(result.items[0].currentValue.status, "available");
+  assert.equal(result.items[0].currentValue.quote.quotedAt, "2026-09-30T12:00:00Z");
+  assert.equal(result.items[0].currentValue.quote.fetchedAt, "2026-09-30T12:00:01Z");
+  assert.equal(result.marketValue.knownAmount, "24");
+  assert.equal(result.marketValue.status, "complete");
+  assert.equal(result.investedAmount.knownAmount, "20");
+  assert.equal(result.investedAmount.status, "complete");
+  assert.deepEqual(result.quotes, {
+    status: "fresh",
+    requested: 2,
+    fresh: 2,
+    stale: 0,
+    unavailable: 0,
+  });
   assert.deepEqual(calls, [["asset-a", "asset-b"]]);
 });
 
@@ -119,6 +139,10 @@ test("keeps closed positions but does not request their quotes", async () => {
   );
 
   assert.equal(result.positions.find(({ assetId }) => assetId === "asset-closed").closed, true);
+  assert.deepEqual(
+    result.items.find(({ position }) => position.assetId === "asset-closed").currentValue,
+    { status: "not-applicable", reason: "closed" },
+  );
   assert.deepEqual(result.marketPositions.map(({ assetId }) => assetId), ["asset-open"]);
   assert.deepEqual(calls, [["asset-open"]]);
 });
@@ -160,6 +184,35 @@ test("sanitizes a failed quote batch without losing positions", async () => {
 
   assert.equal(result.positions.length, 1);
   assert.deepEqual(result.marketPositions, []);
+  assert.deepEqual(result.items[0].currentValue, {
+    status: "unavailable",
+    reason: "quote-unavailable",
+    quoteCode: "TIMEOUT",
+  });
+  assert.deepEqual(result.marketValue, {
+    currency: "BRL",
+    status: "partial",
+    knownAmount: "0",
+    unavailable: [{
+      scope: "asset",
+      portfolioId: "portfolio-a",
+      assetId: "asset-a",
+      reason: "quote-unavailable",
+    }],
+  });
+  assert.deepEqual(result.investedAmount, {
+    currency: "BRL",
+    status: "complete",
+    knownAmount: "10",
+    unavailable: [],
+  });
+  assert.deepEqual(result.quotes, {
+    status: "mixed",
+    requested: 1,
+    fresh: 0,
+    stale: 0,
+    unavailable: 1,
+  });
   assert.deepEqual(result.allocation.unavailable, [
     { assetId: "asset-a", reason: "quote-unavailable" },
   ]);
@@ -181,6 +234,107 @@ test("preserves stale freshness and propagates currency mismatch to allocation",
   assert.deepEqual(result.allocation.unavailable, [
     { assetId: "asset-a", reason: "quote-currency-mismatch" },
   ]);
+});
+
+test("counts stale quotes as known and excludes non-base positions from both amounts", async () => {
+  const result = await readPortfolioPositions(
+    "portfolio-a",
+    dependenciesFor({
+      assets: [asset("asset-brl"), asset("asset-usd", "USD")],
+      transactions: [
+        transaction({ id: "tx-brl", assetId: "asset-brl" }),
+        transaction({ id: "tx-usd", assetId: "asset-usd", currency: "USD" }),
+      ],
+      fetchQuotes: async (assetIds) => assetIds.map((assetId) =>
+        availableQuote(assetId, "12", "stale", assetId === "asset-usd" ? "USD" : "BRL")),
+    }),
+  );
+
+  assert.deepEqual(result.quotes, {
+    status: "stale",
+    requested: 2,
+    fresh: 0,
+    stale: 2,
+    unavailable: 0,
+  });
+  assert.equal(result.marketValue.knownAmount, "12");
+  assert.equal(result.marketValue.status, "partial");
+  assert.deepEqual(result.marketValue.unavailable, [{
+    scope: "asset",
+    portfolioId: "portfolio-a",
+    assetId: "asset-usd",
+    reason: "base-currency-mismatch",
+  }]);
+  assert.equal(result.investedAmount.knownAmount, "10");
+  assert.equal(result.investedAmount.status, "partial");
+  assert.deepEqual(result.investedAmount.unavailable, result.marketValue.unavailable);
+  assert.equal(
+    result.items.find(({ position }) => position.assetId === "asset-usd").currentValue.baseCurrency,
+    "excluded",
+  );
+});
+
+test("returns an empty summary without requesting quotes", async () => {
+  let quoteCalls = 0;
+  const result = await readPortfolioPositions(
+    "portfolio-a",
+    dependenciesFor({
+      assets: [asset("asset-empty")],
+      transactions: [],
+      fetchQuotes: async () => {
+        quoteCalls += 1;
+        return [];
+      },
+    }),
+  );
+
+  assert.equal(quoteCalls, 0);
+  assert.deepEqual(result.marketValue, {
+    currency: "BRL",
+    status: "empty",
+    knownAmount: "0",
+    unavailable: [],
+  });
+  assert.deepEqual(result.investedAmount, result.marketValue);
+  assert.deepEqual(result.quotes, {
+    status: "none",
+    requested: 0,
+    fresh: 0,
+    stale: 0,
+    unavailable: 0,
+  });
+});
+
+test("projects a shared quote superset without quoting closed positions", () => {
+  const prepared = preparePortfolioPositions({
+    portfolio,
+    assets: [asset("asset-open"), asset("asset-closed")],
+    transactions: [
+      transaction({ id: "open", assetId: "asset-open" }),
+      transaction({ id: "buy", assetId: "asset-closed" }),
+      transaction({
+        id: "sell",
+        assetId: "asset-closed",
+        kind: "sell",
+        effectiveDate: "2026-01-02",
+      }),
+    ],
+  });
+  const read = projectPortfolioDashboard({
+    prepared,
+    quoteResults: [
+      availableQuote("asset-open"),
+      availableQuote("asset-closed"),
+      availableQuote("asset-from-another-portfolio"),
+    ],
+  });
+
+  assert.equal(read.items.length, 2);
+  assert.deepEqual(read.marketValue.unavailable, []);
+  assert.deepEqual(
+    read.items.find(({ position }) => position.assetId === "asset-closed").currentValue,
+    { status: "not-applicable", reason: "closed" },
+  );
 });
 
 test("propagates invalid ledger and missing portfolio without requesting quotes", async () => {

@@ -118,6 +118,7 @@ export function TransactionLedger({ portfolioId }: { portfolioId: string }) {
   });
   const isMountedRef = useRef(false);
   const requestIdRef = useRef(0);
+  const createPositionRef = useRef<HTMLDivElement>(null);
 
   const loadLedger = useCallback(async (): Promise<LedgerLoadResult> => {
     const requestId = requestIdRef.current + 1;
@@ -160,6 +161,9 @@ export function TransactionLedger({ portfolioId }: { portfolioId: string }) {
     }
   }, [portfolioId]);
 
+  const isArchived =
+    portfolioState.status === "ready" && portfolioState.portfolio.archivedAt !== null;
+
   useEffect(() => {
     isMountedRef.current = true;
     requestIdRef.current += 1;
@@ -177,6 +181,31 @@ export function TransactionLedger({ portfolioId }: { portfolioId: string }) {
       requestIdRef.current += 1;
     };
   }, [loadLedger]);
+
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      window.location.hash !== "#novo-lancamento" ||
+      portfolioState.status !== "ready" ||
+      ledgerState.status !== "ready" ||
+      isArchived
+    ) {
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      const target = createPositionRef.current;
+      if (!target) return;
+
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      const firstField = target.querySelector<HTMLElement>(
+        "input, select, textarea, button",
+      );
+      (firstField ?? target).focus({ preventScroll: true });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [ledgerState.status, portfolioState.status, isArchived]);
 
   const retry = () => {
     retryPortfolio();
@@ -214,8 +243,6 @@ export function TransactionLedger({ portfolioId }: { portfolioId: string }) {
 
   const isPortfolioLoading = portfolioState.status === "loading";
   const isLedgerLoading = ledgerState.status === "loading";
-  const isArchived =
-    portfolioState.status === "ready" && portfolioState.portfolio.archivedAt !== null;
 
   return (
     <section className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6 lg:px-10 lg:py-14">
@@ -329,7 +356,12 @@ export function TransactionLedger({ portfolioId }: { portfolioId: string }) {
             </div>
 
             {!isArchived && (
-              <Card className="order-1 lg:order-2">
+              <Card
+                id="novo-lancamento"
+                ref={createPositionRef}
+                tabIndex={-1}
+                className="order-1 scroll-mt-6 lg:order-2"
+              >
                 <CardHeader>
                   <h2 className="font-heading text-base font-semibold">
                     Novo lançamento

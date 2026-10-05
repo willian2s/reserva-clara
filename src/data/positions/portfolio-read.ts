@@ -1,24 +1,26 @@
 "use client";
 
 import {
-  calculateAllocation,
-  deriveMarketPosition,
   parseDocumentId,
+  parseQuoteResult,
   QUOTE_ERROR_CODES,
   QUOTE_MAX_BATCH_SIZE,
-  reducePositions,
-  type AllocationResult,
   type Asset,
-  type CurrencyCode,
   type DocumentId,
   type MarketPosition,
   type Portfolio,
+  type PortfolioDashboardRead,
   type Position,
   type QuoteErrorCode,
   type QuoteResult,
   type Transaction,
 } from "../../domain";
 import { PositionCompositionError } from "../../domain/errors";
+import {
+  availableMarketPositions,
+  preparePortfolioPositions,
+  projectPortfolioDashboard,
+} from "./portfolio-projection";
 
 export type PortfolioPositionReadDependencies = Readonly<{
   getPortfolio: (portfolioId: DocumentId) => Promise<Portfolio | null>;
@@ -27,18 +29,20 @@ export type PortfolioPositionReadDependencies = Readonly<{
   fetchQuotes: (assetIds: readonly DocumentId[]) => Promise<readonly QuoteResult[]>;
 }>;
 
-export type PortfolioPositionRead = Readonly<{
-  portfolio: Portfolio;
+/**
+ * The legacy fields remain available while the enriched read is additive.
+ * Consumers can migrate to `items` and the known amounts without a second read.
+ */
+export type PortfolioPositionRead = PortfolioDashboardRead & Readonly<{
   positions: readonly Position[];
   marketPositions: readonly MarketPosition[];
-  allocation: AllocationResult;
 }>;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-function sanitizeQuoteErrorCode(error: unknown): QuoteErrorCode {
+export function sanitizeQuoteErrorCode(error: unknown): QuoteErrorCode {
   if (isRecord(error) && typeof error.code === "string") {
     const code = error.code as QuoteErrorCode;
     if (QUOTE_ERROR_CODES.includes(code)) {
@@ -60,7 +64,7 @@ function unavailableResults(
   }));
 }
 
-function hasCompleteBatch(
+export function hasCompleteQuoteBatch(
   assetIds: readonly DocumentId[],
   results: readonly QuoteResult[],
 ): boolean {
@@ -87,22 +91,36 @@ function hasCompleteBatch(
   return returnedIds.size === requestedIds.size;
 }
 
-async function fetchQuoteBatch(
+export async function fetchQuoteBatch(
   assetIds: readonly DocumentId[],
   fetchQuotes: PortfolioPositionReadDependencies["fetchQuotes"],
 ): Promise<readonly QuoteResult[]> {
   try {
     const results = await fetchQuotes(assetIds);
+    if (!Array.isArray(results)) {
+      return unavailableResults(assetIds, "INVALID_PROVIDER_RESPONSE");
+    }
 
-    return hasCompleteBatch(assetIds, results)
-      ? results
+    let parsedResults: readonly QuoteResult[];
+    try {
+      parsedResults = results.map((result) => parseQuoteResult(result));
+    } catch {
+      return unavailableResults(assetIds, "INVALID_PROVIDER_RESPONSE");
+    }
+
+    return hasCompleteQuoteBatch(assetIds, parsedResults)
+      ? parsedResults
       : unavailableResults(assetIds, "INVALID_PROVIDER_RESPONSE");
   } catch (error) {
+    if (isRecord(error) && error.code === "UNAUTHENTICATED") {
+      throw error;
+    }
     return unavailableResults(assetIds, sanitizeQuoteErrorCode(error));
   }
 }
 
-async function fetchOpenPositionQuotes(
+/** Fetches sequential batches so the client boundary never exceeds the quote policy. */
+export async function fetchOpenPositionQuotes(
   assetIds: readonly DocumentId[],
   fetchQuotes: PortfolioPositionReadDependencies["fetchQuotes"],
 ): Promise<readonly QuoteResult[]> {
@@ -131,49 +149,16 @@ export async function readPortfolioPositions(
     dependencies.listTransactions(parsedPortfolioId),
     dependencies.listAssets(),
   ]);
-  const positions = reducePositions({
-    portfolioId: parsedPortfolioId,
-    assets,
-    transactions,
-  });
-  const openPositions = positions.filter((position) => !position.closed);
+  const prepared = preparePortfolioPositions({ portfolio, assets, transactions });
   const quoteResults = await fetchOpenPositionQuotes(
-    openPositions.map((position) => position.assetId),
+    prepared.openPositions.map((position) => position.assetId),
     dependencies.fetchQuotes,
   );
-  const quoteResultsByAssetId = new Map(
-    quoteResults.map((quoteResult) => [quoteResult.assetId, quoteResult]),
-  );
-  const marketPositionResults = openPositions.map((position) => {
-    const quoteResult = quoteResultsByAssetId.get(position.assetId);
-
-    if (quoteResult === undefined) {
-      return {
-        status: "unavailable" as const,
-        assetId: position.assetId,
-        reason: "quote-unavailable" as const,
-        quoteCode: "INVALID_PROVIDER_RESPONSE" as const,
-      };
-    }
-
-    return deriveMarketPosition(position, quoteResult);
-  });
-  const marketPositions = marketPositionResults.flatMap((result) =>
-    result?.status === "available" ? [result.marketPosition] : [],
-  );
-  const allocation = calculateAllocation({
-    portfolioId: parsedPortfolioId,
-    currency: portfolio.baseCurrency as CurrencyCode,
-    positions,
-    marketPositionResults: marketPositionResults.filter(
-      (result): result is NonNullable<typeof result> => result !== null,
-    ),
-  });
+  const read = projectPortfolioDashboard({ prepared, quoteResults });
 
   return {
-    portfolio,
-    positions,
-    marketPositions,
-    allocation,
+    ...read,
+    positions: prepared.positions,
+    marketPositions: availableMarketPositions(read).marketPositions,
   };
 }

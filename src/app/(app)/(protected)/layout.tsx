@@ -24,7 +24,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
               priority
               className="h-auto w-36 sm:w-44"
             />
-            <nav aria-label="Navegação principal">
+             <nav aria-label="Navegação principal">
               <ul className="flex items-center gap-2 text-sm font-medium">
                 <li>
                   <Link
@@ -50,9 +50,9 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
                     Ativos
                   </Link>
                 </li>
-              </ul>
-            </nav>
-          </div>
+               </ul>
+             </nav>
+            </div>
         </header>
         <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col">
           {children}

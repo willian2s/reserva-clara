@@ -603,7 +603,7 @@ Em:
 Mostrar:
 
 - patrimônio;
-- total investido;
+- Valor investido;
 - composição;
 - posições;
 - distribuição;
