@@ -26,7 +26,7 @@ export function DashboardRefreshButton() {
     };
   }, []);
 
-  if (!/^\/portfolios\/[^/]+$/.test(pathname)) {
+  if (pathname !== "/dashboard" && !/^\/portfolios\/[^/]+$/.test(pathname)) {
     return null;
   }
 

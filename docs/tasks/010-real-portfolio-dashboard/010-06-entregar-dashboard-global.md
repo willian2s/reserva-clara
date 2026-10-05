@@ -2,7 +2,7 @@
 
 - **Ticker:** `010`
 - **Número:** `06`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -95,3 +95,43 @@ zero conhecido parcial, refresh concorrente, mobile e teclado.
 - Não mostrar carteira arquivada por reutilização indevida da listagem geral.
 - Não serializar dados financeiros em Server Component ou logs.
 - Não adicionar paginação improvisada que esconda posições sem indicação.
+
+## Registro de execução
+
+- **Status:** `completed`
+- **Arquivos alterados:** `src/app/(app)/(protected)/dashboard/page.tsx`,
+  `src/components/dashboard/global-dashboard.tsx`,
+  `src/components/dashboard/use-global-dashboard.ts`,
+  `src/components/dashboard/dashboard-refresh-button.tsx` e
+  `src/components/financial/position-table.tsx`.
+- **Decisões:** a página passou a compor um Client Component que injeta uma única
+  leitura global real por refresh. O consolidado exibe métricas derivadas,
+  distribuição com links, carteiras indisponíveis sem valor zero, posições com
+  identidade carteira/ativo e Assets sem cotação deduplicados com carteiras
+  afetadas. Estados loading, empty, parcial, refreshing e erro/retry preservam a
+  última leitura pelo hook compartilhado; o botão de atualização também aparece
+   no dashboard global. Posições desconhecidas por carteiras indisponíveis são
+   qualificadas como conhecidas, sem afirmar ausência.
+- **Ajuste visual posterior:** a dashboard global passou a seguir a mesma
+  estrutura da dashboard de carteira: cards de valor na mesma ordem, tabela
+  responsiva de posições por carteira, composição/cobertura recolhidas e
+  diagnósticos preservados. A tabela recebeu `ariaLabel` contextual para
+  distinguir cada carteira em leitores de tela.
+- **Desvios:** nenhum requisito foi alterado. Não foram modificados read-side,
+  contratos, persistência, Rules, repositories, Quotes ou matemática financeira.
+  Não há runner React configurado, portanto a validação automatizada permanece nos
+  harnesses read-side/apresentação e nos gates técnicos.
+- **Comandos executados:** `npm run test:dashboard-read`,
+  `npm run test:positions-read`, `npm run test:financial-presentation`,
+  `npm run lint`, `npm exec next typegen`, `npx tsc --noEmit`, `npm run build` e
+  `git diff --check`.
+- **Resultados e evidências:** dashboard read passou 8/8 testes, positions read
+  passou 9/9 e apresentação financeira passou 6/6. Lint, Next typegen,
+  TypeScript, build Next.js 16.3.5 e diff check concluíram com código zero. A
+  revisão independente não encontrou blockers; apontou e foi corrigida a
+  distinção entre zero posições e posições não verificáveis em carteira
+  indisponível, além da nomenclatura do custo investido.
+- **Riscos residuais:** smoke manual de estados, teclado, zoom, contraste,
+  largura de 320 px, refresh concorrente e fixtures visuais permanece para
+  010-07. O dashboard continua client-only sob o AuthGate, que não é boundary de
+  autorização server-side.

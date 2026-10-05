@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [010-real-portfolio-dashboard.md](../../specs/010-real-portfolio-dashboard.md)
-- **Progresso:** 5/7 subtarefas concluídas
+- **Progresso:** 6/7 subtarefas concluídas
 
 ## Objetivo
 
@@ -17,7 +17,7 @@ atualização manual e nenhuma fonte patrimonial paralela.
 - [x] [010-03-compor-read-side-global.md](010-03-compor-read-side-global.md)
 - [x] [010-04-criar-apresentacao-patrimonial.md](010-04-criar-apresentacao-patrimonial.md)
 - [x] [010-05-entregar-dashboard-da-carteira.md](010-05-entregar-dashboard-da-carteira.md)
-- [ ] [010-06-entregar-dashboard-global.md](010-06-entregar-dashboard-global.md)
+- [x] [010-06-entregar-dashboard-global.md](010-06-entregar-dashboard-global.md)
 - [ ] [010-07-validar-gates-e-handoff.md](010-07-validar-gates-e-handoff.md)
 
 ## Observações
@@ -42,3 +42,9 @@ atualização manual e nenhuma fonte patrimonial paralela.
   métricas, composição, posições abertas em tabela responsiva, estados de Quote,
   refresh resiliente, archive read-only e navegação preservada. Smoke manual
   visual permanece para 010-07.
+- 010-06 concluída com o consolidado global client-only de carteiras ativas,
+  integração real do read-side, métricas, distribuição, posições preservando
+  carteira/ativo, Assets sem cotação deduplicados e refresh/retry resilientes.
+  A apresentação global replica a estrutura da dashboard de carteira, com
+  tabela responsiva por carteira e composição/cobertura recolhidas. Smoke
+  manual e gates finais permanecem em 010-07.

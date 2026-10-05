@@ -112,9 +112,11 @@ function QuoteDiagnostics({ items }: { items: readonly PositionReadItem[] }) {
 export function PositionTable({
   items,
   allocation,
+  ariaLabel = "Posições abertas da carteira",
 }: {
   items: readonly PositionReadItem[];
   allocation: readonly AllocationEntry[];
+  ariaLabel?: string;
 }) {
   const allocationByAssetId = new Map(
     allocation.map((entry) => [entry.assetId, entry.allocation]),
@@ -127,7 +129,7 @@ export function PositionTable({
           <h2 className="font-heading text-base font-semibold">Posições abertas</h2>
         </CardHeader>
         <CardContent className="p-0 lg:px-(--card-spacing)">
-          <div role="table" aria-label="Posições abertas da carteira" className="min-w-0">
+          <div role="table" aria-label={ariaLabel} className="min-w-0">
             <div
               role="row"
               className="hidden border-y border-border px-4 py-3 text-xs font-medium text-muted-foreground lg:grid lg:grid-cols-[minmax(10rem,1.5fr)_minmax(9rem,1fr)_minmax(9rem,1fr)_minmax(7rem,0.8fr)_minmax(9rem,1fr)] lg:gap-x-4"
