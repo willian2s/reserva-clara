@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [011-revisao-roadmap-evolucao-arquitetural.md](../../specs/011-revisao-roadmap-evolucao-arquitetural.md)
-- **Progresso:** 1/8 subtarefas concluídas
+- **Progresso:** 2/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -14,7 +14,7 @@ backend, sem iniciar a implementação da nova stack.
 ## Checklist
 
 - [x] [011-01-inventariar-frontend-e-next.md](011-01-inventariar-frontend-e-next.md)
-- [ ] [011-02-mapear-dominio-dados-e-riscos.md](011-02-mapear-dominio-dados-e-riscos.md)
+- [x] [011-02-mapear-dominio-dados-e-riscos.md](011-02-mapear-dominio-dados-e-riscos.md)
 - [ ] [011-03-desenhar-arquitetura-alvo-e-camadas.md](011-03-desenhar-arquitetura-alvo-e-camadas.md)
 - [ ] [011-04-modelar-postgresql-e-migracao.md](011-04-modelar-postgresql-e-migracao.md)
 - [ ] [011-05-definir-identidade-e-seguranca.md](011-05-definir-identidade-e-seguranca.md)
@@ -38,4 +38,9 @@ backend, sem iniciar a implementação da nova stack.
 - 011-01 concluída com inventário de rotas, layouts, hosts, acoplamentos Next,
   auth/dados, UX/a11y, testabilidade, matriz de destino e riscos residuais.
 - A baseline técnica permaneceu verde; não houve alteração de código. A próxima
-  subtarefa elegível é 011-02.
+-  subtarefa 011-02 concluiu o inventário de domínio, dados, ownership, queries,
+  Quotes/BRAPI, legado, riscos e opções para C0; nenhum código foi alterado.
+- C0 continua sendo gate operacional: a decisão sobre aceitar temporariamente o
+  risco de `SELL`, suspender writes ou usar bridge server-side deve ocorrer antes
+  de C1/avanço de writes patrimoniais. Não houve dual-write nem implementação de
+  bridge nesta subtarefa.
