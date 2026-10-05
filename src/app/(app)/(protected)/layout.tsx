@@ -3,7 +3,6 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AuthGate } from "@/components/auth/auth-gate";
-import { DashboardRefreshButton } from "@/components/dashboard/dashboard-refresh-button";
 
 export default function ProtectedLayout({ children }: { children: ReactNode }) {
   return (
@@ -53,8 +52,7 @@ export default function ProtectedLayout({ children }: { children: ReactNode }) {
                 </li>
                </ul>
              </nav>
-             <DashboardRefreshButton />
-           </div>
+            </div>
         </header>
         <main id="main-content" tabIndex={-1} className="flex flex-1 flex-col">
           {children}

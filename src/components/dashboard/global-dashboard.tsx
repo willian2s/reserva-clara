@@ -13,6 +13,7 @@ import { formatMoney, formatPercentage } from "@/components/financial/financial-
 import { KnownAmountCard } from "@/components/financial/known-amount-card";
 import { PositionTable } from "@/components/financial/position-table";
 import { QuoteCoverageCard } from "@/components/financial/quote-coverage-card";
+import { DashboardRefreshButton } from "@/components/dashboard/dashboard-refresh-button";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Card,
@@ -28,28 +29,6 @@ import type {
 
 const GLOBAL_DASHBOARD_ERROR_MESSAGE =
   "Não foi possível carregar o patrimônio das carteiras. Tente novamente.";
-
-function CountCard({
-  title,
-  value,
-  description,
-}: {
-  title: string;
-  value: number;
-  description: string;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <h2 className="font-heading text-base font-semibold">{title}</h2>
-      </CardHeader>
-      <CardContent>
-        <p className="financial-value tabular-nums">{value}</p>
-        <p className="mt-2 text-sm text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
-  );
-}
 
 function isOpenItem(item: PositionReadItem): boolean {
   return !item.position.closed;
@@ -123,7 +102,12 @@ function PortfolioDistribution({ read }: { read: GlobalDashboardRead }) {
   return (
     <Card>
       <CardHeader>
-        <h2 className="font-heading text-base font-semibold">Distribuição das carteiras</h2>
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 className="font-heading text-base font-semibold">Distribuição das carteiras</h2>
+          <span className="text-sm text-muted-foreground tabular-nums">
+            {read.portfolios.length} {read.portfolios.length === 1 ? "carteira ativa" : "carteiras ativas"}
+          </span>
+        </div>
         <CardDescription>
           {read.marketValue.status === "partial"
             ? "Distribuição do valor conhecido; carteiras indisponíveis não foram estimadas como zero."
@@ -192,13 +176,19 @@ function PositionSummary({ read }: { read: GlobalDashboardRead }) {
   const unavailablePortfolioCount = read.portfolios.filter(
     (entry) => entry.status === "unavailable",
   ).length;
+  const openPositionCount = groups.reduce((count, group) => count + group.items.length, 0);
 
   return (
     <section className="space-y-4" aria-labelledby="global-open-positions-title">
       <header>
-        <h2 id="global-open-positions-title" className="font-heading text-base font-semibold">
-          Resumo das posições abertas
-        </h2>
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 id="global-open-positions-title" className="font-heading text-base font-semibold">
+            Resumo das posições abertas
+          </h2>
+          <span className="text-sm text-muted-foreground tabular-nums">
+            {openPositionCount} {openPositionCount === 1 ? "posição conhecida" : "posições conhecidas"}
+          </span>
+        </div>
         <p className="mt-1 text-sm text-muted-foreground">
           Cada posição mantém sua identidade de carteira e ativo; custos não são consolidados entre carteiras.
         </p>
@@ -232,6 +222,7 @@ function PositionSummary({ read }: { read: GlobalDashboardRead }) {
               items={items}
               allocation={entry.read.allocation.entries}
               ariaLabel={`Posições abertas da carteira ${entry.portfolio.name}`}
+              showQuoteDiagnostics={false}
             />
           </div>
         ))
@@ -248,13 +239,13 @@ function UnavailableAssets({ read }: { read: GlobalDashboardRead }) {
   return (
     <Card>
       <CardHeader>
-        <h2 className="font-heading text-base font-semibold">Assets sem cotação</h2>
+        <h2 className="font-heading text-base font-semibold">Ativos sem cotação</h2>
         <CardDescription>
-          Lista deduplicada de ativos que ficaram fora do patrimônio conhecido, preservando as carteiras afetadas.
+          Ativos fora do patrimônio conhecido, preservando as carteiras afetadas.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-4" aria-label="Assets sem cotação">
+        <ul className="space-y-4" aria-label="Ativos sem cotação">
           {assets.map((item) => (
             <li key={item.asset.id} className="min-w-0 border-b border-border pb-4 last:border-0 last:pb-0">
               <p className="break-words font-medium [overflow-wrap:anywhere]">
@@ -293,11 +284,6 @@ function EmptyGlobalDashboard() {
 }
 
 function GlobalDashboardContent({ read }: { read: GlobalDashboardRead }) {
-  const openPositionCount = readyEntries(read).reduce(
-    (count, entry) => count + entry.read.items.filter(isOpenItem).length,
-    0,
-  );
-
   return (
     <div className="space-y-6">
       {read.portfolios.length === 0 ? (
@@ -306,7 +292,7 @@ function GlobalDashboardContent({ read }: { read: GlobalDashboardRead }) {
         <>
           <div className="grid gap-4 md:grid-cols-2">
             <KnownAmountCard
-              title="Custo investido das posições abertas"
+              title="Valor investido"
               amount={read.investedAmount}
               description="Custo de aquisição remanescente das posições abertas; não representa aportes ou performance."
             />
@@ -315,30 +301,11 @@ function GlobalDashboardContent({ read }: { read: GlobalDashboardRead }) {
               amount={read.marketValue}
               description="Soma das cotações conhecidas das posições abertas na moeda-base."
             />
-            <CountCard
-              title="Carteiras ativas"
-              value={read.portfolios.length}
-              description="Carteiras incluídas no consolidado operacional."
-            />
-            <CountCard
-              title="Posições abertas conhecidas"
-              value={openPositionCount}
-              description={read.portfolios.some((entry) => entry.status === "unavailable")
-                ? "Posições atuais das carteiras legíveis; há carteiras que não puderam ser verificadas."
-                : "Posições atuais das carteiras legíveis."}
-            />
           </div>
           <PortfolioDistribution read={read} />
           <PositionSummary read={read} />
-          <details className="min-w-0 rounded-card border border-border px-4 py-3">
-            <summary className="cursor-pointer text-sm font-medium focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
-              Ver cobertura das cotações e indisponibilidades
-            </summary>
-            <div className="mt-4 space-y-6">
-              <QuoteCoverageCard coverage={read.quotes} />
-              <UnavailableAssets read={read} />
-            </div>
-          </details>
+          <QuoteCoverageCard coverage={read.quotes} />
+          <UnavailableAssets read={read} />
         </>
       )}
     </div>
@@ -351,14 +318,17 @@ export function GlobalDashboard() {
 
   return (
     <section className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6 lg:px-10 lg:py-14">
-      <header className="mb-8 max-w-3xl">
-        <p className="text-sm font-medium text-primary">Patrimônio</p>
-        <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">
-          Patrimônio das carteiras ativas
-        </h1>
-        <p className="mt-3 text-muted-foreground">
-          Acompanhe o valor conhecido, o custo investido e as posições atuais sem misturar carteiras.
-        </p>
+      <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div className="max-w-3xl">
+          <p className="text-sm font-medium text-primary">Patrimônio</p>
+          <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">
+            Patrimônio das carteiras ativas
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            Acompanhe o valor conhecido, o custo investido e as posições atuais sem misturar carteiras.
+          </p>
+        </div>
+        <DashboardRefreshButton />
       </header>
 
       {state.status === "loading" && !hasRead && (

@@ -32,7 +32,7 @@ sem cálculo patrimonial e sem regressão de operações.
 ## Escopo excluído
 
 - Alterar Transaction form/ledger para chamar Quotes.
-- Position, total investido, patrimônio, lucro/perda, allocation, FX ou
+- Position, Valor investido, patrimônio, lucro/perda, allocation, FX ou
   preenchimento automático de `unitPrice`.
 - Test runner de UI, redesign amplo ou nova rota pública.
 

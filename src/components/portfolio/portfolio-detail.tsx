@@ -10,6 +10,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { AllocationList } from "@/components/financial/allocation-list";
+import { DashboardRefreshButton } from "@/components/dashboard/dashboard-refresh-button";
 import { KnownAmountCard } from "@/components/financial/known-amount-card";
 import { QuoteCoverageCard } from "@/components/financial/quote-coverage-card";
 import { PositionTable } from "@/components/financial/position-table";
@@ -25,17 +26,31 @@ function formatCreatedAt(createdAt: Date) {
   }).format(createdAt);
 }
 
-function PortfolioActions({ portfolioId }: { portfolioId: string }) {
+function PortfolioActions({
+  portfolioId,
+  isArchived,
+}: {
+  portfolioId: string;
+  isArchived: boolean;
+}) {
   return (
     <nav
       className="flex flex-wrap items-center gap-3 border-t border-border pt-5"
       aria-label="Ações da carteira"
     >
+      {!isArchived && (
+        <Link
+          className={buttonVariants({ variant: "default" })}
+          href={`/portfolios/${portfolioId}/transactions#novo-lancamento`}
+        >
+          Cadastrar posição
+        </Link>
+      )}
       <Link
-        className={buttonVariants({ variant: "outline" })}
+        className={buttonVariants({ variant: isArchived ? "outline" : "ghost" })}
         href={`/portfolios/${portfolioId}/transactions`}
       >
-        Operações
+        Histórico de operações
       </Link>
       <Link
         className={buttonVariants({ variant: "outline" })}
@@ -82,36 +97,28 @@ function PortfolioDashboardContent({
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-primary">
-                Carteira {isArchived ? "arquivada" : "ativa"}
+      <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Carteira {isArchived ? "arquivada" : "ativa"} · Moeda base: {read.portfolio.baseCurrency} · Criada em {formatCreatedAt(read.portfolio.createdAt)}
+        </p>
+        {isArchived ? (
+          <Card>
+            <CardContent className="p-6">
+              <p className="rounded-card border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+                Carteira arquivada — leitura somente. Os valores usam cotações
+                atuais e não representam um snapshot do arquivamento.
               </p>
-              <h2 className="mt-1 break-words font-heading text-2xl font-semibold tracking-tight [overflow-wrap:anywhere]">
-                {read.portfolio.name}
-              </h2>
-              <CardDescription>
-                Moeda base: {read.portfolio.baseCurrency} · Criada em {formatCreatedAt(read.portfolio.createdAt)}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {isArchived ? (
-            <p className="rounded-card border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
-              Carteira arquivada — leitura somente. Os valores usam cotações
-              atuais e não representam um snapshot do arquivamento.
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Visão corrente derivada das posições abertas e das cotações
-              disponíveis.
-            </p>
-          )}
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        ) : (
+          <p className="text-muted-foreground">
+            Visão corrente derivada das posições abertas e das cotações
+            disponíveis.
+          </p>
+        )}
+      </div>
+
+      <PortfolioActions portfolioId={portfolioId} isArchived={isArchived} />
 
       <div className="grid gap-4 md:grid-cols-2">
         <KnownAmountCard
@@ -142,7 +149,7 @@ function PortfolioDashboardContent({
             <p className="text-sm text-muted-foreground">
               {isArchived
                 ? "Consulte o histórico ou abra as configurações para restaurar a carteira antes de registrar uma operação."
-                : "Consulte o histórico ou cadastre um ativo para começar uma nova operação."}
+                : "Consulte o histórico ou cadastre uma posição para começar uma nova operação."}
             </p>
             <div className="flex flex-wrap gap-3">
               <Link
@@ -161,9 +168,9 @@ function PortfolioDashboardContent({
               ) : (
                 <Link
                   className={buttonVariants({ variant: "ghost" })}
-                  href="/assets"
+                  href={`/portfolios/${portfolioId}/transactions#novo-lancamento`}
                 >
-                  Cadastrar ativo
+                  Cadastrar posição
                 </Link>
               )}
             </div>
@@ -183,7 +190,6 @@ function PortfolioDashboardContent({
         </div>
       </details>
 
-      <PortfolioActions portfolioId={portfolioId} />
     </div>
   );
 }
@@ -196,14 +202,17 @@ export function PortfolioDetail({ portfolioId }: { portfolioId: string }) {
 
   return (
     <section className="mx-auto w-full max-w-5xl flex-1 px-4 py-10 sm:px-6 lg:px-10 lg:py-14">
-      <header className="mb-8 max-w-2xl">
-        <p className="text-sm font-medium text-primary">Patrimônio</p>
-        <h1 className="mt-2 font-heading text-3xl font-semibold tracking-tight">
-          {read?.portfolio.name ?? "Visão da carteira"}
-        </h1>
-        <p className="mt-3 text-muted-foreground">
-          Consulte o patrimônio conhecido, a composição e as posições atuais.
-        </p>
+      <header className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div className="max-w-2xl">
+          <p className="text-sm font-medium text-primary">Patrimônio</p>
+          <h1 className="mt-2 break-words font-heading text-3xl font-semibold tracking-tight [overflow-wrap:anywhere]">
+            {read?.portfolio.name ?? "Visão da carteira"}
+          </h1>
+          <p className="mt-3 text-muted-foreground">
+            Consulte o patrimônio conhecido, a composição e as posições atuais.
+          </p>
+        </div>
+        <DashboardRefreshButton />
       </header>
 
       {(state.status === "loading" || isScopePending) && !hasRead && (

@@ -1,8 +1,8 @@
 # 010 — Real Portfolio Dashboard
 
-- **Status geral:** in_progress
+- **Status geral:** completed
 - **Spec:** [010-real-portfolio-dashboard.md](../../specs/010-real-portfolio-dashboard.md)
-- **Progresso:** 6/7 subtarefas concluídas
+- **Progresso:** 7/7 subtarefas concluídas
 
 ## Objetivo
 
@@ -18,10 +18,26 @@ atualização manual e nenhuma fonte patrimonial paralela.
 - [x] [010-04-criar-apresentacao-patrimonial.md](010-04-criar-apresentacao-patrimonial.md)
 - [x] [010-05-entregar-dashboard-da-carteira.md](010-05-entregar-dashboard-da-carteira.md)
 - [x] [010-06-entregar-dashboard-global.md](010-06-entregar-dashboard-global.md)
-- [ ] [010-07-validar-gates-e-handoff.md](010-07-validar-gates-e-handoff.md)
+- [x] [010-07-validar-gates-e-handoff.md](010-07-validar-gates-e-handoff.md)
 
 ## Observações
 
+- 010-07 concluída após confirmação do smoke manual autenticado e anônimo nos
+  dois dashboards, estados, interações e viewports exigidos.
+- Após a validação visual do detalhe, o header foi alinhado ao padrão das demais
+  telas e `Cadastrar posição` passou a aparecer sempre em carteiras ativas,
+  no topo e acima das métricas/tabela, levando ao formulário de novo lançamento;
+  o histórico continua separado e carteiras arquivadas permanecem somente
+  leitura.
+- O botão `Atualizar dados` agora pertence ao header de conteúdo dos dashboards,
+  não ao shell global condicional; a navegação superior mantém a mesma
+  geometria nas demais áreas do sistema.
+- O dashboard global foi simplificado: a contagem de carteiras está no header
+  de `Distribuição das carteiras`, sem cards redundantes de contagem ou bloco
+  recolhível de detalhes de cotações; as tabelas globais também não exibem o
+  diagnóstico detalhado, que permanece no dashboard individual. Cobertura e
+  ativos indisponíveis seguem visíveis diretamente, e a quantidade de posições
+  fica no header do resumo de posições.
 - Dependências: fases 007, 008 e 009 concluídas; 010 deve consumir o read-side
   existente sem persistir Position ou alterar o ledger.
 - O consolidado inclui somente carteiras ativas. Arquivadas permanecem

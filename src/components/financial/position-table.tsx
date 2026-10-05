@@ -113,10 +113,12 @@ export function PositionTable({
   items,
   allocation,
   ariaLabel = "Posições abertas da carteira",
+  showQuoteDiagnostics = true,
 }: {
   items: readonly PositionReadItem[];
   allocation: readonly AllocationEntry[];
   ariaLabel?: string;
+  showQuoteDiagnostics?: boolean;
 }) {
   const allocationByAssetId = new Map(
     allocation.map((entry) => [entry.assetId, entry.allocation]),
@@ -152,7 +154,7 @@ export function PositionTable({
           </div>
         </CardContent>
       </Card>
-      <QuoteDiagnostics items={items} />
+      {showQuoteDiagnostics && <QuoteDiagnostics items={items} />}
     </div>
   );
 }

@@ -20,7 +20,7 @@ abertas, Quote freshness, atualização manual e contexto de archive.
   reais no client.
 - Loading inicial, ready, empty, partial, refreshing e erro/retry.
 - Header com nome, moeda-base e estado ativa/arquivada.
-- Patrimônio conhecido e custo investido das posições abertas.
+- Patrimônio conhecido e Valor investido das posições abertas.
 - Composição do valor conhecido e diagnósticos dos itens excluídos.
 - Lista de posições abertas com Asset, quantidade, custo médio, custo, valor,
   freshness e timestamp.
@@ -123,7 +123,7 @@ carteira arquivada.
   Carteira arquivada permanece consultável com copy explícita de leitura
   corrente e sem sugestão de nova operação.
 - **Desvios:** não houve alteração funcional de requisitos. A nomenclatura
-  visual `Custo investido das posições abertas` foi aprovada pelo produto como
+  visual `Valor investido` foi aprovada pelo produto como
   `Valor investido`, com a descrição mantendo o significado de custo de
   aquisição. Não foram modificados schema, Rules, repositories, ledger, rotas,
   matemática patrimonial ou persistência. O diagnóstico da composição continua

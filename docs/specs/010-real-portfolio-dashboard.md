@@ -2,7 +2,7 @@
 
 ## Status
 
-`planned`
+`completed`
 
 ## Ticker
 
@@ -176,12 +176,12 @@ Transactions + Assets
     moeda-base são excluídas e tornam o total `partial`; não viram zero.
 13. Quote `stale` entra no patrimônio conhecido, preserva a marcação stale e
     não torna a cobertura monetária parcial por si só.
-14. “Total investido” significa custo de aquisição remanescente das posições
-    abertas, exposto na UI como “Custo investido das posições abertas”. Não é
+14. “Valor investido” significa custo de aquisição remanescente das posições
+    abertas, exposto na UI como “Valor investido”. Não é
     soma histórica de compras, aporte líquido nem fluxo de caixa.
 15. Custo investido pode permanecer `complete` quando uma Quote está
     indisponível, pois depende da Position. Posição fora da moeda-base é
-    excluída do total investido e torna esse total `partial` sem FX.
+    excluída do Valor investido e torna esse valor `partial` sem FX.
 16. Ausência de posições abertas produz status `empty` e valor conhecido `0`.
     Todas as Quotes indisponíveis com posições abertas produzem patrimônio
     `partial` e valor conhecido `0`, nunca estado vazio.
@@ -521,7 +521,7 @@ nesse seam, sem alterar schema ou parser.
 - `partial` deve ser tão visível quanto o número principal;
 - “patrimônio total” só é usado quando a cobertura é completa; caso contrário,
   “patrimônio conhecido”;
-- o rótulo normativo do custo é “Custo investido das posições abertas”, com
+- o rótulo normativo do custo é “Valor investido”, com
   explicação de custo remanescente;
 - fresh/stale/unavailable e horário de Quote aparecem por posição;
 - stale é “Cotação desatualizada; valor corrente calculado com a última cotação
@@ -606,7 +606,7 @@ Position persistida ou abstração visual sem uso concreto.
 | Dashboard global repetir reads | Catálogo único, Quote deduplicada e um ledger por carteira ativa. |
 | Uma carteira quebrar o global | Isolar ledger/composição por entrada e marcar agregado parcial. |
 | Drift por `number`/arredondamento | Helpers decimais existentes e testes de reconciliação. |
-| “Total investido” ser entendido como aportes | Usar “custo investido das posições abertas” e texto explicativo. |
+| “Valor investido” ser entendido como aportes | Usar “Valor investido” e texto explicativo sobre custo de aquisição remanescente. |
 | Arquivada inflar patrimônio ativo | Excluir do global e marcar claramente no detalhe. |
 | Arquivada parecer snapshot do archive | Informar que a valorização é corrente; histórico fica para 012. |
 | Ledger grande encarecer refresh | Manter leitura explícita nesta fase e encaminhar read model para 021. |
