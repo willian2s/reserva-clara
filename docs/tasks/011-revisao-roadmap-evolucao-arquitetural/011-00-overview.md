@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [011-revisao-roadmap-evolucao-arquitetural.md](../../specs/011-revisao-roadmap-evolucao-arquitetural.md)
-- **Progresso:** 6/8 subtarefas concluídas
+- **Progresso:** 7/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -19,7 +19,7 @@ backend, sem iniciar a implementação da nova stack.
 - [x] [011-04-modelar-postgresql-e-migracao.md](011-04-modelar-postgresql-e-migracao.md)
 - [x] [011-05-definir-identidade-e-seguranca.md](011-05-definir-identidade-e-seguranca.md)
 - [x] [011-06-revisar-ux-frontend-e-contratos.md](011-06-revisar-ux-frontend-e-contratos.md)
-- [ ] [011-07-planejar-testes-ambientes-e-cutover.md](011-07-planejar-testes-ambientes-e-cutover.md)
+- [x] [011-07-planejar-testes-ambientes-e-cutover.md](011-07-planejar-testes-ambientes-e-cutover.md)
 - [ ] [011-08-registrar-adrs-e-handoff.md](011-08-registrar-adrs-e-handoff.md)
 
 ## Observações
@@ -64,6 +64,12 @@ backend, sem iniciar a implementação da nova stack.
   validação definitiva de acessibilidade.
 - A fronteira oficial é `011-01 → 011-06 handoff → 012 Product/UX/UI/IA/
   Frontend Discovery → capacidades/contratos provisórios da API → 013+`.
+- A 011-07 concluiu a estratégia operacional em
+  `docs/architecture/011/quality-environments-cutover.md`: matriz de testes por
+  fase, harness TS↔C#, PostgreSQL real, pipelines independentes, ambientes,
+  secrets/CORS, observabilidade, SLO/runbooks, rehearsals, C0–C11, cutover e
+  rollback honesto. Nenhuma configuração, deploy, banco ou migration foi
+  executado.
 - C0 decidido como **A — aceitação temporária restrita a dev/testes**: o projeto
   não possui usuários ativos, portanto só são permitidos dados
   sintéticos/descartáveis; não são permitidos writes patrimoniais em
