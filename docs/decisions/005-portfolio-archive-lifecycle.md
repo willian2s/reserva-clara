@@ -46,3 +46,18 @@ Archive é reversível e compatível, mas não remove dados. A UI deve substitui
 linguagem de delete por archive e não prometer purge. Rules, parser, converter,
 repository, testes e UI precisam mudar coordenadamente. O gate de 007 falha se
 qualquer hard delete permanecer.
+
+## Revisão na fase 011
+
+- **Estado temporal:** `accepted for 007`; esta ADR continua descrevendo o
+  comportamento do legado até o cutover e não foi marcada `superseded`.
+- **Princípio preservado:** archive/restore mantém o pai, o ledger histórico e
+  a leitura; Portfolio arquivada não aceita novos fatos.
+- **Mecanismo a suceder:** `archivedAt`/Rules/repository Firestore serão
+  reimplementados como lifecycle transacional na API/PostgreSQL, com lock da
+  Portfolio, FKs e autorização owner-scoped.
+- **Gatilho:** a sucessão só pode ser aceita após paridade, C10 e C11; antes
+  disso, o comportamento Firestore desta ADR permanece histórico-operacional.
+
+Evidência: [ADR 021 da revisão 011](021-lifecycle-de-asset-referenciado.md)
+e [modelo relacional](../architecture/011/relational-model.md#fks-lifecycle-e-append-only).

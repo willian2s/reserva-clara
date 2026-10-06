@@ -67,3 +67,21 @@ SDK direto; Quotes/Positions/Snapshots devem resolver materialização derivada 
 uma boundary confiável sem tornar Position fonte autoritativa.
 Sem backend, erro ambíguo não recebe retry cego: UI reconcilia pelo ID e mostra
 conflito sanitizado.
+
+## Revisão na fase 011
+
+- **Estado temporal:** `accepted for 007`; esta ADR permanece válida para o
+  Firestore enquanto ele for a autoridade e não foi marcada `superseded`.
+- **Princípios preservados:** Asset é identidade owner-scoped com ID estável;
+  Transaction é fato append-only; `buy`/`sell`, precisão exata, ordem temporal,
+  idempotência e correção compensatória continuam contratos de domínio.
+- **Mecanismos a suceder:** registry `assetIdentities`, Rules/repository como
+  boundary patrimonial e leitura client-side serão substituídos por unique/FKs,
+  API/Application, locks e PostgreSQL. `assetUsages` será somente evidência de
+  auditoria, não autorização para delete.
+- **Gatilho:** a sucessão efetiva depende de C6, C10 e C11; não há mudança
+  produtiva nesta revisão e o risco C0 continua restrito a dev/testes sintéticos.
+
+Evidência: [ADR 010 da revisão 011](010-modelo-relacional-e-registros-firestore.md),
+[ADR 014](014-concorrencia-idempotencia-e-append-only.md) e [estratégia de
+migração](../architecture/011/data-migration-strategy.md).

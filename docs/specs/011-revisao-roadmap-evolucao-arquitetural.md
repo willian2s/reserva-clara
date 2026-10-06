@@ -2,7 +2,7 @@
 
 ## Status
 
-`in_progress`
+`completed`
 
 ## Ticker
 
@@ -876,9 +876,14 @@ Criar na fase 011, com status `proposed` até evidência suficiente:
 14. Hosting, domínios, ambientes, observabilidade e CI/CD.
 15. Lifecycle de Asset já referenciado por Transaction.
 
-ADRs 003/004 só mudam para `superseded` depois do cutover; 005/006 devem ser
-revisitadas para separar princípio de domínio preservado de mecanismo Firestore
-descartado.
+ADRs 003/004 só mudam para `superseded` depois do cutover; 005/006 foram
+revisitadas na 011-08 para separar princípio de domínio preservado de mecanismo
+Firestore descartado.
+
+O registro executado pela 011-08 está em
+[`docs/architecture/011/adr-register-and-handoff.md`](../architecture/011/adr-register-and-handoff.md)
+e referencia as quinze ADRs novas `007`–`021`. Todas permanecem `proposed` até
+os gates de evidência indicados; nenhuma mudança produtiva foi afirmada.
 
 ## 12. Roadmap futuro e itens antigos superseded
 

@@ -2,7 +2,7 @@
 
 > **Reserva Clara — Seu patrimônio, com clareza.**
 
-Atualizado em: **2026-10-05**
+Atualizado em: **2026-10-06**
 
 Este documento define a direção de produto e a ordem macro de evolução do Reserva Clara.
 
@@ -829,6 +829,22 @@ C0 risco contido → C1 discovery fechado → C2 fundação → C3 auth E2E
 Compilar, passar testes isolados ou criar estruturas não basta: o gate valida
 execução integrada, autorização, PostgreSQL/EF Core, BRAPI, contratos, dados
 migrados, deploy, observabilidade, segurança e remoção do legado.
+
+### Prontidão documental da fase 011
+
+A revisão documental foi consolidada em
+[`docs/architecture/011/adr-register-and-handoff.md`](../architecture/011/adr-register-and-handoff.md).
+As quinze decisões da spec 011 estão registradas nas ADRs `007`–`021` como
+`proposed`, com evidência e gatilho de revisão; as ADRs históricas 001, 003, 004,
+005 e 006 permanecem preservadas e só serão marcadas `superseded` no momento
+temporal previsto após cutover/retirement.
+
+O C1 está pronto para revisão independente, não operacionalmente executado. O
+planejamento da 012 é a próxima atividade elegível; a execução de `UX-01` e do
+backlog prioritário começa somente após o aceite independente de C1. A 013 pode
+preparar tooling e ambientes em paralelo somente sem congelar requisitos, DTOs
+ou contratos que a 012 ainda possa alterar. Nenhuma feature normal reabre antes
+do gate C11/021.
 
 ---
 

@@ -1,8 +1,8 @@
 # 011 — Revisão do Roadmap e Evolução Arquitetural
 
-- **Status geral:** in_progress
+- **Status geral:** completed
 - **Spec:** [011-revisao-roadmap-evolucao-arquitetural.md](../../specs/011-revisao-roadmap-evolucao-arquitetural.md)
-- **Progresso:** 7/8 subtarefas concluídas
+- **Progresso:** 8/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -20,7 +20,7 @@ backend, sem iniciar a implementação da nova stack.
 - [x] [011-05-definir-identidade-e-seguranca.md](011-05-definir-identidade-e-seguranca.md)
 - [x] [011-06-revisar-ux-frontend-e-contratos.md](011-06-revisar-ux-frontend-e-contratos.md)
 - [x] [011-07-planejar-testes-ambientes-e-cutover.md](011-07-planejar-testes-ambientes-e-cutover.md)
-- [ ] [011-08-registrar-adrs-e-handoff.md](011-08-registrar-adrs-e-handoff.md)
+- [x] [011-08-registrar-adrs-e-handoff.md](011-08-registrar-adrs-e-handoff.md)
 
 ## Observações
 
@@ -97,3 +97,9 @@ backend, sem iniciar a implementação da nova stack.
   perguntas para a 012, capacidades e estados HTTP deliberadamente provisórios,
   regra de freeze por slice/N/N-1 e backlog verificável. A descoberta substantiva
   de Produto/UX/UI/IA/frontend continua pertencendo à 012.
+- A 011-08 concluiu o registro das quinze ADRs `007`–`021`, a revisão temporal
+  das ADRs históricas, a consolidação C0–C11 e o handoff para 012–016 em
+  `docs/architecture/011/adr-register-and-handoff.md`. As ADRs novas seguem
+  `proposed` até seus gates; C1 está pronto para revisão independente, o
+  planejamento da 012 é a próxima atividade elegível e `UX-01` só começa após o
+  aceite independente de C1.
