@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [011-revisao-roadmap-evolucao-arquitetural.md](../../specs/011-revisao-roadmap-evolucao-arquitetural.md)
-- **Progresso:** 3/8 subtarefas concluídas
+- **Progresso:** 4/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -16,7 +16,7 @@ backend, sem iniciar a implementação da nova stack.
 - [x] [011-01-inventariar-frontend-e-next.md](011-01-inventariar-frontend-e-next.md)
 - [x] [011-02-mapear-dominio-dados-e-riscos.md](011-02-mapear-dominio-dados-e-riscos.md)
 - [x] [011-03-desenhar-arquitetura-alvo-e-camadas.md](011-03-desenhar-arquitetura-alvo-e-camadas.md)
-- [ ] [011-04-modelar-postgresql-e-migracao.md](011-04-modelar-postgresql-e-migracao.md)
+- [x] [011-04-modelar-postgresql-e-migracao.md](011-04-modelar-postgresql-e-migracao.md)
 - [ ] [011-05-definir-identidade-e-seguranca.md](011-05-definir-identidade-e-seguranca.md)
 - [ ] [011-06-revisar-ux-frontend-e-contratos.md](011-06-revisar-ux-frontend-e-contratos.md)
 - [ ] [011-07-planejar-testes-ambientes-e-cutover.md](011-07-planejar-testes-ambientes-e-cutover.md)
@@ -70,3 +70,13 @@ backend, sem iniciar a implementação da nova stack.
   staging/produção nem dados reais. O owner operacional é o maintainer do
   projeto, e a saída ocorre antes do primeiro usuário ativo, dado real,
   staging/produção ou cutover.
+- A 011-04 concluiu o modelo relacional lógico e a matriz completa
+  Firestore→PostgreSQL em `docs/architecture/011/relational-model.md`, além do
+  pipeline de migração/reconciliação em
+  `docs/architecture/011/data-migration-strategy.md`. Não houve DDL, migration,
+  export ou carga real; os experimentos PostgreSQL ficaram como evidência
+  obrigatória para 015/016.
+- A revisão independente da 011-04 corrigiu a preservação das moedas de
+  `UnitPrice`/`Fee`, distinguiu `null` explícito de campo ausente e detalhou o
+  lock transacional do lifecycle Portfolio→Transaction; não há bloqueio
+  pendente nesta subtarefa.
