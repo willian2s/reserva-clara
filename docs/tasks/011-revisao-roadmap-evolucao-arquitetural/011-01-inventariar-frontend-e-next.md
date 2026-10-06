@@ -228,19 +228,22 @@ Gaps que alimentam o baseline/handoff da 011-06 e a descoberta da 012:
 
 | Rota/superfície | Boundary atual | Renderização/build | Consequência Vite |
 | --- | --- | --- | --- |
-| `/` | Server page/layout; sem dados privados | `next build` reporta `ƒ`/request-time na baseline atual; conteúdo é público e não usa fetch privado | Preservar HTML/SEO necessário no shell estático ou hosting escolhido. |
-| `/login` | Server wrapper + Client `GoogleSignIn` | `ƒ`; auth e interação ocorrem após hidratação | Rota client-side; metadata/robots vão para HTML/config do shell. |
-| `/dashboard` e `/assets` | Server wrapper + Client AuthGate/hooks/repositories | `ƒ`; dados são carregados no browser após auth | API HTTP substitui Firestore; loading/error precisam ser explícitos no cliente. |
-| `/portfolios` | Server wrapper + Client `usePortfolio`/forms | `ƒ`; listagem ocorre no browser | Primeira slice React/API, sem depender de SSR privado. |
-| `/portfolios/[portfolioId]/**` | Server wrapper resolve `params`; componentes client carregam dados | `ƒ`; não há `generateStaticParams` nem fetch privado server-side | Router Vite recebe params; API fornece dados e estados. |
+| `/` | Server page/layout; sem dados privados | Path estático no `routes-manifest`, mas `next build` reporta `ƒ`/request-time na baseline atual; conteúdo é público e não usa fetch privado | Preservar HTML/SEO necessário no shell estático ou hosting escolhido. |
+| `/login` | Server wrapper + Client `GoogleSignIn` | Path estático no `routes-manifest`; `next build` reporta `ƒ`; auth e interação ocorrem após hidratação | Rota client-side; metadata/robots vão para HTML/config do shell. |
+| `/dashboard` e `/assets` | Server wrapper + Client AuthGate/hooks/repositories | Paths estáticos no `routes-manifest`; `next build` reporta `ƒ`; dados são carregados no browser após auth | API HTTP substitui Firestore; loading/error precisam ser explícitos no cliente. |
+| `/portfolios` | Server wrapper + Client `usePortfolio`/forms | Path estático no `routes-manifest`; `next build` reporta `ƒ`; listagem ocorre no browser | Primeira slice React/API, sem depender de SSR privado. |
+| `/portfolios/[portfolioId]/**` | Server wrapper resolve `params`; componentes client carregam dados | Paths dinâmicos no `routes-manifest` e `ƒ` no build; não há `generateStaticParams` nem fetch privado server-side | Router Vite recebe params; API fornece dados e estados. |
 | `not-found` | `headers()` em `src/app/not-found.tsx` | request-time para decidir contexto/links | Infra/shell precisa fornecer política de host/404. |
 | `POST /api/quotes` | Route Handler Node server-only | endpoint request-time | Endpoint sai do frontend e vai para ASP.NET Core. |
 
 Não há SSR de dados privados, SSG explícito, ISR, `generateStaticParams`,
 `revalidate`, `dynamic`, Server Actions ou `cookies()`. Páginas/layouts são
 Server Components wrappers, mas os dados patrimoniais aparecem após hidratação.
-O resumo do `next build` confirmou as rotas atuais como dinâmicas (`ƒ`) e o
-proxy como middleware/proxy; isso é evidência da baseline, não requisito alvo.
+O `routes-manifest` distingue os paths estáticos (`/`, `/login`, `/dashboard`,
+`/assets` e `/portfolios`) dos paths dinâmicos de Portfolio; o resumo do
+`next build` reporta todos como `ƒ`/request-time e o proxy como middleware/proxy.
+Essa diferença entre padrão de rota e estratégia de renderização é evidência da
+baseline, não requisito alvo.
 Metadata existe, mas deve ser reproduzida no shell estático.
 - `.env.example` separa `NEXT_PUBLIC_FIREBASE_*` de `BRAPI_API_KEY` e
   `FIREBASE_ADMIN_*`; somente a configuração pública Firebase e a base URL da
@@ -307,7 +310,7 @@ bundle Vite.
 
 - `docs/specs/011-revisao-roadmap-evolucao-arquitetural.md` — status da fase
   alinhado para `in_progress` após início da execução de 011-01.
-- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-01-inventariar-frontend-e-next.md` — status, inventário, matriz, evidências e riscos.
+- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-01-inventariar-frontend-e-next.md` — status, inventário, matriz, evidências, riscos e distinção entre path estático/dinâmico e renderização `ƒ`.
 - `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-00-overview.md` — checklist e progresso da fase.
 - Nenhum arquivo de produção, configuração externa, banco, deploy ou segredo foi alterado.
 
@@ -327,6 +330,10 @@ e `docs/tasks/**`; o inventário completo foi registrado nesta subtarefa.
   à paridade, cutover, soak e fase 021.
 - O inventário foi incorporado ao arquivo da subtarefa em vez de criar um novo
   arquivo fora dos diretórios permitidos.
+- Após revisão independente, a tabela de renderização foi corrigida para não
+  confundir o padrão de rota do `routes-manifest` com a classificação `ƒ` do
+  `next build`: rotas sem parâmetro têm path estático, mas continuam request-time
+  na baseline; rotas `[portfolioId]` são dinâmicas em ambos os sentidos.
 - Registro histórico da execução: naquele momento, o status da spec foi
   alinhado a `in_progress`, o overview estava em `1/8` e somente 011-01 estava
   concluída. O estado atual deve ser consultado no overview da fase.
@@ -362,6 +369,10 @@ e `docs/tasks/**`; o inventário completo foi registrado nesta subtarefa.
 - `git diff --check` — **passou**; a verificação equivalente com
   `git diff --no-index --check` também passou para os três arquivos documentais
   não rastreados.
+- Validação desta execução: `npm run lint`, todos os scripts `test:*`,
+  `npm exec next typegen && npx tsc --noEmit`, `npm run build` e `git diff --check`
+  passaram novamente; o build confirmou `ƒ` para as rotas e o
+  `.next/routes-manifest.json` confirmou quais paths são estáticos ou dinâmicos.
 
 ## Evidências e aceite
 
@@ -374,7 +385,8 @@ e `docs/tasks/**`; o inventário completo foi registrado nesta subtarefa.
   registrados para as subtarefas seguintes.
 - A baseline técnica permanece verde e nenhum código de produção foi alterado.
 - A revisão independente final aprovou o inventário, os fluxos e os gates
-  documentais; não há findings pendentes nesta subtarefa.
+  documentais; uma ambiguidade sobre path estático versus renderização `ƒ` foi
+  corrigida e não há findings pendentes nesta subtarefa.
 
 ## Riscos residuais
 
