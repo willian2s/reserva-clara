@@ -696,23 +696,28 @@ decisões prematuras de infraestrutura dependentes das fases posteriores. Esses
 detalhes ficam deliberadamente abertos quando dependem de descoberta de UX/UI,
 domínio ou implementação.
 
-**Escopo:** inventário do Next/frontend e do domínio/dados, riscos e volumetria
-sanitizada, modelo relacional lógico, limites de camadas, Firebase → API,
-integridade do `SELL`, estratégia de migração, testes, ambientes, riscos e
-ADRs. Não cria Vite, .NET, schema, migration, endpoint, infraestrutura ou
-deploy.
+**Escopo:** inventário do Next/frontend e do domínio/dados, baseline técnico de
+frontend/UX e questões abertas, riscos e volumetria sanitizada, modelo
+relacional lógico, limites de camadas, Firebase → API, integridade do `SELL`,
+estratégia de migração, testes, ambientes, riscos e ADRs. A 011-06 prepara o
+handoff técnico para a 012; não executa a descoberta de Produto/UX/UI,
+arquitetura de informação, prototipação ou decisões finais de frontend. Não cria
+Vite, .NET, schema, migration, endpoint, infraestrutura ou deploy.
 
 **Critérios de encerramento:** C0 decidido com risco, escopo permitido e saída;
-autoridade dos dados e boundaries definidos; dependências críticas para 012/013
-identificadas; estratégia de migração, validação e rollback suficiente para o
-próximo passo; ADRs e handoff revisados; decisões abertas listadas sem bloquear
-a fundação. A fase pode terminar mesmo com detalhes de slices ainda pendentes.
+autoridade dos dados e boundaries definidos; baseline frontend consolidado,
+perguntas abertas e dependências críticas para 012/013 identificadas; estratégia
+de migração, validação e rollback suficiente para o próximo passo; ADRs e
+handoff revisados; decisões abertas listadas sem bloquear a fundação. A fase
+não exige UX final, protótipos, design system final, arquitetura frontend
+completa ou contratos HTTP definitivos. Pode terminar mesmo com detalhes de
+slices ainda pendentes.
 
 ## 012 — Product, UX/UI, Information Architecture & Provisional API Discovery
 
-**Objetivo:** realizar revisão de produto, UX, UI e arquitetura de informação —
-não uma simples modernização visual — antes de congelar os contratos de cada
-vertical.
+**Objetivo:** realizar revisão de produto, UX, UI, arquitetura de informação e
+frontend — não uma simples modernização visual — antes de congelar os contratos
+de cada vertical.
 
 A revisão parte da evolução até a 010: patrimônio, carteiras, ativos,
 transações, posições, alocação, cotações, dashboards e projeções. A pergunta
@@ -722,14 +727,19 @@ compreender e gerenciar seu patrimônio?**
 Avaliar arquitetura da informação, navegação, hierarquia e densidade visual,
 mobile, acessibilidade, feedback, loading, empty/error states, microcopy,
 formulários, fluxos de criação/edição, consistência entre telas, design system,
-componentes reutilizáveis e jornadas. Qualquer tela, fluxo ou conceito pode ser
-mantido, simplificado, reorganizado, substituído, removido ou dividido.
+componentes reutilizáveis, arquitetura frontend e jornadas. Qualquer tela,
+fluxo ou conceito pode ser mantido, simplificado, reorganizado, substituído,
+removido ou dividido.
 
 **Relação com a API:** UX/UI informa casos de uso; casos de uso informam o API
 Contract; o contrato informa Application, Domain e Persistence. A API não será
-desenhada a partir do banco/EF Core, e a 012 pode mudar requisitos da API. O
-resultado alimenta a fase de definição dos contratos e nenhum contrato é
-congelado antes do protótipo correspondente.
+desenhada a partir do banco/EF Core, e a 012 pode mudar requisitos, DTOs e
+capacidades da API. O resultado alimenta a fase de definição dos contratos e
+nenhum contrato é congelado antes do protótipo correspondente.
+
+**Dependência:** `011-01` fornece o baseline frontend; `011-06` consolida o
+handoff técnico; então a 012 executa Product + UX/UI + IA + Frontend Discovery,
+revisando capacidades e contratos provisórios antes da 013+.
 
 ## 013 — Frontend / Backend Foundation
 

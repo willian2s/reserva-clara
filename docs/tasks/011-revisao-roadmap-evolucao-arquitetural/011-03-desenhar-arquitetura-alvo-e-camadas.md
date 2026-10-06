@@ -77,7 +77,8 @@ que controllers, EF Core, Firebase ou BRAPI contaminem regras de negócio.
 - Evitar arquitetura em camadas apenas nominal com regra nos controllers.
 - Não introduzir abstração sem dois usos concretos.
 - Não transformar detalhes Firestore em conceitos de Domain.
-- Não congelar contratos HTTP antes da subtarefa 06.
+- Não congelar contratos HTTP finais antes da 012 e do protótipo correspondente;
+  a 011-06 registra somente capacidades e contratos provisórios.
 
 ## Registro da execução
 

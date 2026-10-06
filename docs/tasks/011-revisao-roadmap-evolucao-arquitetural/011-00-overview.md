@@ -29,7 +29,8 @@ backend, sem iniciar a implementação da nova stack.
 - 011 é uma fase de discovery e documentação. Não cria Vite, .NET, schema,
   migration, endpoint, infraestrutura ou deploy.
 - As tarefas 01 e 02 podem ser investigadas em paralelo; as demais fecham
-  progressivamente arquitetura, dados, segurança, produto e operação.
+  progressivamente arquitetura, dados, segurança, baseline de produto/UX,
+  handoff e operação. A descoberta substantiva de Produto/UX/UI pertence à 012.
 - O risco de `SELL` acima do saldo via SDK Firestore direto deve receber uma
   decisão de contenção em C0, sem introduzir dual-write.
 - O roadmap canônico foi sincronizado com a revisão em
@@ -54,6 +55,15 @@ backend, sem iniciar a implementação da nova stack.
   como rebaseline histórico.
 - A revisão confirmou que 012 pode alterar os requisitos da API e que o gate
   021 valida o sistema em funcionamento antes do retorno às features.
+- A 011-06 foi delimitada como handoff: consolida o baseline técnico frontend,
+  acoplamentos Next.js, problemas conhecidos, restrições React/Vite, jornadas a
+  revisitar, dependências UX/API e perguntas abertas para a 012. Ela não executa
+  redesign, nova IA, protótipos finais, decisões definitivas de design system,
+  avaliação completa de UX, redesign de dashboards, fechamento de DTOs,
+  congelamento de endpoints, arquitetura completa de estado/cache/frontend ou
+  validação definitiva de acessibilidade.
+- A fronteira oficial é `011-01 → 011-06 handoff → 012 Product/UX/UI/IA/
+  Frontend Discovery → capacidades/contratos provisórios da API → 013+`.
 - C0 decidido como **A — aceitação temporária restrita a dev/testes**: o projeto
   não possui usuários ativos, portanto só são permitidos dados
   sintéticos/descartáveis; não são permitidos writes patrimoniais em

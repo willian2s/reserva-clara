@@ -34,7 +34,7 @@ React/Vite sem transportar acoplamentos ou perder comportamento.
 
 - Escolha final de router, state/query library ou hosting.
 - Alteração de componentes, rotas, CSS, package ou configuração.
-- Protótipos finais de UX, que pertencem à 012/011-06.
+- Protótipos finais de UX, que pertencem à 012.
 
 ## Dependências
 
@@ -211,7 +211,7 @@ Pontos positivos confirmados: `lang="pt-BR"`, skip link, `main` identificável,
 labels associados, `aria-describedby`/`aria-invalid`, `role="status"`/`alert`,
 `aria-live`, `aria-busy`, foco visível e layout responsivo.
 
-Gaps que devem alimentar 011-06/012:
+Gaps que alimentam o baseline/handoff da 011-06 e a descoberta da 012:
 
 - não foi encontrado `signOut`/logout visível;
 - não há indicador claro de navegação ativa;
@@ -393,6 +393,7 @@ e `docs/tasks/**`; o inventário completo foi registrado nesta subtarefa.
   deste inventário.
 - `011-03` deve usar esta matriz para separar API/Application/Domain/
   Infrastructure e classificar o host routing como infraestrutura.
-- `011-06` deve revisar os gaps de UX/a11y e decidir contratos somente após os
-  fluxos prototipados.
+- `011-06` deve consolidar os gaps de UX/a11y, as restrições frontend e as
+  perguntas para a 012; a 012 prototipa, altera requisitos/DTOs e só então
+  permite o freeze de contratos por slice.
 - A remoção efetiva dos acoplamentos fica bloqueada até 017–021.

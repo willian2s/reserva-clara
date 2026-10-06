@@ -64,12 +64,10 @@ solution .NET, schema, migration, endpoint, infraestrutura ou deploy.
   features normais;
 - não alterar código de produção, banco, deploy ou configuração externa.
 
-> Nota operacional: a tentativa de substituir
+> Nota histórica: uma tentativa anterior de substituir
 > `docs/roadmap/reserva-clara-roadmap.md` foi negada pela política de edição do
-> ambiente, que permite escrita somente em `docs/specs/**` e `docs/tasks/**`.
-> Esta spec contém a revisão completa e deve ser sincronizada com o roadmap
-> canônico quando essa permissão estiver disponível. O arquivo antigo não deve
-> ser interpretado como já atualizado.
+> ambiente. Essa limitação foi superada e o roadmap canônico está sincronizado
+> com esta spec; a nota antiga não representa o estado documental atual.
 
 ## 1. Histórico preservado: fases 001–010
 
@@ -248,9 +246,16 @@ do Firestore e há risco conhecido em `SELL` direto.
 
 **Escopo:** discovery e redução de incertezas: inventário Next/frontend,
 domínio/server/data, dados Firestore, volumetria, modelo relacional lógico,
-limites de camadas, auth Firebase → API, UX baseline, testes, migração, deploy,
-riscos e ADRs. A fase responde somente às perguntas necessárias para iniciar a
-migração com segurança; não tenta especificar todo o sistema futuro.
+limites de camadas, auth Firebase → API, baseline técnico de UX/frontend,
+perguntas abertas, testes, migração, deploy, riscos e ADRs. A fase responde
+somente às perguntas necessárias para iniciar a migração com segurança; não tenta
+especificar todo o sistema futuro.
+
+A 011-06 é um handoff técnico para a 012: consolida o estado atual, os
+acoplamentos, gaps, restrições e perguntas que evitam redescobrir o sistema do
+zero. A 011 não executa a descoberta de Produto/UX/UI, arquitetura de
+informação, prototipação ou decisões finais de arquitetura frontend que cabem à
+012.
 
 Não são exigidos nesta fase todos os endpoints, DTOs, componentes, detalhes de
 implementação ou contratos definitivos da API, nem decisões prematuras de
@@ -262,9 +267,10 @@ migração capazes de causar retrabalho estrutural. Detalhes que não ameaçam e
 segurança devem ser deliberadamente refinados depois.
 
 **Entregáveis:** mapas as-is/to-be, matriz preservar/reusar/reescrever/remover,
-catálogo de dados e queries, ERD lógico, matriz Firestore→PostgreSQL, threat
-model, OpenAPI inicial não congelado, plano de testes, estratégia de cutover e
-ADRs propostas/aceitas.
+baseline técnico frontend/UX e handoff de perguntas para a 012, catálogo de
+dados e queries, ERD lógico, matriz Firestore→PostgreSQL, threat model, OpenAPI
+inicial não congelado, plano de testes, estratégia de cutover e ADRs
+propostas/aceitas.
 
 **Tasks:** executar as oito subtarefas desta spec, começando pelo inventário do
 frontend e fechando com ADRs, gates e handoff.
@@ -275,11 +281,15 @@ dados sanitizados; decisão da stack já tomada.
 **Critérios de aceite:** nenhum acoplamento Next relevante sem classificação;
 modelo Firestore completo; ownership/IDs/decimais/timestamps mapeados; boundary
 de `SELL` tratado como risco imediato; ADRs cobrem decisões irreversíveis;
-roadmap e handoff não exigem big-bang. A fase pode ser encerrada quando houver
-decisão explícita para C0, limites de camadas e autoridade dos dados definidos,
-dependências críticas para 012/013 identificadas, estratégia de migração e
-critérios de validação suficientes para iniciar a próxima etapa com segurança,
-e uma lista rastreável de decisões ainda abertas sem bloquear a fundação.
+roadmap e handoff não exigem big-bang. O handoff inclui baseline frontend,
+acoplamentos e gaps conhecidos, jornadas a revisitar, restrições técnicas,
+dependências UX/API e perguntas abertas para a 012. A fase não exige UX final,
+protótipos, design system final, arquitetura frontend completa ou contratos HTTP
+definitivos. Pode ser encerrada quando houver decisão explícita para C0, limites
+de camadas e autoridade dos dados definidos, dependências críticas para 012/013
+identificadas, estratégia de migração e critérios de validação suficientes para
+iniciar a próxima etapa com segurança, e uma lista rastreável de decisões ainda
+abertas sem bloquear a fundação.
 
 **Testes necessários:** revisão cruzada entre código e inventário; amostras
 sintéticas/anonimizadas; validação de todos os paths, contratos e links; threat
@@ -299,8 +309,9 @@ os contratos de cada vertical.
 **Contexto:** a UI atual cresceu por fases e não deve ser apenas transportada
 para Vite. Dashboard, carteiras, ativos e operações precisam ser reavaliados.
 
-**Escopo:** revisão de produto, UX, UI e arquitetura de informação — não apenas
-modernização visual. A análise parte da evolução até a 010: patrimônio,
+**Escopo:** revisão de produto, UX, UI, arquitetura de informação e arquitetura
+frontend — não apenas modernização visual. A análise parte da evolução até a
+010: patrimônio,
 carteiras, ativos, transações, posições, alocação, cotações, dashboards e
 projeções. Deve responder: **a interface atual é realmente a melhor forma de
 ajudar o usuário a compreender e gerenciar seu patrimônio?**
@@ -313,10 +324,11 @@ conceito pode ser mantido, simplificado, reorganizado, substituído, removido ou
 dividido em novos fluxos.
 
 **Entregáveis:** mapa de jornadas, nova IA, protótipos responsivos, inventário de
-componentes, decisão de design system, matriz WCAG, capacidades provisórias da
-API e exemplos de payload/erro por slice. A 012 pode alterar requisitos da API;
-essas mudanças alimentam a fase de definição dos contratos e não são descartadas
-para preservar a interface antiga.
+componentes, decisão de design system, matriz WCAG, decisão de arquitetura
+frontend, capacidades provisórias da API e exemplos de payload/erro por slice. A
+012 pode alterar requisitos, DTOs e capacidades da API; essas mudanças alimentam
+a fase de definição dos contratos e não são descartadas para preservar a
+interface antiga.
 
 **Tasks:** auditar telas; entrevistar/validar premissas; redesenhar navegação e
 shell; prototipar fluxos; testar teclado/mobile; mapear impactos em DTOs;
@@ -359,8 +371,10 @@ staging com configuração documentada.
 Infrastructure; configurar testes; subir PostgreSQL local; configurar lint/
 typecheck/build; criar CI; publicar skeletons em ambiente não produtivo.
 
-**Dependências:** 011; decisões de 012 que afetem tooling podem ocorrer em
-paralelo desde que não congelem UX.
+**Dependências:** 011 e 012. A fundação de tooling e ambientes pode começar após
+as decisões estruturais da 011 e avançar em paralelo com a 012 somente quando
+não depender de decisões de Produto/UX/UI/frontend nem congelar capacidades,
+DTOs ou contratos provisórios que a 012 ainda possa alterar.
 
 **Critérios de aceite:** clone limpo reproduz builds/testes; API e frontend
 publicam independentemente; migrations não rodam no startup; secrets não entram
@@ -852,8 +866,10 @@ Criar na fase 011, com status `proposed` até evidência suficiente:
 6. Precisão temporal e ordenação determinística do ledger.
 7. Validação Firebase ID Token, autorização, revogação e CORS.
 8. Concorrência, idempotência e append-only de Transaction.
-9. Arquitetura frontend, routing, data layer, cache/state e validação.
-10. Contrato HTTP/OpenAPI, erros e compatibilidade de deploy.
+9. Arquitetura frontend, routing, data layer, cache/state e validação, a validar
+   na 012 após a descoberta de produto/UX/UI.
+10. Contrato HTTP/OpenAPI, erros e compatibilidade de deploy, provisórios até os
+    protótipos e o freeze de cada vertical.
 11. BRAPI, cache, timeout, retry, quota e múltiplas instâncias.
 12. Supabase PostgreSQL: schema privado, roles, pooling, migration e backups.
 13. Migração, write fence, reconciliação, point of no return e retenção.
@@ -914,8 +930,9 @@ handoff da 021 e aprendizado de produto.
    migrations controladas, Npgsql, transações e testes em PostgreSQL real.
 10. **Como Next é substituído?** Inventário dos acoplamentos, skeleton Vite,
     migração por slices e remoção final somente na 021.
-11. **Como o frontend é revisado?** Discovery de arquitetura por feature,
-    routing, HTTP, cache/state, validação, testabilidade e boundaries de UI.
+11. **Como o frontend é revisado?** A 011 registra o baseline e os acoplamentos;
+     a 012 decide a arquitetura por feature, routing, HTTP, cache/state,
+     validação, testabilidade e boundaries de UI.
 12. **Como UX/UI é revisada?** Auditoria e protótipos de todas as jornadas,
     mobile, acessibilidade, estados, microcopy e design system antes dos freezes.
 13. **Como a API é definida?** Capacidades provisórias após UX e OpenAPI
@@ -1017,8 +1034,10 @@ handoff da 021 e aprendizado de produto.
 
 As tarefas 01 e 02 podem ser investigadas em paralelo. A 03 depende dos dois
 inventários; 04 e 05 dependem do modelo alvo inicial; 06 pode começar após 01,
-mas só fecha impactos de API após 03/05; 07 consolida 03–06; 08 fecha decisões,
-gates e handoff.
+mas só fecha o handoff técnico com os insumos de 03/05 e não executa a descoberta
+de Produto/UX/UI. A 07 depende de 03–06; 08 fecha decisões, gates e handoff.
+Depois do handoff, a 012 executa a descoberta de Produto/UX/UI/IA/frontend e
+revisa capacidades, requisitos, DTOs e contratos provisórios antes dos freezes.
 
 ## 17. Premissas explícitas
 
@@ -1049,8 +1068,9 @@ gates e handoff.
 - fases 001–010 estão preservadas como concluídas;
 - fases 011–021 têm objetivo, contexto, escopo, entregáveis, tasks, dependências,
   aceite, testes, riscos e decisões;
-- arquitetura alvo, Firebase token, EF Core/PostgreSQL, Vite, UX, API, testes,
-  deploy, migração incremental e remoção antiga estão explícitos;
+- arquitetura alvo, Firebase token, EF Core/PostgreSQL, Vite, baseline de UX,
+  descoberta de Produto/UX/UI na 012, API, testes, deploy, migração incremental e
+  remoção antiga estão explícitos;
 - itens antigos superseded estão mapeados, não apagados;
 - nenhuma implementação, deploy, migration ou segredo foi criado/alterado;
 - o roadmap canônico está sincronizado sem alterar código, deploy, banco ou
