@@ -685,6 +685,8 @@ do migration gate da 021.
 
 ## 011 — Discovery, Architecture & Migration Baseline
 
+**Status:** concluída como baseline documental; C1 aguarda aceite formal do gate.
+
 **Objetivo:** eliminar incertezas arquiteturais e de migração capazes de causar
 retrabalho estrutural, produzindo informação suficiente para iniciar a próxima
 etapa com segurança.
@@ -714,6 +716,9 @@ completa ou contratos HTTP definitivos. Pode terminar mesmo com detalhes de
 slices ainda pendentes.
 
 ## 012 — Product, UX/UI, Information Architecture & Provisional API Discovery
+
+**Status:** próxima fase para planejamento; execução de `UX-01` começa após o
+aceite formal de C1.
 
 **Objetivo:** realizar revisão de produto, UX, UI, arquitetura de informação e
 frontend — não uma simples modernização visual — antes de congelar os contratos
