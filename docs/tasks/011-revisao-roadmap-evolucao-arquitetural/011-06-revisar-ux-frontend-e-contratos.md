@@ -2,7 +2,7 @@
 
 - **Ticker:** `011`
 - **Número:** `06`
-- **Status:** `pending`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -127,53 +127,88 @@ DTOs ou endpoints.
 
 ### Status
 
-`pending`
+`completed`
 
-O status permanece pendente porque esta alteração delimita a subtarefa e seu
-handoff; ela não executa a descoberta de Produto/UX/UI da fase 012.
+A subtarefa entregou o baseline e o handoff técnico previsto. Ela não executou a
+descoberta substantiva de Produto/UX/UI/IA/frontend da fase 012, conforme o limite
+de escopo, e não congelou contratos HTTP.
 
 ### Arquivos alterados
 
-- `docs/specs/011-revisao-roadmap-evolucao-arquitetural.md`
-- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-00-overview.md`
-- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-01-inventariar-frontend-e-next.md`
-- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-03-desenhar-arquitetura-alvo-e-camadas.md`
-- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-06-revisar-ux-frontend-e-contratos.md`
-- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-08-registrar-adrs-e-handoff.md`
-- `docs/roadmap/reserva-clara-roadmap.md`
+- `docs/architecture/011/frontend-ux-contract-discovery.md` — novo handoff
+  técnico com baseline, jornadas, acoplamentos, restrições, mapa de capacidades,
+  estados, freeze N/N-1 e backlog da 012.
+- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-06-revisar-ux-frontend-e-contratos.md` — status e registro desta execução.
+- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-00-overview.md` — checklist e progresso da fase.
 
 Nenhum arquivo de produção, banco, deploy, segredo ou configuração externa foi
 alterado.
 
 ### Decisões e desvios
 
-- 011-06 foi convertida de revisão substantiva para baseline e handoff técnico.
-- A 012 continua sendo a responsável por Produto, UX/UI, IA, arquitetura
-  frontend, protótipos e mudanças em requisitos, DTOs e contratos provisórios.
-- A regra de freeze por vertical slice foi preservada, mas nenhum endpoint, DTO
-  ou contrato HTTP final é decidido na 011.
-- O checklist da fase permanece com 011-06 pendente; a correção documental não
-  conta como conclusão da subtarefa.
+- 011-06 foi executada como baseline e handoff técnico, não como auditoria final
+  de UX nem como redesign.
+- O inventário de 011-01 foi consolidado com as jornadas 001–010, gaps de sessão,
+  offline, foco, erro, acessibilidade e testabilidade, além dos destinos dos
+  acoplamentos Next.js.
+- Capacidades, exemplos JSON, Problem Details e a taxonomia de estados são
+  deliberadamente provisórios e independentes de framework; a 012 pode alterar
+  requisitos, DTOs, erros e capacidades após pesquisa e protótipos.
+- A regra de freeze por vertical slice e compatibilidade N/N-1 foi registrada sem
+  congelar qualquer endpoint, DTO ou contrato HTTP final.
+- Foi criado o artefato dedicado em `docs/architecture/011/`, mantendo a
+  documentação detalhada fora da spec normativa e sem alterar código.
 
 ### Comandos executados e resultados
 
-- `git diff --check` — passou.
-- `functions.grep`/`functions.read` — passaram na validação documental de
-  tickers, links, ordem, dependências e seção única `## Checklist` com oito
-  itens.
-- Revisão independente `review` — **APROVADO** após corrigir a nota histórica
-  de sincronização do roadmap e explicitar a dependência 012 → 013.
+- `functions.glob`/`functions.read` — passaram na conferência da spec, overview,
+  subtarefa, `AGENTS.md`, inventário 011-01, domínio 011-02, arquitetura 011-03,
+  segurança 011-05 e artefatos relacionais/migração.
+- `functions.grep` — passou na conferência de ticker `011`, links de referência,
+  dependências, termos provisórios, estados `partial`/`stale`/`unavailable` e
+  seção única `## Checklist` com oito itens.
+- `git diff --check` — passou após a documentação final.
 - Não foram executados lint, typecheck, build ou testes de aplicação: a mudança
   é exclusivamente documental e não altera código.
+- Revisão independente `review` — **APROVADO**, confirmando ticker, checklist,
+  progresso, cobertura do handoff, consistência com os insumos e ausência de
+  decisões finais ou alterações de produção.
 
 ### Resultados e evidências
 
-- O diff documental entre spec, overview, 011-06, tarefas relacionadas e roadmap
-  mantém a fronteira 011 → 012 explícita.
+- `docs/architecture/011/frontend-ux-contract-discovery.md` cobre as jornadas
+  001–010, a navegação atual, componentes/hooks/services, HTTP, estado/cache,
+  validação, acoplamentos Next e problemas conhecidos.
+- A matriz jornada/capacidade/API explicita dependências sem transformar a tela
+  antiga ou o modelo relacional em contrato de transporte.
+- Exemplos de sucesso/erro, Problem Details e estados críticos estão marcados
+  como ilustrativos/provisórios; `unavailable` não é zero e `stale` permanece
+  visível.
+- O backlog contém perguntas e experimentos pequenos para Produto, UX/UI, IA,
+  frontend, API, acessibilidade e feedback, com evidência esperada.
+- A fronteira `011 → handoff → 012 → freeze por vertical slice → 013+` permanece
+  explícita, e nenhum redesign, protótipo final ou contrato HTTP final foi criado.
 
 ### Riscos residuais
 
 - A descoberta de Produto/UX/UI, IA, frontend e contratos ajustados continua
-  pendente na 012.
-- Capacidades e exemplos registrados na 011-06 podem mudar após protótipos e
+  pendente na 012; o artefato não aprova a UI existente.
+- Capacidades, exemplos e taxonomia registrados podem mudar após protótipos e
   validação da 012; nenhum consumidor deve tratá-los como contrato congelado.
+- Não há ainda testes React/E2E, auditoria definitiva de acessibilidade, decisão
+  de router/state/cache ou política operacional completa de offline/reconexão.
+- O Route Handler de Quotes, os scans client-side e o cache process-local são
+  baseline histórica, não desenho final da API alvo.
+
+### Handoff
+
+- `012` deve iniciar pelos experimentos UX-01, UX-02, UX-03, UX-04, UX-05 e
+  A11Y-01 do artefato, depois revisar as capacidades API-01–API-04 com os
+  protótipos correspondentes.
+- `013` deve usar as decisões da 012 para estruturar o cliente HTTP, testes,
+  boundaries de estado e shell, sem importar Firestore nem segredos para o bundle.
+- `017` só pode congelar o contrato da slice Portfolio depois do protótipo e dos
+  critérios de acessibilidade; `018` deve tratar conflito, idempotência e
+  append-only como requisitos de escrita, não como detalhe de UI.
+- `011-08` deve validar este handoff junto dos gates e ADRs, sem reabrir a
+  descoberta substantiva nem avançar automaticamente nesta sessão.
