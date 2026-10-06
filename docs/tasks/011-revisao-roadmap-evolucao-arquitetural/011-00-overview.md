@@ -2,7 +2,7 @@
 
 - **Status geral:** in_progress
 - **Spec:** [011-revisao-roadmap-evolucao-arquitetural.md](../../specs/011-revisao-roadmap-evolucao-arquitetural.md)
-- **Progresso:** 4/8 subtarefas concluídas
+- **Progresso:** 5/8 subtarefas concluídas
 
 ## Objetivo
 
@@ -17,7 +17,7 @@ backend, sem iniciar a implementação da nova stack.
 - [x] [011-02-mapear-dominio-dados-e-riscos.md](011-02-mapear-dominio-dados-e-riscos.md)
 - [x] [011-03-desenhar-arquitetura-alvo-e-camadas.md](011-03-desenhar-arquitetura-alvo-e-camadas.md)
 - [x] [011-04-modelar-postgresql-e-migracao.md](011-04-modelar-postgresql-e-migracao.md)
-- [ ] [011-05-definir-identidade-e-seguranca.md](011-05-definir-identidade-e-seguranca.md)
+- [x] [011-05-definir-identidade-e-seguranca.md](011-05-definir-identidade-e-seguranca.md)
 - [ ] [011-06-revisar-ux-frontend-e-contratos.md](011-06-revisar-ux-frontend-e-contratos.md)
 - [ ] [011-07-planejar-testes-ambientes-e-cutover.md](011-07-planejar-testes-ambientes-e-cutover.md)
 - [ ] [011-08-registrar-adrs-e-handoff.md](011-08-registrar-adrs-e-handoff.md)
@@ -80,3 +80,8 @@ backend, sem iniciar a implementação da nova stack.
   `UnitPrice`/`Fee`, distinguiu `null` explícito de campo ausente e detalhou o
   lock transacional do lifecycle Portfolio→Transaction; não há bloqueio
   pendente nesta subtarefa.
+- A 011-05 concluiu o baseline de identidade e segurança em
+  `docs/architecture/011/identity-security.md`: fluxo Firebase ID Token → API,
+  `CurrentOwner` derivado de `sub`, matriz de claims/erros, revogação, CORS,
+  headers, rate limits, secrets, logs, RLS candidata e threat model. A validação
+  ASP.NET Core e os testes reais permanecem gates da 014/016.
