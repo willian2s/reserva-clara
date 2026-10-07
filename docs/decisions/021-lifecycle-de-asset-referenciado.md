@@ -1,7 +1,7 @@
 # ADR 021 — Lifecycle de Asset referenciado por Transaction
 
 - **Status:** `proposed — decisão de produto da 012; enforcement pendente em 018`
-- **Ticker relacionado:** `011/012`
+- **Ticker relacionado:** `012` (continuidade do baseline `011`)
 - **Decisão:** UX-06 da 012; enforcement e concorrência permanecem em 018
 
 ## Contexto

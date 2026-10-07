@@ -111,6 +111,11 @@ FK, lock, enforcement ou migração foi implementado.
 - Compilação do JavaScript inline com `vm.Script` e assertions estruturais de
   confirmação, cancelamento, conflito e duplicidade retirada — passaram.
 - Conferência final de links Markdown locais — passou com 29 destinos resolvidos.
+- Revalidação após as revisões independentes — passou: `git diff --check`,
+  compilação do JavaScript inline, assertions das oito fixtures, status textual
+  dos três estados de Asset retirado, nomes acessíveis únicos, foco de erro e
+  foco do controle inverso após retire/restore, consistência do overview e 29
+  links Markdown locais.
 - Revisão independente inicial do subagente `review` — **BLOQUEADA** por falta
   de confirmação explícita no protótipo, política indefinida para retirada sem
   uso e deduplicação de identidade retirada; os achados foram corrigidos antes
@@ -123,6 +128,18 @@ FK, lock, enforcement ou migração foi implementado.
 - Terceira revisão independente do subagente `review` — **APROVADO**; não
   apontou bloqueadores, altos, médios ou baixos obrigatórios e confirmou a
   prontidão do pacote para handoff.
+- Revisão independente adicional — inicialmente **BLOQUEADA** por edição direta
+  de Asset retirado, nomes de controles repetidos para tecnologia assistiva,
+  foco após
+  confirmação divergente do critério e copy ambígua para exclusão de Asset
+  retirado usado. As correções foram aplicadas no protótipo.
+- Revisão independente final após as correções — inicialmente **BLOQUEADA** por
+  status acessível indistinto entre Asset retirado usado e sem operações. A
+  copy de status foi diferenciada no protótipo.
+- Revisão independente final após a última correção — **APROVADO**; confirmou a
+  política de reativação antes de editar, nomes acessíveis únicos, foco após
+  confirmação, foco de diagnóstico em erros e status acessível específico para
+  referência, além da coerência entre ADR, pacote, protótipo, tarefa e overview.
 - Lint, typecheck, build e testes de código — não executados: somente Markdown,
   ADR e protótipo standalone de discovery foram alterados; a spec 012 dispensa
   esses comandos quando não há código de produção.

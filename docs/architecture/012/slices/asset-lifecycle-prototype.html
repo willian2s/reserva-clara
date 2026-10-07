@@ -89,9 +89,13 @@
       const cancelAction = document.querySelector("#cancel-action");
       const catalog = { current: fixture.value, items: [] };
       let pendingAction = null;
-      function announce(message, error = false) { state.textContent = message; state.className = error ? "danger" : ""; }
+      function announce(message, error = false) { state.textContent = message; state.className = error ? "danger" : ""; if (error) queueMicrotask(() => state.focus()); }
       function itemStatus(item) {
-        if (item.lifecycle === "retired") return "Retirado · histórico preservado";
+        if (item.lifecycle === "retired") {
+          if (item.reference === "used") return "Retirado · operações vinculadas · histórico preservado";
+          if (item.reference === "unknown") return "Retirado · uso não confirmado · histórico preservado";
+          return "Retirado · sem operações · histórico preservado";
+        }
         if (item.reference === "used") return "Ativo · operações vinculadas";
         if (item.reference === "unknown") return "Ativo · uso não confirmado";
         return "Ativo · sem operações";
@@ -106,11 +110,24 @@
           const status = document.createElement("p"); status.className = `status${item.lifecycle === "retired" ? " retired" : ""}`; status.textContent = itemStatus(item);
           const details = document.createElement("p"); details.className = "muted"; details.textContent = `${item.type} · ${item.currency} · ID estável: ${item.id}` + (item.portfolios ? ` · ${item.portfolios} carteiras` : "");
           const actions = document.createElement("div"); actions.className = "actions";
-          actions.append(button("Simular edição", () => editItem(item)), button(item.lifecycle === "retired" ? "Reativar Asset" : "Retirar do catálogo", (event) => requestLifecycle(item, event.currentTarget)), button("Excluir cadastro", (event) => requestDelete(item, event.currentTarget)));
+          const edit = button("Simular edição", () => editItem(item));
+          edit.setAttribute("aria-label", `Editar ${item.symbol} ${item.market} (${item.id})`);
+          edit.dataset.assetId = item.id;
+          edit.dataset.assetAction = "edit";
+          const lifecycle = button(item.lifecycle === "retired" ? "Reativar Asset" : "Retirar do catálogo", (event) => requestLifecycle(item, event.currentTarget));
+          lifecycle.setAttribute("aria-label", `${item.lifecycle === "retired" ? "Reativar" : "Retirar do catálogo"} ${item.symbol} ${item.market} (${item.id})`);
+          lifecycle.dataset.assetId = item.id;
+          lifecycle.dataset.assetAction = item.lifecycle === "retired" ? "restore" : "retire";
+          const remove = button("Excluir cadastro", (event) => requestDelete(item, event.currentTarget));
+          remove.setAttribute("aria-label", `Excluir cadastro ${item.symbol} ${item.market} (${item.id})`);
+          remove.dataset.assetId = item.id;
+          remove.dataset.assetAction = "delete";
+          actions.append(edit, lifecycle, remove);
           card.append(title, status, details, actions); cards.append(card);
         });
       }
       function editItem(item) {
+        if (item.lifecycle === "retired") return announce("Este Asset está retirado. Reative-o primeiro para revisar ou editar o cadastro.", true);
         if (item.reference === "used") return announce("Este Asset tem operações vinculadas. A identidade econômica não pode ser editada aqui.", true);
         if (catalog.current === "conflict") return announce("Este cadastro mudou. Atualize o catálogo e revise os campos antes de tentar novamente.", true);
         if (item.reference === "unknown") return announce("Não foi possível confirmar o uso. O formulário permanece preservado; verifique o catálogo.", true);
@@ -127,8 +144,10 @@
         confirmAction.focus();
       }
       function requestDelete(item, trigger) {
-        if (item.reference === "used") return announce("Não é possível excluir este Asset porque existem operações vinculadas. Retire ou reative sem apagar o histórico.", true);
-        if (item.lifecycle === "retired") return announce("Reative o Asset para revisar o cadastro antes de excluir.", true);
+        if (item.lifecycle === "retired") return announce(item.reference === "used"
+          ? "Não é possível excluir este Asset retirado porque existem operações vinculadas. O histórico permanece preservado."
+          : "Reative o Asset para revisar o cadastro antes de excluir.", true);
+        if (item.reference === "used") return announce("Não é possível excluir este Asset porque existem operações vinculadas. Retire-o sem apagar o histórico.", true);
         if (item.reference === "unknown") return announce("Não foi possível confirmar todas as operações vinculadas. O cadastro permanece preservado.", true);
         if (catalog.current === "conflict") return announce("Este cadastro não está mais disponível. Atualize o catálogo antes de excluir.", true);
         pendingAction = { action: "delete", item, trigger };
@@ -138,7 +157,7 @@
       }
       function executePending() {
         if (!pendingAction) return;
-        const { action, item } = pendingAction;
+        const { action, item, trigger } = pendingAction;
         pendingAction = null;
         confirmation.close();
         if (action === "delete") {
@@ -157,7 +176,12 @@
           announce(`Asset retirado em todas as carteiras do owner. O histórico de ${item.symbol} permanece legível.`);
         }
         render();
-        queueMicrotask(() => state.focus());
+        queueMicrotask(() => {
+          const nextAction = action === "retire" ? "restore" : action === "restore" ? "retire" : null;
+          const nextTrigger = nextAction && Array.from(document.querySelectorAll("button[data-asset-id]"))
+            .find((element) => element.dataset.assetId === item.id && element.dataset.assetAction === nextAction);
+          (nextTrigger || (trigger?.isConnected ? trigger : state)).focus();
+        });
       }
       fixture.addEventListener("change", () => { catalog.current = fixture.value; catalog.items = fixtures[fixture.value].map((item) => ({ ...item })); render(); });
       confirmAction.addEventListener("click", executePending);

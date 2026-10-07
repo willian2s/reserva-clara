@@ -72,6 +72,7 @@ handoff verificável para 013–019.
   semanticamente `assetId` estável, identidade usada imutável na edição comum,
   retirada/reativação sem apagar histórico, deduplicação por identidade e
   bloqueio de delete referenciado. O pacote de estados/copy e o protótipo
-  standalone usam fixtures sintéticas; a revisão independente final foi
-  aprovada. Enforcement e correção auditada ficam encaminhados a 016/018, sem
-  avançar automaticamente para `012-09`.
+  standalone usam fixtures sintéticas; após as correções de foco, copy e status
+  acessível, a revisão independente final foi aprovada. Enforcement e correção
+  auditada ficam encaminhados a 016/018, sem avançar automaticamente para
+  `012-09`.
