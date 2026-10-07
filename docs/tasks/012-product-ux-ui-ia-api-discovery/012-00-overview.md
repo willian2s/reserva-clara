@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [012-product-ux-ui-ia-api-discovery.md](../../specs/012-product-ux-ui-ia-api-discovery.md)
-- **Progresso:** 4/13 subtarefas concluídas
+- **Progresso:** 5/13 subtarefas concluídas
 
 ## Objetivo
 
@@ -17,7 +17,7 @@ handoff verificável para 013–019.
 - [x] [012-02-mapear-jornadas-e-problemas-de-produto.md](012-02-mapear-jornadas-e-problemas-de-produto.md)
 - [x] [012-03-definir-ia-navegacao-e-shell.md](012-03-definir-ia-navegacao-e-shell.md)
 - [x] [012-04-definir-estados-sessao-e-recovery.md](012-04-definir-estados-sessao-e-recovery.md)
-- [ ] [012-05-auditar-acessibilidade-densidade-e-microcopy.md](012-05-auditar-acessibilidade-densidade-e-microcopy.md)
+- [x] [012-05-auditar-acessibilidade-densidade-e-microcopy.md](012-05-auditar-acessibilidade-densidade-e-microcopy.md)
 - [ ] [012-06-revisar-design-system-e-componentes.md](012-06-revisar-design-system-e-componentes.md)
 - [ ] [012-07-prototipar-e-freezar-portfolio.md](012-07-prototipar-e-freezar-portfolio.md)
 - [ ] [012-08-decidir-lifecycle-de-asset.md](012-08-decidir-lifecycle-de-asset.md)
@@ -52,3 +52,8 @@ handoff verificável para 013–019.
   cega de writes, signOut, usuário desabilitado, offline, conflito, resultado
   desconhecido, foco, copy e retorno interno sem loop. O tabletop foi documental,
   com fixtures sintéticas, sem alterar código ou avançar automaticamente.
+- `012-05` está `completed`: a auditoria documental produziu matriz WCAG com 15
+  achados priorizados, fixtures sintéticas, critérios observáveis para teclado,
+  foco, leitor de tela, contraste, 320 px e zoom de 200%, além de glossário
+  financeiro aprovado. Validação manual de runtime permanece requisito dos
+  protótipos 013/017–019; a subtarefa seguinte não foi iniciada automaticamente.
