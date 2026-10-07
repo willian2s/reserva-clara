@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [012-product-ux-ui-ia-api-discovery.md](../../specs/012-product-ux-ui-ia-api-discovery.md)
-- **Progresso:** 6/13 subtarefas concluídas
+- **Progresso:** 7/13 subtarefas concluídas
 
 ## Objetivo
 
@@ -19,7 +19,7 @@ handoff verificável para 013–019.
 - [x] [012-04-definir-estados-sessao-e-recovery.md](012-04-definir-estados-sessao-e-recovery.md)
 - [x] [012-05-auditar-acessibilidade-densidade-e-microcopy.md](012-05-auditar-acessibilidade-densidade-e-microcopy.md)
 - [x] [012-06-revisar-design-system-e-componentes.md](012-06-revisar-design-system-e-componentes.md)
-- [ ] [012-07-prototipar-e-freezar-portfolio.md](012-07-prototipar-e-freezar-portfolio.md)
+- [x] [012-07-prototipar-e-freezar-portfolio.md](012-07-prototipar-e-freezar-portfolio.md)
 - [ ] [012-08-decidir-lifecycle-de-asset.md](012-08-decidir-lifecycle-de-asset.md)
 - [ ] [012-09-prototipar-transaction-e-ledger.md](012-09-prototipar-transaction-e-ledger.md)
 - [ ] [012-10-prototipar-quotes-valuation-e-dashboard.md](012-10-prototipar-quotes-valuation-e-dashboard.md)
@@ -62,3 +62,9 @@ handoff verificável para 013–019.
   critérios de reuso e lacunas para 013/017/018/019. A revisão independente foi
   aprovada; não houve alteração de produção, escolha de biblioteca por hábito ou
   avanço automático para 012-07.
+- `012-07` está `completed`: o pacote de Portfolio registra freeze semântico de
+  intenção, lista de ativas/arquivadas, protótipo responsivo standalone, detalhe
+  ativo/arquivado, vazio, conflito, erro, resultado desconhecido, a11y, copy e
+  capabilities provisórias. A revisão independente final foi aprovada; URLs,
+  DTOs e OpenAPI continuam provisórios e a subtarefa seguinte não foi iniciada
+  automaticamente.

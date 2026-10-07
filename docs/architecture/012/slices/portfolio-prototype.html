@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reserva Clara — protótipo de Portfolio</title>
+    <style>
+      :root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; }
+      body { margin: 0; background: #f7f7f5; color: #20231f; }
+      header, main { max-width: 64rem; margin: auto; padding: 1rem; }
+      header { display: flex; flex-wrap: wrap; gap: .8rem 1rem; align-items: center; border-bottom: 1px solid #d7d9d2; }
+      header strong { margin-right: auto; }
+      nav, .actions, .filters { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+      a, button, select, input { border: 1px solid #8c9387; border-radius: .35rem; background: white; color: inherit; padding: .55rem .8rem; font: inherit; }
+      button, a { cursor: pointer; text-decoration: none; }
+      button.primary { background: #245c42; border-color: #245c42; color: white; }
+      button.danger { border-color: #aa3434; }
+      a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible { outline: 3px solid #255db4; outline-offset: 2px; }
+      main { padding-block: 1.5rem 3rem; }
+      .panel { margin-block: 1rem; padding: 1rem; background: white; border: 1px solid #d7d9d2; border-radius: .5rem; }
+      .panel > :first-child { margin-top: 0; }
+      .panel > :last-child { margin-bottom: 0; }
+      .grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card { display: grid; gap: .7rem; padding: 1rem; border: 1px solid #b9beb5; border-radius: .45rem; }
+      .card h3 { margin: 0; overflow-wrap: anywhere; }
+      .muted { color: #5d655a; }
+      .status { border-left: .3rem solid #3d7045; padding: .65rem .8rem; background: #edf6ed; }
+      .warning { border-left-color: #a36c00; background: #fff7df; }
+      .error { border-left-color: #aa3434; background: #fff0f0; }
+      .status:focus { outline: 3px solid #255db4; outline-offset: 2px; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+      .field { display: grid; gap: .3rem; }
+      .field input { width: 100%; box-sizing: border-box; }
+      .meta { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin: 0; }
+      @media (max-width: 42rem) {
+        header strong { flex-basis: 100%; }
+        .grid { grid-template-columns: 1fr; }
+        .actions > *, .filters > * { flex: 1 1 100%; }
+        a, button, select, input { min-height: 2.75rem; box-sizing: border-box; }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="#content" class="sr-only" onfocus="this.classList.remove('sr-only')" onblur="this.classList.add('sr-only')">Pular para conteúdo</a>
+    <header>
+      <strong>Reserva Clara</strong>
+      <nav aria-label="Navegação principal"><a href="#" aria-current="page">Carteiras</a><a href="#">Visão geral</a><a href="#">Ativos</a></nav>
+      <button type="button">Sair</button>
+    </header>
+    <main id="content" tabindex="-1">
+      <section class="panel" aria-labelledby="prototype-title">
+        <h1 id="prototype-title">Protótipo de Portfolio</h1>
+        <p class="muted">Artefato independente de Next. Toda mudança abaixo é uma simulação local com fixtures sintéticas; nada é enviado.</p>
+        <div class="filters" aria-label="Controles do protótipo">
+          <label>Alternativa de lista
+            <select id="list-alternative"><option value="split">A — ativas e arquivadas</option><option value="filter">B — filtro com grupos</option></select>
+          </label>
+          <label>Cenário
+            <select id="scenario"><option value="active">F-CLARA — ativa</option><option value="empty">F-EMPTY — vazia</option><option value="archived">F-MULTI — arquivada</option><option value="error">F-ERROR — erro de leitura</option><option value="partial">Leitura parcial</option><option value="stale">Dados desatualizados</option><option value="conflict">F-CONFLICT — conflito</option><option value="unknown">Resultado desconhecido</option></select>
+          </label>
+          <label>Deep link interno
+            <input id="deep-link" value="/portfolios/p_01HCLARA" autocomplete="off">
+          </label>
+          <button type="button" id="show-list">Abrir lista</button>
+          <button type="button" id="open-deep-link">Abrir deep link</button>
+        </div>
+      </section>
+      <section id="view" aria-live="polite" aria-atomic="true"></section>
+    </main>
+    <script>
+      (() => {
+        const view = document.querySelector("#view");
+        const scenario = document.querySelector("#scenario");
+        const alternative = document.querySelector("#list-alternative");
+        const deepLink = document.querySelector("#deep-link");
+        let currentScenario = "active";
+        let portfolios = [
+          { id: "p_01HCLARA", name: "Carteira Clara", currency: "BRL", lifecycle: "active" },
+          { id: "p_01HAURORA", name: "Carteira Aurora", currency: "BRL", lifecycle: "active" },
+          { id: "p_01ARCHIVED", name: "Reserva de longo prazo", currency: "BRL", lifecycle: "archived" }
+        ];
+        const initialFixtures = portfolios.map((item) => ({ ...item }));
+        let selectedId = "p_01HCLARA";
+        let showAll = false;
+        let listFilter = "all";
+        let pendingArchive = false;
+        let returnFocusToArchive = false;
+        let createdCount = 0;
+
+        const esc = (value) => value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+        const focusTarget = () => document.querySelector("[data-focus], h2[tabindex='-1']")?.focus();
+        const selectedPortfolio = () => portfolios.find((item) => item.id === selectedId) || portfolios[0];
+        const resetFixtures = () => {
+          if (currentScenario === "empty") { portfolios = []; selectedId = null; showAll = false; return; }
+          portfolios = initialFixtures.map((item) => ({ ...item }));
+          selectedId = "p_01HCLARA";
+          showAll = currentScenario === "archived";
+        };
+        const nextPortfolioId = () => `p_01HNEW${String(++createdCount).padStart(2, "0")}`;
+
+        function listCard({ item = selectedPortfolio(), archived = item.lifecycle === "archived" } = {}) {
+          const status = archived ? "Arquivada · somente leitura" : "Ativa";
+          return `<article class="card"><h3>${esc(item.name)}</h3><p class="meta"><span>${status}</span><span>Moeda-base: ${item.currency}</span><span>ID: ${esc(item.id)}</span></p><div class="actions"><button type="button" data-id="${esc(item.id)}" data-open="${archived ? "archived" : "active"}">${archived ? "Abrir carteira" : "Abrir carteira"}</button>${archived ? `<button type="button" data-id="${esc(item.id)}" data-restore>Restaurar</button>` : ""}</div></article>`;
+        }
+
+        function renderList() {
+          const isEmpty = currentScenario === "empty";
+          const error = currentScenario === "error";
+          if (error) {
+            view.innerHTML = '<section class="panel status error" role="alert"><h2 tabindex="-1">Não foi possível carregar suas carteiras</h2><p>Não alteramos nenhum dado. Tente novamente ou volte ao contexto anterior.</p><div class="actions"><button type="button" class="primary" data-retry>Tentar novamente</button><button type="button" data-reset>Voltar para Carteiras</button></div></section>';
+            bindListActions();
+            focusTarget();
+            return;
+          }
+          if (isEmpty) {
+            view.innerHTML = '<section class="panel" aria-labelledby="list-title"><h2 id="list-title" tabindex="-1">Carteiras</h2><p>Ainda não há carteiras. Este é um começo, não um erro.</p><button type="button" class="primary" data-create>Criar carteira</button></section>';
+            bindListActions();
+            focusTarget();
+            return;
+          }
+          const visible = showAll ? portfolios : portfolios.filter((item) => item.id === selectedId);
+          const activeItems = visible.filter((item) => item.lifecycle === "active").map((item) => listCard({ item, archived: false })).join("") || '<p class="muted">Não há carteiras ativas nesta fixture.</p>';
+          const archivedItems = visible.filter((item) => item.lifecycle === "archived").map((item) => listCard({ item, archived: true })).join("") || '<p class="muted">Não há carteiras arquivadas nesta fixture.</p>';
+          const activeGroup = `<section aria-labelledby="active-title"><h2 id="active-title">Ativas</h2><div class="grid">${activeItems}</div></section>`;
+          const archivedGroup = `<section aria-labelledby="archived-title"><h2 id="archived-title">Arquivadas</h2><div class="grid">${archivedItems}</div></section>`;
+          const groups = alternative.value === "split" ? activeGroup + archivedGroup : `<label for="status-filter">Mostrar</label><select id="status-filter"><option value="all"${listFilter === "all" ? " selected" : ""}>Ativas e arquivadas</option><option value="active"${listFilter === "active" ? " selected" : ""}>Somente ativas</option><option value="archived"${listFilter === "archived" ? " selected" : ""}>Somente arquivadas</option></select>${listFilter === "archived" ? archivedGroup : listFilter === "active" ? activeGroup : activeGroup + archivedGroup}`;
+          view.innerHTML = `<section class="panel" aria-labelledby="list-title"><h2 id="list-title" tabindex="-1">Carteiras</h2><p class="muted">Escolha uma carteira para ler seu estado. Arquivar preserva o histórico; não é excluir.</p><div class="actions"><button type="button" class="primary" data-create>Criar carteira</button><button type="button" data-refresh>Atualizar lista</button></div></section><section class="panel">${groups}</section>`;
+          bindListActions();
+          focusTarget();
+        }
+
+        function renderDetail(kind, id = selectedId) {
+          selectedId = id;
+          const item = selectedPortfolio();
+          const archived = item.lifecycle === "archived";
+          const conflict = currentScenario === "conflict";
+          const unknown = currentScenario === "unknown";
+          const partial = currentScenario === "partial";
+          const stale = currentScenario === "stale";
+          const banner = conflict ? '<section class="status error" role="alert" tabindex="-1"><strong>Este dado mudou antes de concluir.</strong><p>Atualize e revise antes de tentar novamente.</p><button type="button" data-refresh>Atualizar e revisar</button></section>' : unknown ? '<section class="status warning" role="alert" tabindex="-1"><strong>O resultado não foi confirmado.</strong><p>Verifique a carteira antes de tentar de novo.</p><button type="button" data-verify>Verificar carteiras</button></section>' : partial ? '<section class="status warning"><strong>Patrimônio conhecido; alguns dados ainda não estão disponíveis.</strong><p>O valor conhecido não inclui as lacunas.</p><button type="button" data-refresh>Atualizar esta carteira</button></section>' : stale ? '<section class="status warning"><strong>Os dados podem estar desatualizados.</strong><p>Última atualização: 2026-10-07 10:00 (fixture). Uma nova leitura ainda não foi confirmada.</p><button type="button" data-refresh>Atualizar esta carteira</button></section>' : archived ? '<section class="status warning"><strong>Carteira arquivada · somente leitura</strong><p>O histórico continua disponível. Restaure a carteira para permitir novas alterações patrimoniais.</p><button type="button" data-restore>Restaurar carteira</button></section>' : '<section class="status"><strong>Carteira ativa</strong><p>Você pode ler o resumo e continuar para uma ação contextual.</p></section>';
+          const write = archived ? '<p class="muted">Registrar operação não está disponível enquanto a carteira estiver arquivada.</p>' : '<button type="button" class="primary">Registrar operação</button><button type="button" data-rename>Renomear carteira</button><button type="button" class="danger" data-archive>Arquivar carteira</button>';
+          const confirmation = pendingArchive && !archived ? '<section class="status warning" role="dialog" aria-modal="true" aria-labelledby="archive-title" data-archive-dialog><h3 id="archive-title" tabindex="-1" data-focus>Confirmar arquivamento</h3><p>Arquivar não exclui a carteira nem seu histórico. Digite o nome atual para continuar.</p><label class="field" for="archive-name">Nome atual<input id="archive-name" data-archive-name autocomplete="off"></label><p id="archive-error" class="muted" role="alert"></p><div class="actions"><button type="button" data-cancel-archive>Cancelar</button><button type="button" class="danger" data-confirm-archive>Arquivar carteira</button></div></section>' : '';
+          const detailName = item.name;
+          view.innerHTML = `<section class="panel" aria-labelledby="detail-title"><p><button type="button" data-back>← Voltar para Carteiras</button></p><h2 id="detail-title" tabindex="-1">${esc(detailName)}</h2>${banner}${confirmation}<dl class="meta"><div><dt>Patrimônio conhecido</dt><dd>R$ 12.400,00</dd></div><div><dt>Custo de aquisição remanescente</dt><dd>R$ 10.000,00</dd></div></dl><p class="muted">Não há performance histórica nesta visão.</p><div class="actions">${write}<button type="button" data-surface="Histórico de operações">Histórico de operações</button><button type="button" data-surface="Configurações">Configurações</button></div></section>`;
+          bindDetailActions();
+          if (returnFocusToArchive) { returnFocusToArchive = false; view.querySelector("[data-archive]")?.focus(); } else focusTarget();
+        }
+
+        function renderForm(mode, preservedValue = null, outcome = "") {
+          const rename = mode === "rename";
+          const value = preservedValue ?? (rename ? selectedPortfolio().name : "");
+          const feedback = outcome === "conflict" ? '<section class="status error" role="alert"><strong>Este dado mudou antes de concluir.</strong><p>Atualize e revise os campos antes de permitir uma nova tentativa.</p><button type="button" data-review-form>Atualizar e revisar</button></section>' : outcome === "unknown" ? '<section class="status warning" role="alert"><strong>O resultado não foi confirmado.</strong><p>Verifique as carteiras antes de tentar de novo. Os dados digitados foram preservados.</p><button type="button" data-review-form>Verificar carteiras</button></section>' : outcome === "reviewed" ? '<section class="status"><strong>Leitura atualizada para revisão</strong><p>Revise o nome antes de enviar uma nova alteração.</p></section>' : '';
+          const blocked = outcome === "conflict" || outcome === "unknown";
+          view.innerHTML = `<section class="panel" aria-labelledby="form-title"><p><button type="button" data-cancel-form>← Voltar</button></p><h2 id="form-title" tabindex="-1">${rename ? "Renomear carteira" : "Criar carteira"}</h2><p class="muted">Nome entre 1 e 100 caracteres. A moeda-base da fixture é BRL.</p>${feedback}<form id="portfolio-form"><label class="field" for="portfolio-name">Nome da carteira<input id="portfolio-name" name="name" value="${esc(value)}" maxlength="100" required></label><p id="form-error" class="muted" role="alert"></p><div class="actions"><button type="submit" class="primary"${blocked ? " disabled" : ""}>${rename ? "Salvar nome" : "Criar carteira"}</button><button type="button" data-cancel-form>Cancelar</button></div></form></section>`;
+          view.querySelectorAll("[data-cancel-form]").forEach((button) => button.addEventListener("click", () => rename ? renderDetail("active", selectedId) : renderList()));
+          view.querySelector("[data-review-form]")?.addEventListener("click", () => { currentScenario = "active"; scenario.value = "active"; renderForm(mode, view.querySelector("#portfolio-name").value, "reviewed"); });
+          view.querySelector("#portfolio-form").addEventListener("submit", (event) => {
+            event.preventDefault();
+            const input = view.querySelector("#portfolio-name");
+            const error = view.querySelector("#form-error");
+            const name = input.value.trim();
+            if (!name || name.length > 100) { error.textContent = "Informe um nome entre 1 e 100 caracteres."; input.focus(); return; }
+            if (rename && name === selectedPortfolio().name) { error.textContent = "Informe um nome diferente do atual."; input.focus(); return; }
+            if (currentScenario === "conflict") { renderForm(mode, name, "conflict"); return; }
+            if (currentScenario === "unknown") { renderForm(mode, name, "unknown"); return; }
+            const item = mode === "rename" ? selectedPortfolio() : { id: nextPortfolioId(), name: "", currency: "BRL", lifecycle: "active" };
+            item.name = name;
+            if (mode === "create") portfolios.push(item);
+            selectedId = item.id;
+            currentScenario = "active";
+            scenario.value = "active";
+            showAll = false;
+            renderDetail("active", item.id);
+          });
+          focusTarget();
+        }
+
+        function renderUnknownCommand() {
+          view.innerHTML = '<section class="panel status warning" role="alert"><h2 tabindex="-1">O resultado não foi confirmado</h2><p>Verifique as carteiras antes de tentar de novo.</p><button type="button" data-verify>Verificar carteiras</button></section>';
+          view.querySelector("[data-verify]").addEventListener("click", () => { currentScenario = "active"; scenario.value = "active"; renderList(); });
+          focusTarget();
+        }
+
+        function renderNotFound() {
+          view.innerHTML = '<section class="panel status error" role="alert"><h2 tabindex="-1">Não foi possível localizar esta carteira</h2><p>O endereço pode estar incorreto ou não estar disponível para esta conta.</p><button type="button" data-back>Voltar para Carteiras</button></section>';
+          view.querySelector("[data-back]").addEventListener("click", renderList);
+          focusTarget();
+        }
+
+        function renderSurface(title) {
+          view.innerHTML = `<section class="panel" aria-labelledby="surface-title"><button type="button" data-back>← Voltar para a carteira</button><h2 id="surface-title" tabindex="-1">${esc(title)}</h2><p class="muted">Superfície contextual simulada para validar retorno sem perder a carteira.</p></section>`;
+          view.querySelector("[data-back]").addEventListener("click", () => renderDetail(selectedPortfolio().lifecycle, selectedId));
+          focusTarget();
+        }
+
+        function bindListActions() {
+          view.querySelectorAll("[data-open]").forEach((button) => button.addEventListener("click", () => renderDetail(button.dataset.open, button.dataset.id)));
+          view.querySelectorAll("[data-restore]").forEach((button) => button.addEventListener("click", () => { selectedId = button.dataset.id; selectedPortfolio().lifecycle = "active"; showAll = true; renderList(); }));
+          view.querySelector("[data-create]")?.addEventListener("click", () => renderForm("create"));
+          view.querySelector("[data-retry]")?.addEventListener("click", () => { currentScenario = "active"; scenario.value = "active"; resetFixtures(); renderList(); });
+          view.querySelector("[data-reset]")?.addEventListener("click", () => { currentScenario = "active"; scenario.value = "active"; resetFixtures(); renderList(); });
+          view.querySelector("[data-refresh]")?.addEventListener("click", renderList);
+          view.querySelector("#status-filter")?.addEventListener("change", (event) => { listFilter = event.target.value; renderList(); });
+        }
+
+        function bindDetailActions() {
+          view.querySelector("[data-back]")?.addEventListener("click", renderList);
+          view.querySelector("[data-restore]")?.addEventListener("click", () => { selectedPortfolio().lifecycle = "active"; showAll = true; renderList(); });
+          view.querySelector("[data-refresh]")?.addEventListener("click", () => { currentScenario = "active"; scenario.value = "active"; renderDetail("active", selectedId); });
+          view.querySelector("[data-verify]")?.addEventListener("click", () => { currentScenario = "active"; scenario.value = "active"; renderList(); });
+          view.querySelector("[data-rename]")?.addEventListener("click", () => renderForm("rename"));
+          view.querySelector("[data-archive]")?.addEventListener("click", () => { pendingArchive = true; renderDetail("active", selectedId); });
+          view.querySelector("[data-cancel-archive]")?.addEventListener("click", () => { pendingArchive = false; returnFocusToArchive = true; renderDetail("active", selectedId); });
+          view.querySelector("[data-confirm-archive]")?.addEventListener("click", () => {
+            const input = view.querySelector("[data-archive-name]");
+            const error = view.querySelector("#archive-error");
+            const item = selectedPortfolio();
+            if (input.value.trim() !== item.name) { error.textContent = "Digite exatamente o nome atual para confirmar."; input.focus(); return; }
+            pendingArchive = false;
+            item.lifecycle = "archived";
+            currentScenario = "archived";
+            scenario.value = "archived";
+            showAll = true;
+            renderDetail("archived");
+          });
+          const dialog = view.querySelector("[data-archive-dialog]");
+          dialog?.addEventListener("keydown", (event) => {
+            if (event.key === "Escape") { event.preventDefault(); pendingArchive = false; returnFocusToArchive = true; renderDetail("active", selectedId); return; }
+            if (event.key !== "Tab") return;
+            const focusable = [...dialog.querySelectorAll("button, input")];
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+            else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+          });
+          view.querySelectorAll("[data-surface]").forEach((button) => button.addEventListener("click", () => renderSurface(button.dataset.surface)));
+        }
+
+        scenario.addEventListener("change", () => { currentScenario = scenario.value; listFilter = "all"; pendingArchive = false; returnFocusToArchive = false; resetFixtures(); renderList(); });
+        alternative.addEventListener("change", () => { listFilter = "all"; renderList(); });
+        document.querySelector("#show-list").addEventListener("click", renderList);
+        document.querySelector("#open-deep-link").addEventListener("click", () => {
+          const value = deepLink.value.trim();
+          if (!/^\/portfolios\/[A-Za-z0-9_-]+$/.test(value)) {
+            renderNotFound();
+            return;
+          }
+          const targetId = value.slice("/portfolios/".length);
+          const target = portfolios.find((item) => item.id === targetId);
+          if (target) renderDetail(target.lifecycle, target.id);
+          else renderNotFound();
+        });
+        renderList();
+      })();
+    </script>
+  </body>
+</html>
