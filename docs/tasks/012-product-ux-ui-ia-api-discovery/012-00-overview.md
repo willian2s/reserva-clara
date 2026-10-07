@@ -34,3 +34,6 @@ handoff verificável para 013–019.
   implementação de Vite, .NET, banco, migration, endpoint ou deploy nesta fase.
 - Contratos HTTP são provisórios e congelam por slice apenas após protótipo,
   estados críticos e aceite de acessibilidade/responsividade.
+- `012-01` está `blocked`: C1 está pronto para revisão independente, mas ainda
+  não possui aceite formal. O checklist permanece sem itens concluídos e `012-02`
+  só é elegível após a remoção desse bloqueio.
