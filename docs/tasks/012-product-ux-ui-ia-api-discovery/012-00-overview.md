@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [012-product-ux-ui-ia-api-discovery.md](../../specs/012-product-ux-ui-ia-api-discovery.md)
-- **Progresso:** 7/13 subtarefas concluídas
+- **Progresso:** 8/13 subtarefas concluídas
 
 ## Objetivo
 
@@ -20,7 +20,7 @@ handoff verificável para 013–019.
 - [x] [012-05-auditar-acessibilidade-densidade-e-microcopy.md](012-05-auditar-acessibilidade-densidade-e-microcopy.md)
 - [x] [012-06-revisar-design-system-e-componentes.md](012-06-revisar-design-system-e-componentes.md)
 - [x] [012-07-prototipar-e-freezar-portfolio.md](012-07-prototipar-e-freezar-portfolio.md)
-- [ ] [012-08-decidir-lifecycle-de-asset.md](012-08-decidir-lifecycle-de-asset.md)
+- [x] [012-08-decidir-lifecycle-de-asset.md](012-08-decidir-lifecycle-de-asset.md)
 - [ ] [012-09-prototipar-transaction-e-ledger.md](012-09-prototipar-transaction-e-ledger.md)
 - [ ] [012-10-prototipar-quotes-valuation-e-dashboard.md](012-10-prototipar-quotes-valuation-e-dashboard.md)
 - [ ] [012-11-realizar-spike-frontend-e-data-layer.md](012-11-realizar-spike-frontend-e-data-layer.md)
@@ -68,3 +68,10 @@ handoff verificável para 013–019.
   capabilities provisórias. A revisão independente final foi aprovada; URLs,
   DTOs e OpenAPI continuam provisórios e a subtarefa seguinte não foi iniciada
   automaticamente.
+- `012-08` está `completed`: UX-06 e a revisão da ADR 021 congelam
+  semanticamente `assetId` estável, identidade usada imutável na edição comum,
+  retirada/reativação sem apagar histórico, deduplicação por identidade e
+  bloqueio de delete referenciado. O pacote de estados/copy e o protótipo
+  standalone usam fixtures sintéticas; a revisão independente final foi
+  aprovada. Enforcement e correção auditada ficam encaminhados a 016/018, sem
+  avançar automaticamente para `012-09`.
