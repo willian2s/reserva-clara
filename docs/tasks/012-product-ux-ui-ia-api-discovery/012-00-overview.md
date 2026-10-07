@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [012-product-ux-ui-ia-api-discovery.md](../../specs/012-product-ux-ui-ia-api-discovery.md)
-- **Progresso:** 3/13 subtarefas concluídas
+- **Progresso:** 4/13 subtarefas concluídas
 
 ## Objetivo
 
@@ -16,7 +16,7 @@ handoff verificável para 013–019.
 - [x] [012-01-confirmar-gate-e-escopo.md](012-01-confirmar-gate-e-escopo.md)
 - [x] [012-02-mapear-jornadas-e-problemas-de-produto.md](012-02-mapear-jornadas-e-problemas-de-produto.md)
 - [x] [012-03-definir-ia-navegacao-e-shell.md](012-03-definir-ia-navegacao-e-shell.md)
-- [ ] [012-04-definir-estados-sessao-e-recovery.md](012-04-definir-estados-sessao-e-recovery.md)
+- [x] [012-04-definir-estados-sessao-e-recovery.md](012-04-definir-estados-sessao-e-recovery.md)
 - [ ] [012-05-auditar-acessibilidade-densidade-e-microcopy.md](012-05-auditar-acessibilidade-densidade-e-microcopy.md)
 - [ ] [012-06-revisar-design-system-e-componentes.md](012-06-revisar-design-system-e-componentes.md)
 - [ ] [012-07-prototipar-e-freezar-portfolio.md](012-07-prototipar-e-freezar-portfolio.md)
@@ -47,3 +47,8 @@ handoff verificável para 013–019.
   history, foco, filtros, 404, retorno pós-login e host policy separada de
   autorização. O walkthrough mínimo foi exercitado no protótipo standalone,
   sem avançar automaticamente para a subtarefa seguinte.
+- `012-04` está `completed`: a taxonomia transversal e o fluxo de sessão/recovery
+  documentam último dado válido, refresh único, retry idempotente, não repetição
+  cega de writes, signOut, usuário desabilitado, offline, conflito, resultado
+  desconhecido, foco, copy e retorno interno sem loop. O tabletop foi documental,
+  com fixtures sintéticas, sem alterar código ou avançar automaticamente.
