@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [012-product-ux-ui-ia-api-discovery.md](../../specs/012-product-ux-ui-ia-api-discovery.md)
-- **Progresso:** 2/13 subtarefas concluídas
+- **Progresso:** 3/13 subtarefas concluídas
 
 ## Objetivo
 
@@ -15,7 +15,7 @@ handoff verificável para 013–019.
 
 - [x] [012-01-confirmar-gate-e-escopo.md](012-01-confirmar-gate-e-escopo.md)
 - [x] [012-02-mapear-jornadas-e-problemas-de-produto.md](012-02-mapear-jornadas-e-problemas-de-produto.md)
-- [ ] [012-03-definir-ia-navegacao-e-shell.md](012-03-definir-ia-navegacao-e-shell.md)
+- [x] [012-03-definir-ia-navegacao-e-shell.md](012-03-definir-ia-navegacao-e-shell.md)
 - [ ] [012-04-definir-estados-sessao-e-recovery.md](012-04-definir-estados-sessao-e-recovery.md)
 - [ ] [012-05-auditar-acessibilidade-densidade-e-microcopy.md](012-05-auditar-acessibilidade-densidade-e-microcopy.md)
 - [ ] [012-06-revisar-design-system-e-componentes.md](012-06-revisar-design-system-e-componentes.md)
@@ -42,3 +42,8 @@ handoff verificável para 013–019.
   walkthroughs heurísticos e decisão de Carteiras como entrada principal;
   dashboard permanece como Visão geral. A subtarefa seguinte não foi iniciada
   automaticamente.
+- `012-03` está `completed`: a IA conceitual promove Carteiras a entrada
+  autenticada, mantém Visão geral como consolidado e documenta shell, deep links,
+  history, foco, filtros, 404, retorno pós-login e host policy separada de
+  autorização. O walkthrough mínimo foi exercitado no protótipo standalone,
+  sem avançar automaticamente para a subtarefa seguinte.
