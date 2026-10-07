@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [012-product-ux-ui-ia-api-discovery.md](../../specs/012-product-ux-ui-ia-api-discovery.md)
-- **Progresso:** 5/13 subtarefas concluídas
+- **Progresso:** 6/13 subtarefas concluídas
 
 ## Objetivo
 
@@ -18,7 +18,7 @@ handoff verificável para 013–019.
 - [x] [012-03-definir-ia-navegacao-e-shell.md](012-03-definir-ia-navegacao-e-shell.md)
 - [x] [012-04-definir-estados-sessao-e-recovery.md](012-04-definir-estados-sessao-e-recovery.md)
 - [x] [012-05-auditar-acessibilidade-densidade-e-microcopy.md](012-05-auditar-acessibilidade-densidade-e-microcopy.md)
-- [ ] [012-06-revisar-design-system-e-componentes.md](012-06-revisar-design-system-e-componentes.md)
+- [x] [012-06-revisar-design-system-e-componentes.md](012-06-revisar-design-system-e-componentes.md)
 - [ ] [012-07-prototipar-e-freezar-portfolio.md](012-07-prototipar-e-freezar-portfolio.md)
 - [ ] [012-08-decidir-lifecycle-de-asset.md](012-08-decidir-lifecycle-de-asset.md)
 - [ ] [012-09-prototipar-transaction-e-ledger.md](012-09-prototipar-transaction-e-ledger.md)
@@ -57,3 +57,8 @@ handoff verificável para 013–019.
   foco, leitor de tela, contraste, 320 px e zoom de 200%, além de glossário
   financeiro aprovado. Validação manual de runtime permanece requisito dos
   protótipos 013/017–019; a subtarefa seguinte não foi iniciada automaticamente.
+- `012-06` está `completed`: o inventário e a decisão documental de design system
+  cobrem tokens, primitives, estados, componentes financeiros, boundaries de UI,
+  critérios de reuso e lacunas para 013/017/018/019. A revisão independente foi
+  aprovada; não houve alteração de produção, escolha de biblioteca por hábito ou
+  avanço automático para 012-07.
