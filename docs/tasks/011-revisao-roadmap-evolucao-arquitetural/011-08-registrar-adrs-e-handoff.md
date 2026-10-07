@@ -102,9 +102,10 @@ para as fases 012–016.
 A subtarefa consolidou as quinze decisões da spec em ADRs `007`–`021`, revisou
 as ADRs históricas sem antecipar `superseded`, reconciliou o roadmap canônico e
 produziu o handoff para 012–016. A 011 continua exclusivamente documental: C0
-  tem aceitação restrita a dev/testes, C1 está pronto para revisão independente e
-  C2–C11 permanecem gates futuros. O planejamento da 012 é elegível agora; sua
-  execução começa após o aceite independente de C1.
+tem aceitação restrita a dev/testes, C1 foi aceito formalmente em 2026-10-07 e
+C2–C11 permanecem gates futuros. O planejamento e a execução documental da 012
+são elegíveis sob as condições de C0; nenhuma execução de subtarefa foi
+avançada automaticamente.
 
 ### Arquivos alterados
 

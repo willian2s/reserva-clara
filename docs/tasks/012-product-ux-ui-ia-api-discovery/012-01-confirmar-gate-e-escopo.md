@@ -2,7 +2,7 @@
 
 - **Ticker:** `012`
 - **Número:** `01`
-- **Status:** `blocked`
+- **Status:** `completed`
 
 ## Objetivo e resultado esperado
 
@@ -57,23 +57,33 @@ staging/produção e não tratar ADRs `proposed` como decisões implementadas.
 
 ### Status e resultado
 
-`blocked` — o gate C1 está documentalmente pronto para revisão independente,
-mas não há aceite formal independente neste checkout. C0 foi confirmado como
-ativo somente em dev/testes com dados sintéticos/descartáveis. A execução de
-UX-01 e das demais experiências da 012 permanece bloqueada até o aceite de C1.
+`completed` — o gate C1 foi aceito formalmente após revisão independente do
+subagente `review`, em 2026-10-07. A revisão cobriu o handoff 011, a coerência
+entre spec, ADRs, gates, riscos e roadmap, e confirmou que C0 permanece ativo
+somente em dev/testes com dados sintéticos/descartáveis. C2–C11 não foram
+declarados executados e as ADRs `proposed` não foram promovidas.
 
 ### Arquivos alterados
 
 - `docs/architecture/012/decision-matrix.md` — matriz de gate, limites de C0,
   classificações de decisão, evidências, freeze, owners e bloqueios.
 - este arquivo — status, resultado, evidências, decisões, validações e riscos.
-- `docs/tasks/012-product-ux-ui-ia-api-discovery/012-00-overview.md` —
-  observação do bloqueio; checklist e progresso permanecem inalterados.
+- `docs/tasks/012-product-ux-ui-ia-api-discovery/012-00-overview.md` — checklist,
+  progresso e observações atualizados para registrar a conclusão de `012-01`.
+- `docs/tasks/012-product-ux-ui-ia-api-discovery/012-02-mapear-jornadas-e-problemas-de-produto.md`
+  — normalização administrativa para `pending`; UX-01 foi executado
+  posteriormente em uma seleção explícita da subtarefa.
+- `docs/architecture/011/adr-register-and-handoff.md` e
+  `docs/roadmap/reserva-clara-roadmap.md` — estado corrente de C1 alinhado ao
+  aceite formal, mantendo C2–C11 pendentes.
+- `docs/tasks/011-revisao-roadmap-evolucao-arquitetural/011-00-overview.md` e
+  `011-08-registrar-adrs-e-handoff.md` — snapshots de handoff alinhados ao
+  estado corrente de C1.
 
 ### Decisões e desvios
 
-- C1 não foi promovido a aceito: o handoff 011 afirma apenas “pronto para
-  revisão independente”.
+- C1 foi promovido a aceito somente após a revisão independente formal, sem
+  tratar “pronto para revisão” como aceite automático.
 - C0 permanece restrito a dev/testes, fixtures sintéticas/descartáveis e owner
   maintainer; staging, produção, dados reais, migração, deploy e cutover ficam
   fora.
@@ -82,8 +92,10 @@ UX-01 e das demais experiências da 012 permanece bloqueada até o aceite de C1.
   frontend continuam dependentes de evidência da 012.
 - URLs, DTOs, OpenAPI, schema e implementação foram deferidos; nenhuma ADR
   `proposed` foi tratada como decisão implementada.
-- Desvio operacional: a subtarefa não libera a próxima tarefa porque o critério
-  de entrada independente de C1 ainda não foi satisfeito.
+- A próxima subtarefa elegível é `012-02`; ela não foi iniciada automaticamente
+  nesta entrega.
+- A normalização do status de `012-02` não executou a subtarefa nem alterou seu
+  checklist; apenas removeu o bloqueio de dependência já resolvido.
 
 ### Comandos executados e resultados
 
@@ -91,10 +103,14 @@ UX-01 e das demais experiências da 012 permanece bloqueada até o aceite de C1.
   spec, overview, 13 subtarefas, AGENTS.md, roadmap, handoff 011 e ADRs
   relevantes.
 - Conferência manual da seção `## Checklist` — passou: existe uma única seção
-  no overview, com 13 itens, um por subtarefa, todos ainda `[ ]`.
-- Conferência documental de status e dependências — passou; C1 ficou explícito
-  como `blocked`, sem aceite fictício.
+  no overview, com 13 itens, um por subtarefa; `012-01` e `012-02` estão `[x]`.
+- Conferência documental de status e dependências — passou; C1 está aceito com
+  condições explícitas, sem promover ADRs ou gates posteriores.
 - `git diff --check` — passou.
+- Revisão independente `review` — o primeiro apontamento bloqueou a
+  formalização por falta de revisor, data, escopo e condições; os metadados
+  foram então registrados nesta execução. O follow-up confirmou os metadados e
+  apontou apenas normalizações documentais de estado corrente, aplicadas abaixo.
 - Primeira validação inline de contagem — falhou por incluir o arquivo de
   overview na glob de subtarefas; foi um erro do verificador, não do conteúdo.
   O comando foi corrigido para excluir `012-00-overview.md`.
@@ -105,21 +121,20 @@ UX-01 e das demais experiências da 012 permanece bloqueada até o aceite de C1.
 
 ### Resultados e evidências
 
-- A matriz documenta C0 ativo e C1 pronto para revisão, mas não aceito.
+- A matriz documenta C0 ativo e C1 aceito formalmente, com revisor, data,
+  escopo, evidências e condições explícitas.
 - A matriz separa preservar, experimentar, decidir na 012 e deferir, com owner
   e evidência de saída para cada grupo.
 - Os limites de dados e ambientes impedem usar dados reais ou executar writes
   patrimoniais fora de C0.
 - Os critérios de freeze exigem protótipo, estados críticos, a11y,
   responsividade, erros, retry, dependências e decisões abertas por slice.
-- Revisão independente `review` — **APROVADO**, sem bloqueadores ou achados;
-  confirmou ticker, checklist 0/13, C0 restrito, C1 sem aceite fictício,
-  owners, evidências, bloqueios, freeze e ausência de escopo produtivo.
+- Revisão independente `review` — a análise documental confirmou a coerência do
+  handoff e do C0; após o registro formal dos metadados, o aceite foi concluído
+  sem promover ADRs ou declarar gates posteriores.
 
 ### Riscos residuais e bloqueios
 
-- **Bloqueio atual:** falta registrar o aceite independente de C1 com revisor,
-  escopo, evidência, data e condições.
 - A fragilidade histórica de `SELL` continua aceita somente no C0 restrito; não
   foi exercitada nem corrigida nesta subtarefa.
 - Não há pesquisa com usuários reais; decisões de Produto/UX dependerão de
@@ -129,8 +144,8 @@ UX-01 e das demais experiências da 012 permanece bloqueada até o aceite de C1.
 
 ### Handoff
 
-- Após o aceite independente de C1, a próxima subtarefa é `012-02`, para UX-01,
-  mantendo a restrição de C0.
+- A próxima subtarefa elegível é `012-02`, para UX-01, mantendo a restrição de
+  C0.
 - `012-03` em diante não deve ser iniciada automaticamente nesta entrega.
 - A 013 pode preparar somente tooling não acoplado, sem congelar capacidades,
   DTOs ou contratos que a 012 ainda possa alterar.

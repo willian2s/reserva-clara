@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [012-product-ux-ui-ia-api-discovery.md](../../specs/012-product-ux-ui-ia-api-discovery.md)
-- **Progresso:** 0/13 subtarefas concluídas
+- **Progresso:** 2/13 subtarefas concluídas
 
 ## Objetivo
 
@@ -13,8 +13,8 @@ handoff verificável para 013–019.
 
 ## Checklist
 
-- [ ] [012-01-confirmar-gate-e-escopo.md](012-01-confirmar-gate-e-escopo.md)
-- [ ] [012-02-mapear-jornadas-e-problemas-de-produto.md](012-02-mapear-jornadas-e-problemas-de-produto.md)
+- [x] [012-01-confirmar-gate-e-escopo.md](012-01-confirmar-gate-e-escopo.md)
+- [x] [012-02-mapear-jornadas-e-problemas-de-produto.md](012-02-mapear-jornadas-e-problemas-de-produto.md)
 - [ ] [012-03-definir-ia-navegacao-e-shell.md](012-03-definir-ia-navegacao-e-shell.md)
 - [ ] [012-04-definir-estados-sessao-e-recovery.md](012-04-definir-estados-sessao-e-recovery.md)
 - [ ] [012-05-auditar-acessibilidade-densidade-e-microcopy.md](012-05-auditar-acessibilidade-densidade-e-microcopy.md)
@@ -29,11 +29,16 @@ handoff verificável para 013–019.
 
 ## Observações
 
-- A execução começa por `012-01` somente após o aceite independente de C1.
+- O aceite independente de C1 está registrado; UX-01 foi executado em `012-02`
+  com dados sintéticos e sem writes patrimoniais.
 - C0 permanece limitado a dev/testes e dados sintéticos/descartáveis; não há
   implementação de Vite, .NET, banco, migration, endpoint ou deploy nesta fase.
 - Contratos HTTP são provisórios e congelam por slice apenas após protótipo,
   estados críticos e aceite de acessibilidade/responsividade.
-- `012-01` está `blocked`: C1 está pronto para revisão independente, mas ainda
-  não possui aceite formal. O checklist permanece sem itens concluídos e `012-02`
-  só é elegível após a remoção desse bloqueio.
+- `012-01` está `completed`: C1 foi aceito formalmente em 2026-10-07 por
+  revisão independente do subagente `review`, com C0 restrito a dev/testes e
+  dados sintéticos/descartáveis.
+- `012-02` está `completed`: UX-01 foi documentado com fixtures sintéticas,
+  walkthroughs heurísticos e decisão de Carteiras como entrada principal;
+  dashboard permanece como Visão geral. A subtarefa seguinte não foi iniciada
+  automaticamente.

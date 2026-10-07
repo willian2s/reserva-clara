@@ -2,7 +2,7 @@
 
 - **Ticker:** `012`
 - **Subtarefa de origem:** `012-01`
-- **Estado:** `blocked` até o aceite independente de C1
+- **Estado:** C1 aceito; C0 permanece ativo e limitado
 - **Escopo:** discovery documental e prototipação progressiva; nenhum dado real,
   write patrimonial fora de C0 ou contrato HTTP definitivo
 
@@ -11,12 +11,12 @@
 | Gate | Estado nesta subtarefa | Evidência disponível | Owner | Condição de saída/bloqueio |
 | --- | --- | --- | --- | --- |
 | C0 — risco atual contido | **ativo e limitado** | Aceitação A em dev/testes, somente com dados sintéticos/descartáveis; sem writes patrimoniais em staging/produção ou dados reais | maintainer do projeto | Sair antes do primeiro usuário ativo, dado real, avanço para staging/produção ou cutover; o backend novo não pode copiar a fragilidade do SDK |
-| C1 — discovery fechado | **pronto para revisão independente; não aceito** | `docs/architecture/011/adr-register-and-handoff.md` consolida inventários, ERD, threat model, ADRs, testes, ambientes, migração e handoff | revisor independente designado pelo maintainer/release | Registrar aceite formal, com escopo da revisão e evidências, antes de executar UX-01 ou qualquer experimento da 012 |
+| C1 — discovery fechado | **aceito formalmente em 2026-10-07** | Revisão independente do subagente `review` confirmou o handoff 011 e a coerência entre spec, ADRs, gates, riscos e roadmap | subagente independente `review` | C1 liberado; manter C0 restrito, não promover ADRs `proposed` e não declarar C2–C11 executados |
 
-O baseline documental da 011 está concluído, mas “pronto para revisão” não é
-aceite operacional. A subtarefa permanece `blocked` porque não há, neste
-checkout, evidência independente de aceite de C1. O planejamento pode ser
-preparado; a execução da descoberta começa somente depois desse aceite.
+O baseline documental da 011 foi revisado independentemente para a entrada da
+012. O aceite libera o planejamento experimental da fase, sempre dentro de C0;
+nenhuma ADR `proposed`, contrato final ou gate posterior é promovido por este
+registro.
 
 ### Evidência mínima para aceitar C1
 
@@ -26,6 +26,19 @@ preparado; a execução da descoberta começa somente depois desse aceite.
    dev/testes.
 3. O aceite identifica revisor, data, evidência consultada e eventuais
    condições; não promove ADR `proposed` nem declara C2–C11 executados.
+
+### Registro do aceite independente
+
+- **Revisor:** subagente independente `review`.
+- **Data:** 2026-10-07.
+- **Escopo:** gate C1 da fase 012, incluindo handoff 011, spec, ADRs, gates,
+  riscos, roadmap e limites de C0.
+- **Evidências consultadas:** `adr-register-and-handoff.md`,
+  `frontend-ux-contract-discovery.md`, spec 012, esta matriz, overview 012 e
+  roadmap canônico.
+- **Condições:** somente fixtures sintéticas e dados descartáveis em dev/testes;
+  sem dados reais, writes fora de C0, migração, deploy ou cutover; ADRs
+  `proposed` permanecem propostas; C2–C11 permanecem pendentes.
 
 ## 2. Dados permitidos e limites operacionais
 
@@ -83,9 +96,9 @@ demais e não transforma ADRs `proposed` em decisões implementadas.
 
 | Item | Dependência | Estado | Ação necessária |
 | --- | --- | --- | --- |
-| Entrada operacional da 012 | Aceite independente de C1 | **Bloqueado** | Designar revisor, executar revisão e registrar aceite formal |
+| Entrada operacional da 012 | Aceite independente de C1 | **Liberado com condições** | Manter C0 restrito e iniciar UX-01 pela `012-02` |
 | Preparação documental desta subtarefa | Spec 012, handoff 011 e roadmap canônico | Disponível | Manter a matriz vinculada a esses documentos |
-| Execução de UX-01 | C1 aceito e C0 respeitado | **Não elegível ainda** | Iniciar 012-02 somente após remover o bloqueio |
+| Execução de UX-01 | C1 aceito e C0 respeitado | **Elegível** | Executar `012-02` somente quando selecionada; não congelar API por inércia |
 | 013 em paralelo | Apenas tooling que não congele decisões da 012 | Permitido com limite | Não criar feature patrimonial nem promover contrato provisório |
 | 012-13 | Evidências das 012-01 a 012-12 e C1 aceito | Futuro | Consolidar somente após todas as dependências |
 
