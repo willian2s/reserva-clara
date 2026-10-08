@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reserva Clara — protótipo de valuation e dashboard</title>
+    <style>
+      :root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; }
+      body { margin: 0; background: #f7f7f5; color: #20231f; }
+      header, main { max-width: 68rem; margin: auto; padding: 1rem; }
+      header { display: flex; flex-wrap: wrap; gap: .8rem 1rem; align-items: center; border-bottom: 1px solid #d7d9d2; }
+      header strong { margin-right: auto; }
+      nav, .actions, .controls { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+      a, button, select { border: 1px solid #8c9387; border-radius: .35rem; background: white; color: inherit; padding: .55rem .8rem; font: inherit; }
+      button, a { cursor: pointer; text-decoration: none; }
+      button.primary { background: #245c42; border-color: #245c42; color: white; }
+      a:focus-visible, button:focus-visible, select:focus-visible { outline: 3px solid #255db4; outline-offset: 2px; }
+      main { padding-block: 1.5rem 3rem; }
+      .panel { margin-block: 1rem; padding: 1rem; background: white; border: 1px solid #d7d9d2; border-radius: .5rem; }
+      .panel > :first-child { margin-top: 0; }
+      .panel > :last-child { margin-bottom: 0; }
+      .grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .cards { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card { display: grid; gap: .65rem; padding: 1rem; border: 1px solid #b9beb5; border-radius: .45rem; }
+      .card h2, .card h3 { margin: 0; overflow-wrap: anywhere; }
+      .metric { font-size: 1.65rem; font-weight: 700; overflow-wrap: anywhere; }
+      .muted { color: #5d655a; }
+      .status { border-left: .3rem solid #3d7045; padding: .65rem .8rem; background: #edf6ed; }
+      .warning { border-left-color: #a36c00; background: #fff7df; }
+      .error { border-left-color: #aa3434; background: #fff0f0; }
+      .status:focus, h1:focus, h2:focus { outline: 3px solid #255db4; outline-offset: 2px; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+      .meta { display: flex; flex-wrap: wrap; gap: .5rem 1rem; margin: 0; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: .65rem .5rem; border-top: 1px solid #d7d9d2; text-align: left; vertical-align: top; }
+      th:not(:first-child), td:not(:first-child) { text-align: right; }
+      .tag { display: inline-block; border: 1px solid #8c9387; border-radius: 99rem; padding: .1rem .5rem; font-size: .85rem; }
+      .diagnostics { border-top: 1px solid #d7d9d2; padding-top: .8rem; }
+      @media (max-width: 46rem) {
+        header strong { flex-basis: 100%; }
+        .grid, .cards { grid-template-columns: 1fr; }
+        .controls > *, .actions > * { flex: 1 1 100%; }
+        a, button, select { min-height: 2.75rem; box-sizing: border-box; }
+        table, thead, tbody, tr, th, td { display: block; }
+        thead { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+        tr { border-top: 1px solid #d7d9d2; padding: .75rem 0; }
+        th, td { min-width: 0; border-top: 0; padding: .2rem 0; text-align: left !important; }
+        td::before { display: inline; margin-right: .35rem; font-weight: 600; }
+        td:nth-child(2)::before { content: "Valor atual: "; }
+        td:nth-child(3)::before { content: "Custo: "; }
+        td:nth-child(4)::before { content: "Quantidade: "; }
+        td:nth-child(5)::before { content: "Participação: "; }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="#content" class="sr-only" onfocus="this.classList.remove('sr-only')" onblur="this.classList.add('sr-only')">Pular para conteúdo</a>
+    <header>
+      <strong>Reserva Clara</strong>
+      <nav aria-label="Navegação principal"><a href="#" aria-current="page">Visão geral</a><a href="#">Carteiras</a><a href="#">Ativos</a></nav>
+      <button type="button">Sair</button>
+    </header>
+    <main id="content" tabindex="-1">
+      <section class="panel" aria-labelledby="prototype-title">
+        <h2 id="prototype-title">Controles do protótipo de valuation e dashboard</h2>
+        <p class="muted">Artefato independente. Toda mudança é local e usa fixtures sintéticas; nada é enviado ou persistido.</p>
+        <div class="controls" aria-label="Controles do protótipo">
+          <label>Superfície <select id="surface"><option value="global">Visão geral</option><option value="detail">Detalhe da carteira</option></select></label>
+          <label>Cenário <select id="scenario">
+            <option value="ready">F-READY — leitura completa</option>
+            <option value="partial">F-PARTIAL — leitura parcial</option>
+            <option value="stale">F-STALE — cotação desatualizada</option>
+            <option value="timeout">F-TIMEOUT — timeout</option>
+            <option value="rate">F-RATE-LIMITED — limite temporário</option>
+            <option value="currency">F-CURRENCY — moeda incompatível</option>
+            <option value="portfolio">F-PORTFOLIO-UNAVAILABLE — carteira indisponível</option>
+            <option value="archived">F-ARCHIVED — arquivada</option>
+            <option value="refresh">F-REFRESH — refresh com snapshot</option>
+          </select></label>
+          <button type="button" id="render-button">Mostrar cenário</button>
+        </div>
+      </section>
+      <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+      <section id="view"></section>
+    </main>
+    <script>
+      (() => {
+        const view = document.querySelector("#view");
+        const announcer = document.querySelector("#announcer");
+        const surface = document.querySelector("#surface");
+        const scenario = document.querySelector("#scenario");
+        let currentSurface = "global";
+        let currentScenario = "ready";
+        let selectedPortfolio = "clara";
+        let isRefreshing = false;
+        let focusStatus = false;
+
+        const esc = (value) => String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+        const focusTarget = () => document.querySelector(focusStatus ? "[data-status-focus]" : "[data-focus]")?.focus();
+        const money = (value, currency = "BRL") => value === null ? "Não disponível" : `${currency === "BRL" ? "R$" : currency} ${value}`;
+
+        const positions = [
+          { symbol: "CLRA3", market: "B3", quantity: "100", value: "8.300,00", cost: "7.000,00", allocation: "61,94%", quote: "fresh", currency: "BRL" },
+          { symbol: "AURORA11", market: "B3", quantity: "50", value: "5.100,00", cost: "4.200,00", allocation: "38,06%", quote: "fresh", currency: "BRL" },
+        ];
+
+        function dataFor(kind = currentScenario, portfolio = selectedPortfolio, scope = "detail") {
+          const isGlobal = scope === "global";
+          const rows = isGlobal
+            ? positions.map((row) => ({ ...row }))
+            : portfolio === "aurora"
+            ? [{ symbol: "AURORA11", market: "B3", quantity: "50", value: "5.100,00", cost: "4.200,00", allocation: "100%", quote: "fresh", currency: "BRL" }]
+            : [{ ...positions[0], allocation: "100%" }];
+          const data = isGlobal
+            ? { state: "ready", total: "13.400,00", cost: "11.200,00", costStatus: "completo", currency: "BRL", gaps: [], quote: { requested: 2, fresh: 2, stale: 0, unavailable: 0, incompatible: 0 }, note: "Leitura completa para este escopo." }
+            : portfolio === "aurora"
+            ? { state: "ready", total: "5.100,00", cost: "4.200,00", costStatus: "completo", currency: "BRL", gaps: [], quote: { requested: 1, fresh: 1, stale: 0, unavailable: 0, incompatible: 0 }, note: "Leitura completa para este escopo." }
+            : { state: "ready", total: "8.300,00", cost: "7.000,00", costStatus: "completo", currency: "BRL", gaps: [], quote: { requested: 1, fresh: 1, stale: 0, unavailable: 0, incompatible: 0 }, note: "Leitura completa para este escopo." };
+          if (kind === "partial" || kind === "timeout" || kind === "rate") {
+            const unavailableIndex = rows.length > 1 ? 1 : 0;
+            rows[unavailableIndex] = { ...rows[unavailableIndex], value: null, allocation: "—", quote: "unavailable" };
+            data.state = "partial";
+            data.total = isGlobal ? "8.300,00" : null;
+            data.quote = { requested: rows.length, fresh: rows.filter((row) => row.quote === "fresh").length, stale: 0, unavailable: 1, incompatible: 0 };
+            data.gaps = [{ label: rows[unavailableIndex].symbol, reason: kind === "timeout" ? "A cotação demorou demais e está indisponível." : kind === "rate" ? "A cotação está temporariamente indisponível." : "Cotação indisponível; este item ficou fora do patrimônio conhecido." }];
+            data.note = "Patrimônio conhecido; alguns dados ainda não estão disponíveis.";
+          }
+          if (kind === "stale") {
+            rows.forEach((row) => { row.quote = "stale"; });
+            data.state = "stale";
+            data.quote = { requested: rows.length, fresh: 0, stale: rows.length, unavailable: 0, incompatible: 0 };
+            data.note = "Última atualização em 08/10/2026 09:40 (fixture). Esses dados podem estar desatualizados.";
+          }
+          if (kind === "currency") {
+            const incompatibleIndex = rows.length > 1 ? 1 : 0;
+            rows[incompatibleIndex] = { ...rows[incompatibleIndex], value: "1.200,00", currency: "USD", allocation: "—", quote: "currency" };
+            data.state = "partial";
+            data.total = isGlobal ? "8.300,00" : null;
+            data.cost = isGlobal ? "7.000,00" : null;
+            data.costStatus = "parcial";
+            data.quote = { requested: rows.length, fresh: rows.filter((row) => row.quote === "fresh").length, stale: 0, unavailable: 0, incompatible: 1 };
+            data.gaps = [{ label: rows[incompatibleIndex].symbol, reason: "Moeda incompatível; este item ficou fora do patrimônio conhecido." }];
+            data.note = "Patrimônio conhecido; não há conversão cambial nesta visão.";
+          }
+          if (kind === "portfolio") {
+            data.state = "partial";
+            data.total = "8.300,00";
+            data.cost = "7.000,00";
+            data.costStatus = "parcial";
+            data.quote = { requested: 1, fresh: 1, stale: 0, unavailable: 0, incompatible: 0 };
+            data.gaps = [{ label: "Carteira Aurora", reason: "Não foi possível ler esta carteira; seu valor não foi estimado como zero." }];
+            data.note = "Patrimônio conhecido; uma carteira ativa não está disponível nesta leitura.";
+            rows.splice(1, 1);
+          }
+          if (kind === "archived") {
+            return {
+              state: "ready",
+              total: "12.000,00",
+              cost: "9.500,00",
+              costStatus: "completo",
+              currency: "BRL",
+              gaps: [],
+              quote: { requested: 1, fresh: 1, stale: 0, unavailable: 0, incompatible: 0 },
+              note: "Leitura corrente da carteira arquivada; o histórico permanece disponível.",
+              rows: [{ symbol: "RESV11", market: "B3", quantity: "80", value: "12.000,00", cost: "9.500,00", allocation: "100%", quote: "fresh", currency: "BRL" }],
+            };
+          }
+          return { ...data, rows };
+        }
+
+        function statusBanner(data, scope) {
+          if (isRefreshing) return `<section class="status" data-status-focus tabindex="-1"><strong>Atualizando ${scope}.</strong><p>A última leitura continua visível enquanto esta atualização termina.</p></section>`;
+          if (data.state === "partial") return `<section class="status warning" data-status-focus tabindex="-1"><strong>Patrimônio conhecido; alguns dados ainda não estão disponíveis.</strong><p>${esc(data.note)}</p><button type="button" data-refresh>Atualizar ${scope}</button></section>`;
+          if (data.state === "stale") return `<section class="status warning" data-status-focus tabindex="-1"><strong>Dados desatualizados (stale).</strong><p>${esc(data.note)}</p><button type="button" data-refresh>Atualizar ${scope}</button></section>`;
+          return `<section class="status" data-status-focus tabindex="-1"><strong>Leitura pronta.</strong><p>${esc(data.note)}</p></section>`;
+        }
+
+        function amountCard(title, value, status, description) {
+          const rendered = value === null ? "Não disponível" : money(value);
+          return `<article class="card"><h2>${esc(title)}</h2><p class="tag">${esc(status)}</p><p class="metric" aria-label="${esc(title)}: ${esc(rendered)}">${esc(rendered)}</p><p class="muted">${esc(description)}</p></article>`;
+        }
+
+        function coverageCard(data) {
+          const label = data.quote.incompatible ? "Há moeda incompatível" : data.quote.unavailable ? "Cobertura de cotações mista" : data.quote.stale ? "Cotações desatualizadas" : "Cotações atualizadas";
+          return `<article class="card"><h2>Cobertura das cotações</h2><p class="tag">${label}</p><dl class="meta"><div><dt>Solicitadas</dt><dd><strong>${data.quote.requested}</strong></dd></div><div><dt>Atualizadas</dt><dd><strong>${data.quote.fresh}</strong></dd></div><div><dt>Desatualizadas</dt><dd><strong>${data.quote.stale}</strong></dd></div><div><dt>Indisponíveis</dt><dd><strong>${data.quote.unavailable}</strong></dd></div><div><dt>Moeda incompatível</dt><dd><strong>${data.quote.incompatible}</strong></dd></div></dl><p class="muted">Conta ativos consultados; não é percentual do patrimônio nem garantia de preço. Moeda incompatível é composição, não cotação indisponível.</p></article>`;
+        }
+
+        function positionTable(rows) {
+          return `<section class="panel" aria-labelledby="positions-title"><h2 id="positions-title">Posições abertas</h2><table><caption class="sr-only">Posições abertas, valores conhecidos e custos</caption><thead><tr><th scope="col">Ativo</th><th scope="col">Valor atual</th><th scope="col">Custo de aquisição remanescente</th><th scope="col">Quantidade</th><th scope="col">Participação conhecida</th></tr></thead><tbody>${rows.map((row) => {
+            const value = row.value === null ? "Indisponível" : money(row.value, row.currency);
+            const diagnostic = row.quote === "stale" ? "Cotação desatualizada" : row.quote === "currency" ? "Moeda incompatível; fora do patrimônio conhecido" : row.quote === "unavailable" ? "Cotação indisponível; fora do patrimônio conhecido" : "Cotação atualizada";
+            return `<tr><th scope="row">${esc(row.symbol)}<br><span class="muted">${esc(row.market)} · ${esc(row.currency)}</span></th><td>${esc(value)}<br><span class="muted">${diagnostic}</span></td><td>${money(row.cost, row.currency)}</td><td>${esc(row.quantity)}</td><td>${esc(row.allocation)}</td></tr>`;
+          }).join("")}</tbody></table></section>`;
+        }
+
+        function gaps(data) {
+          if (!data.gaps.length) return "";
+          return `<section class="panel diagnostics" aria-labelledby="gaps-title"><h2 id="gaps-title">O que ficou fora do patrimônio conhecido</h2><ul>${data.gaps.map((gap) => `<li><strong>${esc(gap.label)}</strong>: ${esc(gap.reason)} Não foi considerado zero.</li>`).join("")}</ul></section>`;
+        }
+
+        function refreshButton(scope) {
+          return `<button type="button" class="primary" data-refresh aria-busy="${isRefreshing}">${isRefreshing ? "Atualizando..." : `Atualizar ${scope}`}</button>`;
+        }
+
+        function renderGlobal() {
+          const globalScenario = currentScenario === "archived" ? "ready" : currentScenario;
+          const data = dataFor(globalScenario, "clara", "global");
+          const unavailablePortfolio = currentScenario === "portfolio" ? `<div class="panel status warning"><h2>Carteira Aurora indisponível</h2><p>Não foi possível ler esta carteira; seu valor não foi estimado como zero.</p><a href="#" data-open-detail data-portfolio="aurora">Abrir detalhe e tentar novamente</a></div>` : "";
+          const archivedNote = `<p class="muted">Escopo: carteiras ativas. Carteiras arquivadas continuam legíveis no detalhe, mas não entram neste consolidado.</p>`;
+          const distribution = `<section id="carteiras" class="panel" aria-labelledby="distribution-title"><h2 id="distribution-title">Distribuição das carteiras ativas</h2><p class="muted">Valores por carteira dentro do patrimônio conhecido; não são performance.</p><ul><li><a href="#" data-detail data-portfolio="clara">Carteira Clara</a> — ${money(data.total === "8.300,00" ? "8.300,00" : "8.300,00")}</li><li><a href="#" data-detail data-portfolio="aurora">Carteira Aurora</a> — ${data.state === "partial" ? "Parcial / valor não disponível" : money("5.100,00")}</li></ul></section>`;
+          const title = currentScenario === "portfolio" ? "Visão geral parcial" : "Patrimônio das carteiras ativas";
+          view.innerHTML = `<section class="panel"><h1 data-focus tabindex="-1">${title}</h1><p>Resumo consolidado para leitura; Carteiras continua sendo o workspace principal.</p>${statusBanner(data, "o patrimônio das carteiras")}${archivedNote}<div class="actions">${refreshButton("o patrimônio das carteiras")}<a href="#carteiras">Abrir Carteiras</a></div></section><div class="cards">${amountCard("Patrimônio conhecido", data.total, data.state === "ready" ? "completo" : data.state, "Soma de cotações conhecidas na moeda-base; lacunas permanecem explícitas.")}${amountCard("Custo de aquisição remanescente", data.cost, data.costStatus, "Custo derivado das posições abertas; não representa aporte nem performance.")}</div>${distribution}${unavailablePortfolio}<section class="panel"><h2>Resumo das posições abertas</h2>${positionTable(data.rows)}</section>${coverageCard(data)}${gaps(data)}<section class="panel"><p class="muted">Sem performance histórica disponível nesta visão. Não há série de snapshots para calcular retorno, rentabilidade ou ganho.</p></section>`;
+          bindActions();
+        }
+
+        function renderDetail() {
+          const effectivePortfolio = currentScenario === "archived" ? "archived" : selectedPortfolio;
+          const archived = effectivePortfolio === "archived";
+          const data = archived ? dataFor("archived", "archived", "detail") : dataFor(currentScenario, effectivePortfolio, "detail");
+          if (currentScenario === "portfolio") {
+            view.innerHTML = `<section class="panel status error" role="alert" data-status-focus tabindex="-1"><h1>Carteira indisponível</h1><p>Não foi possível ler esta carteira. Seu valor não foi estimado como zero.</p><div class="actions"><button type="button" data-refresh>Tentar novamente nesta carteira</button><a href="#" data-global>Voltar para Visão geral</a></div></section>`;
+            bindActions();
+            return;
+          }
+          const detailName = effectivePortfolio === "aurora" ? "Carteira Aurora" : archived ? "Reserva de longo prazo" : "Carteira Clara";
+          const lifecycle = archived ? `<section class="status warning"><strong>Carteira arquivada · somente leitura</strong><p>O histórico continua disponível. Registrar operação não está disponível enquanto a carteira estiver arquivada.</p><button type="button">Restaurar carteira</button></section>` : "";
+          const operation = archived ? "" : `<a class="primary" href="#">Registrar operação</a>`;
+          view.innerHTML = `<section class="panel"><p><a href="#" data-global>← Voltar para Visão geral</a></p><h1 data-focus tabindex="-1">${detailName}</h1><p class="muted">Carteira ${archived ? "arquivada" : "ativa"} · moeda-base BRL · leitura corrente derivada do ledger</p>${lifecycle}${statusBanner(data, "o patrimônio desta carteira")}<div class="actions">${refreshButton("o patrimônio desta carteira")}${operation}<a href="#">Histórico de operações</a></div></section><div class="cards">${amountCard("Patrimônio conhecido", data.total, data.state === "ready" ? "completo" : data.state, "Soma de valores correntes conhecidos; não é performance.")}${amountCard("Custo de aquisição remanescente", data.cost, data.costStatus, "Custo das posições abertas; aporte e patrimônio são conceitos diferentes.")}</div>${positionTable(data.rows)}${coverageCard(data)}${gaps(data)}<section class="panel"><p class="muted">Sem performance histórica disponível nesta visão. Cotação é uma leitura externa, não uma garantia de preço.</p></section>`;
+          bindActions();
+        }
+
+        function bindActions() {
+          view.querySelectorAll("[data-refresh]").forEach((button) => button.addEventListener("click", () => {
+            if (isRefreshing) return;
+            isRefreshing = true;
+            focusStatus = true;
+            render();
+            window.setTimeout(() => { isRefreshing = false; if (currentScenario === "refresh") currentScenario = "ready"; scenario.value = currentScenario; focusStatus = true; render(); }, 700);
+          }));
+          view.querySelectorAll("[data-detail], [data-open-detail]").forEach((link) => link.addEventListener("click", (event) => { event.preventDefault(); selectedPortfolio = link.dataset.portfolio || "clara"; currentSurface = "detail"; surface.value = "detail"; render(); }));
+          view.querySelectorAll("[data-global]").forEach((link) => link.addEventListener("click", (event) => { event.preventDefault(); currentSurface = "global"; surface.value = "global"; render(); }));
+        }
+
+        function render() {
+          currentSurface === "global" ? renderGlobal() : renderDetail();
+          const globalScenario = currentScenario === "archived" ? "ready" : currentScenario;
+          const data = currentSurface === "global"
+            ? dataFor(globalScenario, "clara", "global")
+            : (selectedPortfolio === "archived" || currentScenario === "archived" ? dataFor("archived", "archived", "detail") : dataFor(currentScenario, selectedPortfolio, "detail"));
+          announcer.textContent = isRefreshing
+            ? `Atualizando ${currentSurface === "global" ? "o patrimônio das carteiras" : "o patrimônio desta carteira"}.`
+            : data.state === "partial"
+              ? "Patrimônio conhecido; alguns dados ainda não estão disponíveis."
+              : data.state === "stale"
+                ? "Dados desatualizados; consulte o horário e atualize o escopo."
+                : "Leitura pronta.";
+          focusTarget();
+          focusStatus = false;
+        }
+
+        surface.addEventListener("change", () => { currentSurface = surface.value; render(); });
+        scenario.addEventListener("change", () => { currentScenario = scenario.value; isRefreshing = false; render(); });
+        document.querySelector("#render-button").addEventListener("click", render);
+        render();
+      })();
+    </script>
+  </body>
+</html>

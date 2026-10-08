@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [012-product-ux-ui-ia-api-discovery.md](../../specs/012-product-ux-ui-ia-api-discovery.md)
-- **Progresso:** 9/13 subtarefas concluídas
+- **Progresso:** 10/13 subtarefas concluídas
 
 ## Objetivo
 
@@ -22,7 +22,7 @@ handoff verificável para 013–019.
 - [x] [012-07-prototipar-e-freezar-portfolio.md](012-07-prototipar-e-freezar-portfolio.md)
 - [x] [012-08-decidir-lifecycle-de-asset.md](012-08-decidir-lifecycle-de-asset.md)
 - [x] [012-09-prototipar-transaction-e-ledger.md](012-09-prototipar-transaction-e-ledger.md)
-- [ ] [012-10-prototipar-quotes-valuation-e-dashboard.md](012-10-prototipar-quotes-valuation-e-dashboard.md)
+- [x] [012-10-prototipar-quotes-valuation-e-dashboard.md](012-10-prototipar-quotes-valuation-e-dashboard.md)
 - [ ] [012-11-realizar-spike-frontend-e-data-layer.md](012-11-realizar-spike-frontend-e-data-layer.md)
 - [ ] [012-12-mapear-api-provisoria-e-compatibilidade.md](012-12-mapear-api-provisoria-e-compatibilidade.md)
 - [ ] [012-13-consolidar-freezes-e-handoff.md](012-13-consolidar-freezes-e-handoff.md)
@@ -81,4 +81,12 @@ handoff verificável para 013–019.
   arquivada, conflito, idempotência, resultado desconhecido, append-only, filtros
   e cursor conceitual. O protótipo standalone usa somente fixtures sintéticas;
   a revisão independente final foi aprovada. Não houve alteração de produção e
+  a subtarefa seguinte não foi iniciada automaticamente.
+- `012-10` está `completed`: o pacote de Quotes/valuation/dashboard documenta a
+  hierarquia Visão geral/detalhe, patrimônio conhecido, custo de aquisição
+  remanescente, partial/stale/unavailable, timeout, rate limit, moeda
+  incompatível, carteira indisponível, arquivada fora do consolidado, refresh e
+  telemetria percebida. O protótipo standalone usa nove fixtures sintéticas e
+  não congela contrato HTTP, cache, provider ou Position persistida. Após corrigir
+  o isolamento entre global/detalhe, a revisão independente final foi aprovada;
   a subtarefa seguinte não foi iniciada automaticamente.
