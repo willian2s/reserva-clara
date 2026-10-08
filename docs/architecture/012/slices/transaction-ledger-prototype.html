@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reserva Clara — protótipo de Transaction e ledger</title>
+    <style>
+      :root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; }
+      body { margin: 0; background: #f7f7f5; color: #20231f; }
+      header, main { max-width: 68rem; margin: auto; padding: 1rem; }
+      header { border-bottom: 1px solid #d7d9d2; }
+      h1, h2, h3 { line-height: 1.2; }
+      header > :first-child { margin-top: 0; }
+      .controls, .actions { display: flex; flex-wrap: wrap; gap: .7rem; align-items: end; }
+      label, .field { display: grid; gap: .25rem; }
+      button, select, input { min-height: 2.75rem; box-sizing: border-box; border: 1px solid #7b8479; border-radius: .35rem; background: white; color: inherit; padding: .55rem .75rem; font: inherit; }
+      button { cursor: pointer; font-weight: 650; }
+      button.primary { background: #245c42; border-color: #245c42; color: white; }
+      button:disabled, input:disabled, select:disabled { cursor: not-allowed; opacity: .65; }
+      button:focus-visible, select:focus-visible, input:focus-visible, [tabindex="-1"]:focus { outline: 3px solid #255db4; outline-offset: 2px; }
+      main { padding-block: 1.5rem 3rem; }
+      .panel { margin-block: 1rem; padding: 1rem; background: white; border: 1px solid #d7d9d2; border-radius: .5rem; }
+      .panel > :first-child { margin-top: 0; }
+      .panel > :last-child { margin-bottom: 0; }
+      .grid { display: grid; gap: 1rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .card { display: grid; gap: .5rem; padding: 1rem; border: 1px solid #b9beb5; border-radius: .45rem; }
+      .card h3, .card p { margin: 0; overflow-wrap: anywhere; }
+      .muted { color: #5d655a; }
+      .status { border-left: .3rem solid #3d7045; padding: .7rem .85rem; background: #edf6ed; }
+      .warning { border-left-color: #a36c00; background: #fff7df; }
+      .error { border-left-color: #aa3434; background: #fff0f0; }
+      .status:focus { outline: 3px solid #255db4; outline-offset: 2px; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+      .form-grid { display: grid; gap: .8rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .form-grid input, .form-grid select { width: 100%; }
+      .meta { display: flex; flex-wrap: wrap; gap: .4rem 1rem; margin: 0; }
+      .meta strong { font-weight: 650; }
+      @media (max-width: 42rem) {
+        .grid, .form-grid { grid-template-columns: 1fr; }
+        .controls > *, .actions > * { flex: 1 1 100%; }
+      }
+    </style>
+  </head>
+  <body>
+    <a href="#content" class="sr-only" onfocus="this.classList.remove('sr-only')" onblur="this.classList.add('sr-only')">Pular para conteúdo</a>
+    <header>
+      <p class="muted">Fixture sintética · sem API, Firestore, optimistic write ou persistência</p>
+      <h1>Transaction e ledger</h1>
+      <p>O histórico mostra fatos confirmados. Compra e venda são append-only; posição, saldo e performance não são calculados nesta jornada.</p>
+      <div class="controls" aria-label="Controles do protótipo">
+        <label for="scenario">Cenário
+          <select id="scenario">
+            <option value="buy">F-BUY — compra confirmada</option>
+            <option value="sell">F-SELL — venda suficiente</option>
+            <option value="insufficient">F-INSUFFICIENT — venda maior que saldo</option>
+            <option value="extreme">F-EXTREME — precisão extrema</option>
+            <option value="invalid-date">F-INVALID-DATE — data inválida</option>
+            <option value="archived">F-ARCHIVED — carteira arquivada</option>
+            <option value="conflict">F-CONFLICT — payload divergente</option>
+            <option value="idempotent">F-IDEMPOTENT — mesmo payload</option>
+            <option value="unknown">F-UNKNOWN — resultado desconhecido</option>
+          </select>
+        </label>
+        <label for="volume">Volume do histórico
+          <select id="volume"><option value="small">F-SMALL — 12 fatos</option><option value="medium">F-MEDIUM — 120 fatos</option><option value="large">F-LARGE — 1.200 fatos</option></select>
+        </label>
+        <button type="button" id="reset">Reiniciar fixture</button>
+      </div>
+    </header>
+    <main id="content" tabindex="-1">
+      <section id="state" class="panel status" role="status" aria-live="polite" aria-atomic="true" tabindex="-1"></section>
+      <section class="panel" aria-labelledby="form-title">
+        <h2 id="form-title">Registrar operação</h2>
+        <p class="muted">A taxa é fixa e opcional. A data é civil; nenhum valor é convertido para número ou timezone.</p>
+        <form id="transaction-form" novalidate>
+          <div class="form-grid">
+            <label class="field" for="asset">Ativo<select id="asset" name="asset" aria-describedby="form-error"><option value="asset-petr4">PETR4 · B3 · BRL</option></select></label>
+            <label class="field" for="kind">Operação<select id="kind" name="kind" aria-describedby="form-error"><option value="buy">Compra</option><option value="sell">Venda</option></select></label>
+            <label class="field" for="quantity">Quantidade<input id="quantity" name="quantity" inputmode="decimal" autocomplete="off" value="2,5" aria-describedby="form-error"></label>
+            <label class="field" for="price">Preço unitário<input id="price" name="price" inputmode="decimal" autocomplete="off" value="35,10" aria-describedby="form-error"></label>
+            <label class="field" for="currency">Moeda<input id="currency" name="currency" value="BRL" maxlength="3" aria-describedby="form-error"></label>
+            <label class="field" for="date">Data da operação<input id="date" name="date" inputmode="numeric" autocomplete="off" value="15/01/2026" placeholder="dd/mm/aaaa" aria-describedby="form-error"></label>
+            <label class="field" for="fee">Taxa (opcional)<input id="fee" name="fee" inputmode="decimal" autocomplete="off" placeholder="0,00" aria-describedby="form-error"></label>
+            <label class="field" for="fee-currency">Moeda da taxa<input id="fee-currency" name="fee-currency" value="BRL" maxlength="3" aria-describedby="form-error"></label>
+          </div>
+          <p id="form-error" class="error" role="alert" tabindex="-1" hidden></p>
+          <p class="muted">Chave desta operação: <code id="operation-id">op-transaction-001</code>. Ela permanece igual durante a reconciliação.</p>
+          <div class="actions"><button type="submit" class="primary" id="submit">Registrar operação</button><button type="button" id="verify" hidden>Verificar histórico</button><button type="button" id="review" hidden>Revisar com nova chave</button></div>
+        </form>
+      </section>
+      <section class="panel" aria-labelledby="filters-title">
+        <h2 id="filters-title">Histórico de operações</h2>
+        <div class="controls">
+          <label for="filter-asset">Ativo<select id="filter-asset"><option value="all">Todos os ativos</option><option value="asset-petr4">PETR4</option><option value="asset-ivvb11">IVVB11</option></select></label>
+          <label for="filter-kind">Tipo<select id="filter-kind"><option value="all">Todas</option><option value="buy">Compras</option><option value="sell">Vendas</option></select></label>
+          <label for="filter-date">Data mínima<input id="filter-date" placeholder="aaaa-mm-dd" inputmode="numeric"></label>
+          <label for="filter-date-to">Data máxima<input id="filter-date-to" placeholder="aaaa-mm-dd" inputmode="numeric"></label>
+          <button type="button" id="apply-filter">Aplicar filtros</button>
+        </div>
+        <p id="filter-status" class="muted" role="status" aria-live="polite"></p>
+        <div id="history" class="grid" aria-live="polite"></div>
+        <div class="actions"><button type="button" id="load-more" hidden>Carregar mais</button></div>
+      </section>
+    </main>
+    <script>
+      (() => {
+        const state = document.querySelector("#state");
+        const form = document.querySelector("#transaction-form");
+        const error = document.querySelector("#form-error");
+        const history = document.querySelector("#history");
+        const scenario = document.querySelector("#scenario");
+        const volume = document.querySelector("#volume");
+        const asset = document.querySelector("#asset");
+        const kind = document.querySelector("#kind");
+        const quantity = document.querySelector("#quantity");
+        const price = document.querySelector("#price");
+        const currency = document.querySelector("#currency");
+        const date = document.querySelector("#date");
+        const fee = document.querySelector("#fee");
+        const feeCurrency = document.querySelector("#fee-currency");
+        const operationId = document.querySelector("#operation-id");
+        const verify = document.querySelector("#verify");
+        const review = document.querySelector("#review");
+        const submit = document.querySelector("#submit");
+        const loadMore = document.querySelector("#load-more");
+        const filterAsset = document.querySelector("#filter-asset");
+        const filterKind = document.querySelector("#filter-kind");
+        const filterDate = document.querySelector("#filter-date");
+        const filterDateTo = document.querySelector("#filter-date-to");
+        const filterStatus = document.querySelector("#filter-status");
+        let transactions = [];
+        let visibleLimit = 12;
+        let nextCursor = null;
+        let loadedItems = [];
+        let pendingUnknown = false;
+        let blockedForReview = false;
+        let operationNumber = 1;
+
+        const esc = (value) => String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+        const canonical = (value) => { const raw = value.trim().replace(/\s/g, ""); let normalized = raw; if (/^(?:0|[1-9][0-9]*)(?:,[0-9]+)?$/.test(raw)) normalized = raw.replace(",", "."); else if (/^[1-9][0-9]{0,2}(?:\.[0-9]{3})+(?:,[0-9]+)?$/.test(raw)) normalized = raw.replace(/\./g, "").replace(",", "."); if (!decimalPattern.test(normalized)) return normalized; const [integer, fraction = ""] = normalized.split("."); const trimmedFraction = fraction.replace(/0+$/, ""); return trimmedFraction ? `${integer}.${trimmedFraction}` : integer; };
+        const optionalDecimal = (value) => { const normalized = canonical(value); if (normalized === "") return null; if (!decimalPattern.test(normalized)) return normalized; return normalized === "0" ? null : normalized; };
+        const decimalPattern = /^(?:0|[1-9][0-9]*)(?:\.[0-9]+)?$/;
+        const digits = (value) => { const [integer, fraction = ""] = canonical(value).split("."); return { integer, fraction }; };
+        const validDecimal = (value, positive) => { const normalized = canonical(value); if (!decimalPattern.test(normalized)) return false; const { integer, fraction } = digits(normalized); if (integer.length > 30 || fraction.length > 18) return false; const isZero = integer === "0" && fraction.length === 0; return !positive || !isZero; };
+        const dateParts = (value) => { const match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(value.trim()); return match ? { day: match[1], month: match[2], year: match[3] } : null; };
+        const validCivilDate = (value) => { const parts = dateParts(value); if (!parts) return false; const days = { "01": 31, "02": (parts.year % 4 === 0 && (parts.year % 100 !== 0 || parts.year % 400 === 0)) ? 29 : 28, "03": 31, "04": 30, "05": 31, "06": 30, "07": 31, "08": 31, "09": 30, "10": 31, "11": 30, "12": 31 }; return Boolean(days[parts.month]) && parts.day >= "01" && parts.day <= String(days[parts.month]).padStart(2, "0") && parts.year !== "0000"; };
+        const isoDate = (value) => { const parts = dateParts(value); return `${parts.year}-${parts.month}-${parts.day}`; };
+        const compareDecimal = (left, right) => { const a = canonical(left).split("."), b = canonical(right).split("."); const width = Math.max(a[0].length, b[0].length); const ai = a[0].padStart(width, "0"), bi = b[0].padStart(width, "0"); if (ai !== bi) return ai > bi ? 1 : -1; const scale = Math.max((a[1] || "").length, (b[1] || "").length); const af = (a[1] || "").padEnd(scale, "0"), bf = (b[1] || "").padEnd(scale, "0"); return af === bf ? 0 : af > bf ? 1 : -1; };
+        const id = () => `op-transaction-${String(operationNumber).padStart(3, "0")}`;
+        const announce = (message, type = "", focusSelector = "#state") => { state.className = `panel status ${type}`; state.innerHTML = message; queueMicrotask(() => document.querySelector(focusSelector || "#state")?.focus()); };
+        const fixtureTransactions = (size) => { const count = size === "small" ? 12 : size === "medium" ? 120 : 1200; return Array.from({ length: count }, (_, index) => ({ id: `fixture-${String(index + 1).padStart(4, "0")}`, assetId: index % 5 === 0 ? "asset-ivvb11" : "asset-petr4", kind: index % 4 === 0 ? "sell" : "buy", quantity: index % 4 === 0 ? "0.5" : "1", price: "35.10", currency: "BRL", date: `2026-${String((index % 12) + 1).padStart(2, "0")}-01`, fee: null, feeCurrency: null, createdAt: { seconds: 1700000000 + index, nanoseconds: (index * 1000) % 1000000000 } })); };
+        const operationFixture = (samePayload) => ({ id: "op-transaction-001", assetId: "asset-petr4", kind: "buy", quantity: samePayload ? "2.5" : "1", price: "35.1", currency: "BRL", date: "2026-01-15", fee: null, feeCurrency: null, createdAt: { seconds: 1699999999, nanoseconds: 900000000 } });
+        const cursorFor = (item) => `opaque-${item.date}-${item.createdAt.seconds}-${item.createdAt.nanoseconds}-${item.id}`;
+        const sorted = () => [...transactions].sort((left, right) => left.date.localeCompare(right.date) || left.createdAt.seconds - right.createdAt.seconds || left.createdAt.nanoseconds - right.createdAt.nanoseconds || left.id.localeCompare(right.id));
+        const renderHistory = (append = false) => { const current = sorted(); const selectedAsset = filterAsset.value; const selectedKind = filterKind.value; const from = filterDate.value.trim(); const to = filterDateTo.value.trim(); const filtered = current.filter((item) => (selectedAsset === "all" || item.assetId === selectedAsset) && (selectedKind === "all" || item.kind === selectedKind) && (!from || item.date >= from) && (!to || item.date <= to)); const start = append && nextCursor ? filtered.findIndex((item) => cursorFor(item) === nextCursor) + 1 : 0; const page = filtered.slice(start, start + visibleLimit); const shown = append ? [...loadedItems, ...page] : page; loadedItems = shown; nextCursor = page.length && start + page.length < filtered.length ? cursorFor(page[page.length - 1]) : null; history.innerHTML = shown.length ? shown.map((item) => `<article class="card"><h3>${item.kind === "buy" ? "Compra" : "Venda"} · ${item.assetId === "asset-ivvb11" ? "IVVB11" : "PETR4"}</h3><p class="meta"><span>Quantidade: <strong>${esc(item.quantity)}</strong></span><span>Preço: ${esc(item.price)} ${esc(item.currency)}</span><span>Data: <time datetime="${esc(item.date)}">${esc(item.date)}</time></span><span>Taxa: ${item.fee ? `${esc(item.fee)} ${esc(item.feeCurrency)}` : "sem taxa"}</span></p><p class="muted">ID estável: ${esc(item.id)} · fato confirmado</p></article>`).join("") : "<p class=\"muted\">Ainda não há operações nesta carteira.</p>"; loadMore.hidden = !nextCursor; const active = []; if (selectedAsset !== "all") active.push(selectedAsset === "asset-ivvb11" ? "Asset IVVB11" : "Asset PETR4"); if (selectedKind !== "all") active.push(selectedKind === "buy" ? "compras" : "vendas"); if (from) active.push(`de ${from}`); if (to) active.push(`até ${to}`); filterStatus.textContent = `${filtered.length} fato(s)${active.length ? ` · filtros ativos: ${active.join(", ")}` : " · sem filtros"}; exibindo ${shown.length}${nextCursor ? ` · cursor simulado: ${nextCursor}` : ""}. Ordenação: data, segundos, nanos e ID.`; };
+        const setScenarioDefaults = () => { kind.value = scenario.value === "sell" || scenario.value === "insufficient" ? "sell" : "buy"; quantity.value = scenario.value === "extreme" ? "0,000000000000000001" : scenario.value === "insufficient" ? "3" : "2,5"; date.value = scenario.value === "invalid-date" ? "31/02/2026" : "15/01/2026"; fee.value = scenario.value === "sell" ? "1,25" : ""; feeCurrency.value = "BRL"; const archived = scenario.value === "archived"; form.querySelectorAll("input, select, button[type=submit]").forEach((element) => { element.disabled = archived; }); if (archived) announce("<strong>Carteira arquivada</strong><p>Esta carteira está arquivada e não aceita novas operações. O histórico continua disponível.</p>", "warning"); else announce("<strong>Carteira ativa</strong><p>Informe a operação. Nada será inserido no histórico antes da confirmação.</p>"); };
+        const clearErrors = () => { error.hidden = true; form.querySelectorAll("input, select").forEach((element) => element.removeAttribute("aria-invalid")); };
+        const reset = () => { operationNumber = 1; transactions = scenario.value === "insufficient" ? [{ id: "fixture-insufficient", assetId: "asset-petr4", kind: "buy", quantity: "2.5", price: "35.10", currency: "BRL", date: "2026-01-01", fee: null, feeCurrency: null, createdAt: { seconds: 1700000000, nanoseconds: 0 } }] : fixtureTransactions(volume.value); if (scenario.value === "conflict") transactions.unshift(operationFixture(false)); if (scenario.value === "idempotent") transactions.unshift(operationFixture(true)); visibleLimit = 12; nextCursor = null; loadedItems = []; pendingUnknown = false; blockedForReview = false; verify.hidden = true; review.hidden = true; submit.disabled = false; operationId.textContent = id(); clearErrors(); setScenarioDefaults(); renderHistory(); };
+        const showError = (message, field) => { clearErrors(); error.hidden = false; error.textContent = message; const target = document.querySelector(`#${field}`); target.setAttribute("aria-invalid", "true"); target.focus(); };
+        const samePayload = (left, right) => left.assetId === right.assetId && left.kind === right.kind && left.quantity === right.quantity && left.price === right.price && left.currency === right.currency && left.date === right.date && left.fee === right.fee && (left.fee === null || left.feeCurrency === right.feeCurrency);
+        form.addEventListener("submit", (event) => { event.preventDefault(); if (scenario.value === "archived" || blockedForReview) return; clearErrors(); if (!validDecimal(quantity.value, true)) return showError("Informe uma quantidade positiva em formato decimal, sem expoente.", "quantity"); if (!validDecimal(price.value, true)) return showError("Informe um preço positivo em formato decimal, sem expoente.", "price"); const storedFee = optionalDecimal(fee.value); if (storedFee !== null && !validDecimal(fee.value, false)) return showError("Informe uma taxa fixa não negativa ou deixe o campo vazio.", "fee"); const normalizedCurrency = currency.value.toUpperCase(); const normalizedFeeCurrency = feeCurrency.value.toUpperCase(); if (!/^[A-Z]{3}$/.test(normalizedCurrency)) return showError("Informe um código de moeda com três letras, como BRL ou USD.", "currency"); if (storedFee !== null && !/^[A-Z]{3}$/.test(normalizedFeeCurrency)) return showError("Informe a moeda da taxa.", "fee-currency"); if (!validCivilDate(date.value)) return showError("Informe uma data civil real.", "date"); currency.value = normalizedCurrency; feeCurrency.value = normalizedFeeCurrency; submit.disabled = true; const operationIdValue = id(); const candidate = { id: operationIdValue, assetId: asset.value, kind: kind.value, quantity: canonical(quantity.value), price: canonical(price.value), currency: normalizedCurrency, date: isoDate(date.value), fee: storedFee, feeCurrency: storedFee === null ? null : normalizedFeeCurrency, createdAt: { seconds: 1800000000, nanoseconds: 1 } }; const existing = transactions.find((item) => item.id === operationIdValue); if (existing && samePayload(existing, candidate)) { submit.disabled = false; announce("<strong>Operação já confirmada no histórico.</strong><p>A mesma chave e o mesmo payload foram reconciliados; nenhum duplicado foi criado.</p>"); renderHistory(); return; } if (existing) { blockedForReview = true; review.hidden = false; announce("<strong>Conflito de operação</strong><p>Esta operação conflita com um fato existente. Atualize o histórico e revise os dados antes de tentar novamente.</p>", "error", "#review"); return; } const knownBalance = scenario.value === "insufficient" ? "2.5" : scenario.value === "sell" ? "7.5" : null; if (candidate.kind === "sell" && knownBalance && compareDecimal(candidate.quantity, knownBalance) > 0) { submit.disabled = false; announce("<strong>Venda não confirmada</strong><p>Esta venda excede a quantidade disponível no histórico.</p>", "error", "#quantity"); return; } if (scenario.value === "unknown") { pendingUnknown = true; verify.hidden = false; submit.disabled = true; announce("<strong>O resultado não foi confirmado</strong><p>Verifique o histórico pelo mesmo ID antes de tentar novamente. Nenhum card otimista foi inserido.</p>", "warning", "#verify"); return; } transactions.push(candidate); operationNumber += 1; operationId.textContent = id(); submit.disabled = false; announce("<strong>Operação confirmada no histórico.</strong><p>O fato foi anexado sem edição ou exclusão.</p>"); renderHistory(); });
+        verify.addEventListener("click", () => { if (!pendingUnknown) return; pendingUnknown = false; verify.hidden = true; submit.disabled = false; announce("<strong>Histórico verificado</strong><p>O ID não foi encontrado. Revise os dados e escolha conscientemente se deseja iniciar uma nova operação.</p>", "warning", "#submit"); });
+        review.addEventListener("click", () => { if (!blockedForReview) return; blockedForReview = false; operationNumber += 1; operationId.textContent = id(); review.hidden = true; submit.disabled = false; announce("<strong>Nova tentativa preparada</strong><p>Foi criada uma nova chave para a operação revisada; o fato anterior não foi alterado.</p>", "warning", "#quantity"); });
+        document.querySelector("#apply-filter").addEventListener("click", () => { visibleLimit = 12; nextCursor = null; loadedItems = []; renderHistory(); });
+        loadMore.addEventListener("click", () => { if (nextCursor) renderHistory(true); });
+        scenario.addEventListener("change", reset);
+        volume.addEventListener("change", reset);
+        document.querySelector("#reset").addEventListener("click", reset);
+        reset();
+      })();
+    </script>
+  </body>
+</html>

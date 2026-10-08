@@ -2,7 +2,7 @@
 
 - **Status geral:** pending
 - **Spec:** [012-product-ux-ui-ia-api-discovery.md](../../specs/012-product-ux-ui-ia-api-discovery.md)
-- **Progresso:** 8/13 subtarefas concluídas
+- **Progresso:** 9/13 subtarefas concluídas
 
 ## Objetivo
 
@@ -21,7 +21,7 @@ handoff verificável para 013–019.
 - [x] [012-06-revisar-design-system-e-componentes.md](012-06-revisar-design-system-e-componentes.md)
 - [x] [012-07-prototipar-e-freezar-portfolio.md](012-07-prototipar-e-freezar-portfolio.md)
 - [x] [012-08-decidir-lifecycle-de-asset.md](012-08-decidir-lifecycle-de-asset.md)
-- [ ] [012-09-prototipar-transaction-e-ledger.md](012-09-prototipar-transaction-e-ledger.md)
+- [x] [012-09-prototipar-transaction-e-ledger.md](012-09-prototipar-transaction-e-ledger.md)
 - [ ] [012-10-prototipar-quotes-valuation-e-dashboard.md](012-10-prototipar-quotes-valuation-e-dashboard.md)
 - [ ] [012-11-realizar-spike-frontend-e-data-layer.md](012-11-realizar-spike-frontend-e-data-layer.md)
 - [ ] [012-12-mapear-api-provisoria-e-compatibilidade.md](012-12-mapear-api-provisoria-e-compatibilidade.md)
@@ -76,3 +76,9 @@ handoff verificável para 013–019.
   acessível, a revisão independente final foi aprovada. Enforcement e correção
   auditada ficam encaminhados a 016/018, sem avançar automaticamente para
   `012-09`.
+- `012-09` está `completed`: o pacote de Transaction/ledger documenta Compra e
+  Venda, precisão decimal, taxa opcional, data civil, saldo insuficiente, carteira
+  arquivada, conflito, idempotência, resultado desconhecido, append-only, filtros
+  e cursor conceitual. O protótipo standalone usa somente fixtures sintéticas;
+  a revisão independente final foi aprovada. Não houve alteração de produção e
+  a subtarefa seguinte não foi iniciada automaticamente.
