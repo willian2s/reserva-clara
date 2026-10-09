@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reserva Clara — protótipo de IA e shell</title>
+    <style>
+      :root { color-scheme: light; font: 16px/1.5 system-ui, sans-serif; }
+      body { margin: 0; background: #f7f7f5; color: #20231f; }
+      header, main { max-width: 62rem; margin: auto; padding: 1rem; }
+      header { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; border-bottom: 1px solid #d7d9d2; }
+      nav { display: flex; flex-wrap: wrap; gap: .5rem; }
+      a, button { border: 1px solid #8c9387; border-radius: .35rem; background: white; color: inherit; padding: .55rem .8rem; font: inherit; cursor: pointer; }
+      a[aria-current="page"] { background: #dcebdc; border-color: #3d7045; font-weight: 700; }
+      a:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #255db4; outline-offset: 2px; }
+      .panel { margin-block: 1rem; padding: 1rem; background: white; border: 1px solid #d7d9d2; border-radius: .5rem; }
+      .controls { display: grid; gap: .6rem; grid-template-columns: minmax(18rem, 1fr) auto auto; align-items: end; }
+      label { display: grid; gap: .25rem; font-weight: 600; }
+      input { min-height: 2.5rem; padding: .4rem .55rem; border: 1px solid #8c9387; border-radius: .35rem; font: inherit; }
+      .muted { color: #5d655a; }
+      .status { border-left: .3rem solid #3d7045; padding: .6rem .8rem; background: #edf6ed; }
+      .warning { border-left-color: #a36c00; background: #fff7df; }
+      .error { border-left-color: #aa3434; background: #fff0f0; }
+      @media (max-width: 42rem) { .controls { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <a href="#content" style="position:absolute;left:-10000px" onfocus="this.style.left='1rem'" onblur="this.style.left='-10000px'">Pular para conteúdo</a>
+    <header>
+      <strong>Reserva Clara</strong>
+      <nav aria-label="Navegação principal" id="primary-nav"></nav>
+      <button type="button" id="logout">Sair</button>
+    </header>
+    <main id="content" tabindex="-1">
+      <section class="panel" aria-labelledby="simulator-title">
+        <h1 id="simulator-title">Protótipo de IA, URL e shell</h1>
+        <p class="muted">Artefato independente de Next para o walkthrough da 012-03. O endereço abaixo simula host, path e query.</p>
+        <form class="controls" id="address-form">
+          <label for="address">Endereço conceitual
+            <input id="address" value="https://app.reservaclara.com.br/portfolios?status=active" autocomplete="off">
+          </label>
+          <label for="session">Sessão
+            <select id="session">
+              <option value="out">Desconectada</option>
+              <option value="in">Autenticada</option>
+            </select>
+          </label>
+          <button type="submit">Abrir</button>
+        </form>
+      </section>
+      <section id="view" aria-live="polite"></section>
+      <section class="panel" id="self-test" hidden aria-labelledby="self-test-title">
+        <h2 id="self-test-title">Autoverificação do protótipo</h2>
+        <pre id="self-test-result"></pre>
+      </section>
+    </main>
+    <script>
+      (() => {
+        const publicHost = "reservaclara.com.br";
+        const appHost = "app.reservaclara.com.br";
+        function pathFromSearch(search) {
+          const route = new URLSearchParams(search).get("route");
+          return route && route.startsWith("/") ? parseAddress(`https://${appHost}${route}`).path : "/portfolios?status=active";
+        }
+
+        const state = { session: false, pending: null, path: pathFromSearch(location.search) };
+        const address = document.querySelector("#address");
+        const session = document.querySelector("#session");
+        const view = document.querySelector("#view");
+        const nav = document.querySelector("#primary-nav");
+
+        function hostClass(host) {
+          const value = host.toLowerCase().replace(/:\d+$/, "");
+          if (value === publicHost) return "public";
+          if (value === appHost) return "app";
+          if (value === `www.${publicHost}`) return "www";
+          if (["localhost", "127.0.0.1", "0.0.0.0", "[::1]"].includes(value)) return "local";
+          if (value.endsWith(".vercel.app")) return "preview";
+          return "unknown";
+        }
+
+        function canonicalPath(url) {
+          const params = new URLSearchParams();
+          const status = url.searchParams.get("status");
+          const direction = url.searchParams.get("direction");
+          if (["active", "archived", "all"].includes(status)) params.set("status", status);
+          if (["buy", "sell"].includes(direction)) params.set("direction", direction);
+          const query = params.toString();
+          return `${url.pathname}${query ? `?${query}` : ""}`;
+        }
+
+        function parseAddress(value) {
+          const url = new URL(value, `https://${appHost}`);
+          return { host: hostClass(url.hostname), path: canonicalPath(url) };
+        }
+
+        function isProtected(path) {
+          return /^\/(dashboard|portfolios|assets)(\/|$)/.test(path);
+        }
+
+        function routeName(path) {
+          if (/^\/dashboard(?:\/|$)/.test(path)) return "overview";
+          if (/^\/assets(?:\/|$)/.test(path)) return "assets";
+          return "portfolios";
+        }
+
+        function routeStatus(path) {
+          const pathname = new URL(`https://${appHost}${path}`).pathname;
+          if (["/dashboard", "/assets", "/portfolios"].includes(pathname)) return "ok";
+          const portfolioRoute = /^\/portfolios\/([A-Za-z0-9_-]+)(?:\/(transactions|settings))?$/.exec(pathname);
+          if (!portfolioRoute) return "route-not-found";
+          return ["missing", "inaccessible"].includes(portfolioRoute[1]) ? "resource-not-found" : "ok";
+        }
+
+        function escapeHtml(value) {
+          return value.replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+        }
+
+        function focusHeading() {
+          const heading = document.querySelector("#route-heading");
+          if (heading) heading.focus();
+        }
+
+        function renderNav(active) {
+          nav.innerHTML = [
+            ["/dashboard", "Visão geral", "overview"],
+            ["/portfolios", "Carteiras", "portfolios"],
+            ["/assets", "Ativos", "assets"]
+          ].map(([path, label, key]) => `<a href="#${path}" data-path="${path}"${active === key ? ' aria-current="page"' : ""}>${label}</a>`).join("");
+          nav.querySelectorAll("[data-path]").forEach((link) => link.addEventListener("click", (event) => {
+            event.preventDefault();
+            navigate(link.dataset.path, true);
+          }));
+        }
+
+        function render(addressState) {
+          address.value = `https://${addressState.host === "app" ? appHost : publicHost}${addressState.path}`;
+          if (addressState.host === "unknown") {
+            nav.innerHTML = "";
+            view.innerHTML = '<section class="panel status error"><h2 id="route-heading" tabindex="-1">Host não permitido</h2><p>Esta origem não disponibiliza a aplicação. Isso não é uma resposta de autorização.</p></section>';
+            focusHeading();
+            return;
+          }
+          const publicHostClass = ["public", "www"].includes(addressState.host);
+          if (publicHostClass && addressState.path === "/") {
+            nav.innerHTML = "";
+            view.innerHTML = '<section class="panel" data-surface="public"><h2 id="route-heading" tabindex="-1">Apresentação do Reserva Clara</h2><p>Organize e compreenda seu patrimônio com clareza. Nenhum dado patrimonial é exibido nesta superfície.</p><a href="#/login" data-path="/login">Entrar</a></section>';
+            view.querySelector("[data-path]").addEventListener("click", (event) => { event.preventDefault(); navigate("/login", true); });
+            focusHeading();
+            return;
+          }
+          if (publicHostClass && (addressState.path === "/login" || isProtected(addressState.path))) {
+            view.innerHTML = '<section class="panel status warning"><h2 id="route-heading" tabindex="-1">Abrir no host da aplicação</h2><p>A intenção interna será preservada; dados continuam sujeitos à API e à sessão.</p></section>';
+            focusHeading();
+            return;
+          }
+          if (addressState.host === "app" && addressState.path === "/") {
+            render({ host: "app", path: "/login" });
+            return;
+          }
+          if (addressState.path === "/login") {
+            nav.innerHTML = "";
+            view.innerHTML = '<section class="panel status warning" data-surface="auth"><h2 id="route-heading" tabindex="-1">Entrar para continuar</h2><p>Após autenticar, a entrada padrão será Carteiras ou o deep link interno pendente.</p><button type="button" id="sign-in">Entrar e retornar</button></section>';
+            document.querySelector("#sign-in").addEventListener("click", () => {
+              state.session = true;
+              session.value = "in";
+              const target = state.pending || "/portfolios";
+              state.pending = null;
+              navigate(target, false);
+            });
+            focusHeading();
+            return;
+          }
+          const status = routeStatus(addressState.path);
+          if (status !== "ok") {
+            nav.innerHTML = "";
+            const resourceCopy = status === "resource-not-found" ? "Não foi possível localizar esta carteira." : "Não encontramos esta página.";
+            view.innerHTML = `<section class="panel status error" data-not-found="${status}"><h2 id="route-heading" tabindex="-1">${resourceCopy}</h2><p>O endereço pode estar incorreto, ter sido movido ou não estar disponível para esta conta.</p><button type="button" data-path="/portfolios">Voltar para Carteiras</button></section>`;
+            view.querySelector("[data-path]").addEventListener("click", () => navigate("/portfolios", true));
+            focusHeading();
+            return;
+          }
+          if (isProtected(addressState.path) && !state.session) {
+            state.pending = addressState.path;
+            nav.innerHTML = "";
+            view.innerHTML = '<section class="panel status warning"><h2 id="route-heading" tabindex="-1">Entrar para continuar</h2><p>Depois da autenticação, este deep link interno será consumido uma vez.</p><button type="button" id="sign-in">Entrar e retornar</button></section>';
+            document.querySelector("#sign-in").addEventListener("click", () => {
+              state.session = true;
+              session.value = "in";
+              const target = state.pending || "/portfolios";
+              state.pending = null;
+              navigate(target, false);
+            });
+            focusHeading();
+            return;
+          }
+          const active = routeName(addressState.path);
+          renderNav(active);
+          const parsed = new URL(`https://${appHost}${addressState.path}`);
+          const rawFilter = parsed.searchParams.get("status");
+          const filter = ["active", "archived", "all"].includes(rawFilter) ? rawFilter : "all";
+          const detail = /^\/portfolios\/([^/]+)/.exec(parsed.pathname);
+          let title = active === "overview" ? "Visão geral" : active === "assets" ? "Ativos" : "Carteiras";
+          let body = active === "portfolios" ? `<p>Entrada padrão. Filtro: <strong>${filter || "todas"}</strong>.</p><button type="button" data-filter="archived">Ver arquivadas</button>` : `<p>Superfície de leitura: ${title}.</p>`;
+          if (detail) {
+            const portfolioId = escapeHtml(detail[1]);
+            body = `<p>Carteira <code>${portfolioId}</code> em contexto. <a href="#/portfolios/${portfolioId}/transactions" data-path="/portfolios/${portfolioId}/transactions">Histórico de operações</a> · <a href="#/portfolios/${portfolioId}/settings" data-path="/portfolios/${portfolioId}/settings">Configurações</a></p>`;
+          }
+          if (/\/transactions$/.test(parsed.pathname)) body = "<p>Histórico de operações. Resultado desconhecido orienta verificar o histórico, sem retry cego.</p>";
+          if (/\/settings$/.test(parsed.pathname)) body = "<p>Configurações e lifecycle da carteira. Uma carteira arquivada fica somente leitura.</p>";
+          view.innerHTML = `<section class="panel"><h2 id="route-heading" tabindex="-1">${title}</h2>${body}<p class="muted">Host: ${addressState.host} · Query preservada para estado de navegação.</p></section>`;
+          view.querySelectorAll("[data-path]").forEach((link) => link.addEventListener("click", (event) => { event.preventDefault(); navigate(link.dataset.path, true); }));
+          const filterButton = view.querySelector("[data-filter]");
+          if (filterButton) filterButton.addEventListener("click", () => navigate("/portfolios?status=archived", true));
+          focusHeading();
+        }
+
+        function navigate(path, addHistory) {
+          state.path = path;
+          const parsed = parseAddress(`https://${appHost}${path}`);
+          if (addHistory) history.pushState({ path }, "", `${location.pathname}?route=${encodeURIComponent(path)}`);
+          render({ host: parsed.host, path: parsed.path });
+        }
+
+        document.querySelector("#address-form").addEventListener("submit", (event) => {
+          event.preventDefault();
+          const parsed = parseAddress(address.value);
+          state.session = session.value === "in";
+          state.path = parsed.path;
+          render(parsed);
+        });
+        session.addEventListener("change", () => { state.session = session.value === "in"; });
+        document.querySelector("#logout").addEventListener("click", () => { state.session = false; session.value = "out"; render(parseAddress(address.value)); });
+        history.replaceState({ path: state.path }, "", location.href);
+        window.addEventListener("popstate", (event) => {
+          const path = event.state?.path || pathFromSearch(location.search);
+          state.path = path;
+          render({ host: "app", path });
+        });
+        render({ host: "app", path: state.path });
+
+        async function selfTest() {
+          const checks = [];
+          const check = (name, result) => checks.push(`${result ? "PASS" : "FAIL"} — ${name}`);
+          check("host desconhecido é rejeitado", hostClass("not-allowed.example") === "unknown");
+          check("query de filtro é preservada", parseAddress(`https://${appHost}/portfolios?status=archived`).path.endsWith("status=archived"));
+          check("query não permitida é descartada", !parseAddress(`https://${appHost}/portfolios?ownerId=secret&status=active`).path.includes("ownerId"));
+          check("deep link de operação é rota protegida", isProtected("/portfolios/opaque-1/transactions"));
+          check("Carteiras é a entrada padrão", routeName("/portfolios") === "portfolios");
+          check("refresh reidrata rota e query", pathFromSearch(`?route=${encodeURIComponent("/portfolios?status=archived")}`) === "/portfolios?status=archived");
+          check("raiz pública exibe landing sem dados", hostClass("reservaclara.com.br") === "public");
+          render({ host: "public", path: "/" });
+          check("landing pública é uma superfície própria", document.querySelector('[data-surface="public"]') !== null);
+          render({ host: "www", path: "/" });
+          check("www compartilha a política pública", document.querySelector('[data-surface="public"]') !== null);
+          state.session = false;
+          render({ host: "app", path: "/portfolios/opaque-1/transactions?direction=sell" });
+          check("deep link sem sessão pede login", Boolean(document.querySelector("#sign-in")) && state.pending.includes("opaque-1"));
+          document.querySelector("#sign-in").click();
+          check("login retorna uma vez ao deep link", state.session && state.pending === null && location.pathname.endsWith("information-architecture-prototype.html"));
+          check("foco retorna ao título da tarefa", document.activeElement?.id === "route-heading");
+          check("navegação aplicada marca item ativo", document.querySelector('[aria-current="page"]')?.textContent === "Carteiras");
+          navigate("/portfolios?status=archived", true);
+          check("mudança confirmada entra no history", history.state?.path === "/portfolios?status=archived");
+          navigate("/portfolios?status=active", true);
+          const backCheck = new Promise((resolve) => {
+            window.addEventListener("popstate", () => resolve(state.path === "/portfolios?status=archived"), { once: true });
+            history.back();
+          });
+          check("Back restaura rota anterior", await backCheck);
+          const forwardCheck = new Promise((resolve) => {
+            window.addEventListener("popstate", () => resolve(state.path === "/portfolios?status=active"), { once: true });
+            history.forward();
+          });
+          check("Forward restaura rota seguinte", await forwardCheck);
+          render({ host: "app", path: "/not-a-route" });
+          check("rota desconhecida mostra 404 contextual", document.querySelector('[data-not-found="route-not-found"]') !== null);
+          render({ host: "app", path: "/portfolios/missing" });
+          check("recurso ausente não revela owner", document.querySelector('[data-not-found="resource-not-found"]')?.textContent.toLowerCase().includes("não foi possível") === true);
+          render({ host: "unknown", path: "/portfolios" });
+          check("host inválido move foco ao erro", document.activeElement?.id === "route-heading");
+          document.querySelector("#self-test").hidden = false;
+          document.querySelector("#self-test-result").textContent = checks.join("\n");
+          document.querySelector("#self-test-result").dataset.failed = checks.some((item) => item.startsWith("FAIL")) ? "true" : "false";
+        }
+        if (new URLSearchParams(location.search).has("selfTest")) selfTest();
+      })();
+    </script>
+  </body>
+</html>

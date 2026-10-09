@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Protótipo — lifecycle de Asset</title>
+    <style>
+      :root { color-scheme: light; font-family: system-ui, sans-serif; line-height: 1.45; color: #17202a; background: #f6f7f9; }
+      body { margin: 0; }
+      main { width: min(68rem, calc(100% - 2rem)); margin: 0 auto; padding: 2rem 0 4rem; }
+      header, section, article { background: white; border: 1px solid #d7dce2; border-radius: .75rem; padding: 1rem; }
+      header, section { margin-bottom: 1rem; }
+      h1, h2, h3 { line-height: 1.15; }
+      .controls, .actions { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; }
+      select, button { min-height: 2.5rem; border: 1px solid #68737e; border-radius: .4rem; padding: .5rem .75rem; background: white; color: inherit; font: inherit; }
+      button { cursor: pointer; font-weight: 650; }
+      button:focus-visible, select:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr)); gap: 1rem; }
+      .card { border: 1px solid #c8ced6; border-radius: .6rem; padding: 1rem; }
+      .muted { color: #53606d; }
+      .status { display: inline-block; border-radius: 999px; padding: .2rem .55rem; background: #e7eefc; color: #1d4ed8; font-size: .875rem; font-weight: 700; }
+      .retired { background: #eceff1; color: #4b5563; }
+      .danger { color: #9f1239; }
+      dialog { width: min(30rem, calc(100% - 2rem)); border: 1px solid #68737e; border-radius: .75rem; padding: 1rem; color: inherit; }
+      dialog::backdrop { background: rgb(23 32 42 / 35%); }
+      [role="status"], [role="alert"] { min-height: 1.5rem; }
+      @media (max-width: 20rem) { main { width: calc(100% - 1rem); padding-top: 1rem; } header, section, article { padding: .75rem; } button, select { width: 100%; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <p class="muted">Fixture sintética · sem API ou persistência</p>
+        <h1>Catálogo de Assets</h1>
+        <p>Identidade econômica reutilizável. Retirar preserva o histórico; excluir não é retirar.</p>
+        <div class="controls">
+          <label for="fixture">Cenário</label>
+          <select id="fixture">
+            <option value="empty">F-EMPTY — catálogo vazio</option>
+            <option value="unused">F-UNUSED — sem operações</option>
+            <option value="duplicate">F-DUPLICATE — identidade existente</option>
+            <option value="retired-duplicate">F-DUPLICATE-RETIRED — identidade retirada</option>
+            <option value="used" selected>F-USED — operações vinculadas</option>
+            <option value="retired">F-RETIRED — retirado</option>
+            <option value="conflict">F-CONFLICT — conflito</option>
+            <option value="unknown">F-UNKNOWN — resultado não confirmado</option>
+          </select>
+        </div>
+      </header>
+      <section aria-labelledby="state-title">
+        <h2 id="state-title">Estado do walkthrough</h2>
+        <p id="state" role="status" aria-live="polite" tabindex="-1"></p>
+      </section>
+      <dialog id="confirmation" aria-labelledby="confirmation-title">
+        <h2 id="confirmation-title">Confirmar ação</h2>
+        <p id="confirmation-copy"></p>
+        <div class="actions">
+          <button type="button" id="confirm-action">Confirmar</button>
+          <button type="button" id="cancel-action">Cancelar</button>
+        </div>
+      </dialog>
+      <section id="catalog" aria-labelledby="catalog-title">
+        <h2 id="catalog-title">Ativos</h2>
+        <div id="cards" class="grid"></div>
+      </section>
+      <section aria-labelledby="create-title">
+        <h2 id="create-title">Cadastrar ativo</h2>
+        <p class="muted">A mesma tupla de identidade reutiliza o cadastro existente, sem criar outro ID.</p>
+        <button type="button" id="create">Simular cadastro da mesma identidade</button>
+      </section>
+    </main>
+    <script>
+      const fixtures = {
+        empty: [],
+        unused: [{ id: "a-unused-01", symbol: "BOVA11", market: "B3", type: "ETF", currency: "BRL", lifecycle: "active", reference: "unused" }],
+        duplicate: [{ id: "a-duplicate-01", symbol: "ITUB4", market: "B3", type: "Ação", currency: "BRL", lifecycle: "active", reference: "unused" }],
+        "retired-duplicate": [{ id: "a-retired-duplicate-01", symbol: "ITUB4", market: "B3", type: "Ação", currency: "BRL", lifecycle: "retired", reference: "unused" }],
+        used: [{ id: "a-used-01", symbol: "PETR4", market: "B3", type: "Ação", currency: "BRL", lifecycle: "active", reference: "used", portfolios: 2 }],
+        retired: [{ id: "a-retired-01", symbol: "IVVB11", market: "B3", type: "ETF", currency: "BRL", lifecycle: "retired", reference: "used", portfolios: 1 }],
+        conflict: [{ id: "a-conflict-01", symbol: "VALE3", market: "B3", type: "Ação", currency: "BRL", lifecycle: "active", reference: "unused" }],
+        unknown: [{ id: "a-unknown-01", symbol: "HASH11", market: "B3", type: "ETF", currency: "BRL", lifecycle: "active", reference: "unknown" }]
+      };
+      const fixture = document.querySelector("#fixture");
+      const cards = document.querySelector("#cards");
+      const state = document.querySelector("#state");
+      const confirmation = document.querySelector("#confirmation");
+      const confirmationCopy = document.querySelector("#confirmation-copy");
+      const confirmAction = document.querySelector("#confirm-action");
+      const cancelAction = document.querySelector("#cancel-action");
+      const catalog = { current: fixture.value, items: [] };
+      let pendingAction = null;
+      function announce(message, error = false) { state.textContent = message; state.className = error ? "danger" : ""; if (error) queueMicrotask(() => state.focus()); }
+      function itemStatus(item) {
+        if (item.lifecycle === "retired") {
+          if (item.reference === "used") return "Retirado · operações vinculadas · histórico preservado";
+          if (item.reference === "unknown") return "Retirado · uso não confirmado · histórico preservado";
+          return "Retirado · sem operações · histórico preservado";
+        }
+        if (item.reference === "used") return "Ativo · operações vinculadas";
+        if (item.reference === "unknown") return "Ativo · uso não confirmado";
+        return "Ativo · sem operações";
+      }
+      function button(label, handler) { const element = document.createElement("button"); element.type = "button"; element.textContent = label; element.addEventListener("click", handler); return element; }
+      function render() {
+        cards.replaceChildren();
+        if (!catalog.items.length) { const empty = document.createElement("p"); empty.textContent = "Ainda não há ativos cadastrados. Este é um começo, não um erro."; cards.append(empty); announce("Estado vazio: Cadastrar ativo é a próxima ação."); return; }
+        catalog.items.forEach((item) => {
+          const card = document.createElement("article"); card.className = "card";
+          const title = document.createElement("h3"); title.textContent = `${item.symbol} · ${item.market}`;
+          const status = document.createElement("p"); status.className = `status${item.lifecycle === "retired" ? " retired" : ""}`; status.textContent = itemStatus(item);
+          const details = document.createElement("p"); details.className = "muted"; details.textContent = `${item.type} · ${item.currency} · ID estável: ${item.id}` + (item.portfolios ? ` · ${item.portfolios} carteiras` : "");
+          const actions = document.createElement("div"); actions.className = "actions";
+          const edit = button("Simular edição", () => editItem(item));
+          edit.setAttribute("aria-label", `Editar ${item.symbol} ${item.market} (${item.id})`);
+          edit.dataset.assetId = item.id;
+          edit.dataset.assetAction = "edit";
+          const lifecycle = button(item.lifecycle === "retired" ? "Reativar Asset" : "Retirar do catálogo", (event) => requestLifecycle(item, event.currentTarget));
+          lifecycle.setAttribute("aria-label", `${item.lifecycle === "retired" ? "Reativar" : "Retirar do catálogo"} ${item.symbol} ${item.market} (${item.id})`);
+          lifecycle.dataset.assetId = item.id;
+          lifecycle.dataset.assetAction = item.lifecycle === "retired" ? "restore" : "retire";
+          const remove = button("Excluir cadastro", (event) => requestDelete(item, event.currentTarget));
+          remove.setAttribute("aria-label", `Excluir cadastro ${item.symbol} ${item.market} (${item.id})`);
+          remove.dataset.assetId = item.id;
+          remove.dataset.assetAction = "delete";
+          actions.append(edit, lifecycle, remove);
+          card.append(title, status, details, actions); cards.append(card);
+        });
+      }
+      function editItem(item) {
+        if (item.lifecycle === "retired") return announce("Este Asset está retirado. Reative-o primeiro para revisar ou editar o cadastro.", true);
+        if (item.reference === "used") return announce("Este Asset tem operações vinculadas. A identidade econômica não pode ser editada aqui.", true);
+        if (catalog.current === "conflict") return announce("Este cadastro mudou. Atualize o catálogo e revise os campos antes de tentar novamente.", true);
+        if (item.reference === "unknown") return announce("Não foi possível confirmar o uso. O formulário permanece preservado; verifique o catálogo.", true);
+        announce(`Edição permitida para ${item.symbol}; ${item.id} permanece estável. Nenhuma Transaction é alterada.`);
+      }
+      function requestLifecycle(item, trigger) {
+        if (catalog.current === "conflict") return announce("Este cadastro mudou. Atualize o catálogo e revise antes de retirar ou reativar.", true);
+        const action = item.lifecycle === "retired" ? "restore" : "retire";
+        pendingAction = { action, item, trigger };
+        confirmationCopy.textContent = action === "retire"
+          ? `Retirar ${item.symbol} em todas as carteiras do owner? O histórico não será excluído e o Asset deixará de ser selecionável em novas operações.`
+          : `Reativar ${item.symbol}? O mesmo Asset voltará a ser selecionável em novas operações.`;
+        confirmation.showModal();
+        confirmAction.focus();
+      }
+      function requestDelete(item, trigger) {
+        if (item.lifecycle === "retired") return announce(item.reference === "used"
+          ? "Não é possível excluir este Asset retirado porque existem operações vinculadas. O histórico permanece preservado."
+          : "Reative o Asset para revisar o cadastro antes de excluir.", true);
+        if (item.reference === "used") return announce("Não é possível excluir este Asset porque existem operações vinculadas. Retire-o sem apagar o histórico.", true);
+        if (item.reference === "unknown") return announce("Não foi possível confirmar todas as operações vinculadas. O cadastro permanece preservado.", true);
+        if (catalog.current === "conflict") return announce("Este cadastro não está mais disponível. Atualize o catálogo antes de excluir.", true);
+        pendingAction = { action: "delete", item, trigger };
+        confirmationCopy.textContent = `Excluir o cadastro ${item.symbol} · ${item.market}? Ele não tem operações vinculadas; nenhum histórico será removido.`;
+        confirmation.showModal();
+        confirmAction.focus();
+      }
+      function executePending() {
+        if (!pendingAction) return;
+        const { action, item, trigger } = pendingAction;
+        pendingAction = null;
+        confirmation.close();
+        if (action === "delete") {
+          catalog.items = catalog.items.filter((candidate) => candidate.id !== item.id);
+          announce("Cadastro sem operações excluído. Nenhuma Transaction foi removida.");
+        } else if (action === "restore") {
+          item.lifecycle = "active";
+          announce(`Asset reativado: ${item.symbol}. O mesmo ID voltou a ser selecionável.`);
+        } else {
+          if (catalog.current === "unknown") {
+            announce("O resultado não foi confirmado. Verifique o estado antes de retirar novamente.", true);
+            queueMicrotask(() => state.focus());
+            return;
+          }
+          item.lifecycle = "retired";
+          announce(`Asset retirado em todas as carteiras do owner. O histórico de ${item.symbol} permanece legível.`);
+        }
+        render();
+        queueMicrotask(() => {
+          const nextAction = action === "retire" ? "restore" : action === "restore" ? "retire" : null;
+          const nextTrigger = nextAction && Array.from(document.querySelectorAll("button[data-asset-id]"))
+            .find((element) => element.dataset.assetId === item.id && element.dataset.assetAction === nextAction);
+          (nextTrigger || (trigger?.isConnected ? trigger : state)).focus();
+        });
+      }
+      fixture.addEventListener("change", () => { catalog.current = fixture.value; catalog.items = fixtures[fixture.value].map((item) => ({ ...item })); render(); });
+      confirmAction.addEventListener("click", executePending);
+      function cancelPending() {
+        const trigger = pendingAction?.trigger;
+        pendingAction = null;
+        if (confirmation.open) confirmation.close();
+        announce("Ação cancelada; nenhum dado foi alterado.");
+        queueMicrotask(() => trigger?.focus());
+      }
+      cancelAction.addEventListener("click", cancelPending);
+      confirmation.addEventListener("cancel", (event) => { event.preventDefault(); cancelPending(); });
+      document.querySelector("#create").addEventListener("click", () => { const existing = catalog.items[0]; if (!existing) return announce("Informe símbolo, mercado, tipo e moeda para cadastrar um novo Asset."); if (existing.lifecycle === "retired") return announce(`Este Asset já está cadastrado e retirado: ${existing.symbol} em ${existing.market}. Reative o cadastro existente; nenhum duplicado foi criado.`); announce(`Este Asset já está cadastrado: ${existing.symbol} em ${existing.market}. Usamos ${existing.id}; nenhum duplicado foi criado.`); });
+      catalog.items = fixtures[catalog.current].map((item) => ({ ...item })); render();
+    </script>
+  </body>
+</html>

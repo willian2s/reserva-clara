@@ -100,6 +100,6 @@ backend, sem iniciar a implementação da nova stack.
 - A 011-08 concluiu o registro das quinze ADRs `007`–`021`, a revisão temporal
   das ADRs históricas, a consolidação C0–C11 e o handoff para 012–016 em
   `docs/architecture/011/adr-register-and-handoff.md`. As ADRs novas seguem
-  `proposed` até seus gates; C1 está pronto para revisão independente, o
-  planejamento da 012 é a próxima atividade elegível e `UX-01` só começa após o
-  aceite independente de C1.
+  `proposed` até seus gates; C1 foi aceito formalmente em 2026-10-07, o
+  planejamento da 012 é a atividade elegível e `UX-01` pode começar sob as
+  condições de C0 quando `012-02` for selecionada.

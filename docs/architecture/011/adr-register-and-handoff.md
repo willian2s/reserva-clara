@@ -49,7 +49,7 @@ planejamento temporal; não descreve uma mudança produtiva já realizada.
 | Gate | Evidência consolidada | Estado documental | Bloqueia |
 | --- | --- | --- | --- |
 | C0 — risco atual contido | Aceitação A somente em dev/testes, dados sintéticos/descartáveis, owner maintainer e saída antes de usuário, dado real, staging/produção ou cutover | decidido e ativo | writes fora do escopo e qualquer backend que replique a fragilidade |
-| C1 — discovery fechado | inventários, ERD, threat model, ADRs, testes, ambientes, migração e handoff desta fase | pronto para revisão independente | avanço sem arquitetura revisada |
+| C1 — discovery fechado | inventários, ERD, threat model, ADRs, testes, ambientes, migração e handoff desta fase; aceite independente registrado em 2026-10-07 | aceito com condições de C0 | avanço sem arquitetura revisada e sem respeitar C0 |
 | C2 — fundação reproduzível | CI, Vite/API, PostgreSQL real, migration job separado, health e staging skeleton | pendente de 013 | feature no alvo |
 | C3 — auth E2E | token válido, claims negativas, A/B, CORS, refresh e logs sanitizados | pendente de 014 | dados privados na API |
 | C4 — compatibilidade | golden master de IDs, decimal, data, nanos, Portfolio e erros | pendente de 015 | primeira slice |
@@ -61,11 +61,10 @@ planejamento temporal; não descreve uma mudança produtiva já realizada.
 | C10 — PostgreSQL writes | primeiro write registrado, hosts/origens e observabilidade aprovados | pendente de 020 | retorno ao Firestore |
 | C11 — retirement | soak sem tráfego legado, retenção/restore e scans aprovados | pendente de 021 | remoção e supersession final |
 
-O C1 está documentalmente pronto, mas o estado operacional só deve ser aceito
-após revisão independente. O planejamento da 012 pode começar em paralelo; a
-execução de `UX-01` e dos demais experimentos fica elegível somente depois do
-aceite independente de C1. C2–C11 não são declarados executados por este
-artefato.
+O C1 foi aceito operacionalmente em 2026-10-07 após revisão independente
+registrada na documentação da fase 012. A execução de `UX-01` e dos demais
+experimentos está elegível somente dentro das condições de C0. C2–C11 não são
+declarados executados por este artefato.
 
 ## 4. Riscos residuais e bloqueios
 
@@ -80,10 +79,9 @@ não pode copiar a fragilidade.
 
 ### 012–016
 
-- O planejamento da 012 é a próxima atividade elegível. Após o aceite
-  independente de C1, seu primeiro trabalho de execução é `UX-01`, seguido de
-  `UX-02`–`UX-05` e `A11Y-01`; a 012 pode alterar requisitos, DTOs e capacidades
-  provisórias.
+- O planejamento da 012 é a atividade elegível. Com o aceite independente de
+  C1, seu primeiro trabalho de execução é `UX-01`, seguido de `UX-02`–`UX-05` e
+  `A11Y-01`; a 012 pode alterar requisitos, DTOs e capacidades provisórias.
 - A 013 pode preparar tooling e ambientes sem congelar capacidades da 012, mas
   não pode promover feature patrimonial nem migration no startup.
 - A 014 está bloqueada até a fundação reproduzível da 013 e deve provar
@@ -107,9 +105,10 @@ janela de cutover e rollback após C10. Nenhum é ocultado como resolvido.
 | 015 | invariantes, strings decimais, datas, nanos, IDs, errors e harness TS↔C# | `System.Decimal`, `Date` ou tradução mecânica de entidades | fixtures/golden masters e primeiro caso de uso |
 | 016 | ERD, FKs, unique, roles, pipeline, quarentena, reconcile e PONR | DDL final, volumetria observada, RLS aceita ou schema exposto ao browser | provar tipos, locks, migrations, import repetido e restore |
 
-O primeiro item elegível do roadmap é o planejamento da fase 012. A execução do
-experimento `UX-01` começa somente depois do aceite independente de C1. Nenhuma
-fase futura é tratada como executada.
+O primeiro item elegível do roadmap é o planejamento da fase 012. O experimento
+`UX-01` está elegível após o aceite independente de C1, mas ainda depende da
+seleção explícita da subtarefa correspondente. Nenhuma fase futura é tratada
+como executada.
 
 ## 6. Conferência das 19 perguntas do pedido original
 

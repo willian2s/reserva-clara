@@ -685,7 +685,8 @@ do migration gate da 021.
 
 ## 011 — Discovery, Architecture & Migration Baseline
 
-**Status:** concluída como baseline documental; C1 aguarda aceite formal do gate.
+**Status:** concluída como baseline documental; C1 aceito formalmente em
+2026-10-07, mantendo C0 restrito e C2–C11 pendentes.
 
 **Objetivo:** eliminar incertezas arquiteturais e de migração capazes de causar
 retrabalho estrutural, produzindo informação suficiente para iniciar a próxima
@@ -717,8 +718,8 @@ slices ainda pendentes.
 
 ## 012 — Product, UX/UI, Information Architecture & Provisional API Discovery
 
-**Status:** próxima fase para planejamento; execução de `UX-01` começa após o
-aceite formal de C1.
+**Status:** próxima fase para execução documental; C1 aceito formalmente em
+2026-10-07 e `UX-01` elegível sob as condições de C0.
 
 **Objetivo:** realizar revisão de produto, UX, UI, arquitetura de informação e
 frontend — não uma simples modernização visual — antes de congelar os contratos
@@ -844,12 +845,11 @@ As quinze decisões da spec 011 estão registradas nas ADRs `007`–`021` como
 005 e 006 permanecem preservadas e só serão marcadas `superseded` no momento
 temporal previsto após cutover/retirement.
 
-O C1 está pronto para revisão independente, não operacionalmente executado. O
-planejamento da 012 é a próxima atividade elegível; a execução de `UX-01` e do
-backlog prioritário começa somente após o aceite independente de C1. A 013 pode
-preparar tooling e ambientes em paralelo somente sem congelar requisitos, DTOs
-ou contratos que a 012 ainda possa alterar. Nenhuma feature normal reabre antes
-do gate C11/021.
+O C1 foi aceito formalmente em 2026-10-07 após revisão independente registrada
+na documentação da 012. O planejamento da 012 e a execução de `UX-01` estão
+elegíveis sob C0; a 013 pode preparar tooling e ambientes em paralelo somente
+sem congelar requisitos, DTOs ou contratos que a 012 ainda possa alterar.
+Nenhuma feature normal reabre antes do gate C11/021.
 
 ---
 
